@@ -115,20 +115,8 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* ElevenLabs Widget - Official Implementation with WebRTC */}
-      <elevenlabs-convai
-        id="el-agent"
-        agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
-        style={{
-          position: 'fixed',
-          right: '24px',
-          bottom: '24px',
-          zIndex: 9999,
-          '--connection-type': 'webrtc',
-          '--mobile-optimized': 'true',
-          '--fallback-enabled': 'true'
-        } as any}
-      />
+      {/* ElevenLabs Widget - Simple Implementation */}
+      <elevenlabs-convai agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"></elevenlabs-convai>
     </div>
   );
 }
