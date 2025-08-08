@@ -51,16 +51,19 @@ export default function AssistantPage() {
       script.async = true;
       
       script.onload = () => {
+        console.log('ElevenLabs script loaded successfully');
         initWidget();
       };
       
       script.onerror = () => {
+        console.error('Failed to load ElevenLabs script');
         setError('Failed to load ElevenLabs widget');
         setIsLoading(false);
       };
 
       document.head.appendChild(script);
     } else {
+      console.log('ElevenLabs already loaded');
       initWidget();
     }
 
@@ -72,6 +75,8 @@ export default function AssistantPage() {
       }
 
       try {
+        console.log('Initializing ElevenLabs widget with agent:', 'agent_8201k251883jf0hr1ym7d6dbymxc');
+        
         window.ElevenLabs.init({
           agentId: 'agent_8201k251883jf0hr1ym7d6dbymxc',
           onMessage: (message) => {
@@ -102,6 +107,7 @@ export default function AssistantPage() {
           }
         });
         
+        console.log('ElevenLabs widget initialized successfully');
         setIsLoading(false);
       } catch (error) {
         console.error('Widget initialization error:', error);
@@ -173,17 +179,33 @@ export default function AssistantPage() {
             <p>• The AI will automatically create and organize your tasks</p>
             <p>• Your conversation is being processed by the task supervisor</p>
           </div>
+          
+          {/* Debug info */}
+          <div className="mt-4 p-3 bg-muted rounded text-xs">
+            <strong>Debug Info:</strong>
+            <br />Agent ID: agent_8201k251883jf0hr1ym7d6dbymxc
+            <br />Session: {sessionId}
+            <br />Widget Status: {isLoading ? 'Loading...' : error ? 'Error' : 'Ready'}
+            {error && <><br />Error: {error}</>}
+          </div>
         </div>
 
         {/* ElevenLabs Widget Container */}
         <div className="bg-card border rounded-lg p-6" data-testid="widget-container">
-          <div id="elevenlabs-widget" className="min-h-[400px] flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <div className="text-4xl">🎤</div>
-              <p className="text-muted-foreground">
-                ElevenLabs voice widget will appear here once loaded
-              </p>
-            </div>
+          <h2 className="text-lg font-semibold mb-4">ElevenLabs Conversational AI</h2>
+          <div id="elevenlabs-widget" className="min-h-[400px]">
+            {/* ElevenLabs widget will be injected here */}
+          </div>
+          
+          {/* Fallback instructions */}
+          <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
+            <p><strong>If the widget doesn't appear:</strong></p>
+            <ol className="list-decimal list-inside mt-2 space-y-1">
+              <li>Check browser console for any script loading errors</li>
+              <li>Ensure you have a stable internet connection</li>
+              <li>Try refreshing the page</li>
+              <li>Verify the ElevenLabs agent ID is correct: agent_8201k251883jf0hr1ym7d6dbymxc</li>
+            </ol>
           </div>
         </div>
 

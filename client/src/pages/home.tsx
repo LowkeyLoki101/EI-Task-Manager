@@ -88,8 +88,8 @@ export default function Home() {
               
               {/* Navigation Links */}
               <div className="hidden md:flex items-center space-x-4 ml-8">
-                <Link href="/assistant" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
-                  Voice Assistant
+                <Link href="/assistant" className="px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                  🎤 NEW: ElevenLabs Voice Assistant
                 </Link>
                 <Link href="/proposals" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
                   Code Proposals
@@ -125,6 +125,25 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        {/* New Voice Assistant Banner */}
+        <div className="mb-6 bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">🎤 New ElevenLabs Voice Assistant Available!</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Experience true conversational AI with your ElevenLabs agent (agent_8201k251883jf0hr1ym7d6dbymxc)
+              </p>
+            </div>
+            <Link 
+              href="/assistant" 
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors"
+            >
+              Try Voice Assistant →
+            </Link>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Left Panel - Conversation & Voice Widget */}
