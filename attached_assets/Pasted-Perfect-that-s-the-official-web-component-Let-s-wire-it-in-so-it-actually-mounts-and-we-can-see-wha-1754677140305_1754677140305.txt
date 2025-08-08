@@ -1,0 +1,100 @@
+Perfect—that’s the official web component. Let’s wire it in so it actually mounts and we can see what’s failing.
+
+Drop-in snippet (safe order + debug hooks)
+
+Put this near the end of <body> (outside the Replit in-pane preview if possible; open the external tab).
+
+<!-- Mount point -->
+<elevenlabs-convai
+  id="el-agent"
+  agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
+  style="position:fixed; right:24px; bottom:24px; z-index:9999;"
+></elevenlabs-convai>
+
+<!-- SDK: after the element; it will “upgrade” when loaded -->
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+<!-- Optional: diagnostics -->
+<script>
+  (function waitForWC() {
+    const el = document.getElementById('el-agent');
+    if (!el || typeof el.addEventListener !== 'function') {
+      return setTimeout(waitForWC, 150);
+    }
+    el.addEventListener('convai-ready',  () => console.log('[EL] ready'));
+    el.addEventListener('convai-error',  e => console.error('[EL] error', e.detail));
+    el.addEventListener('convai-opened', () => console.log('[EL] opened'));
+    el.addEventListener('convai-closed', () => console.log('[EL] closed'));
+
+    // Failsafe: if SDK didn’t upgrade the element
+    setTimeout(() => {
+      if (!el.shadowRoot) {
+        console.error('[EL] widget not upgraded (no shadowRoot). Check CSP/allowlist/SDK 404s.');
+      }
+    }, 3000);
+  })();
+</script>
+
+Must-do checks (this is usually where it breaks)
+	1.	Agent allowlist / public
+	•	In ElevenLabs: turn Web Widget = ON, set Public/Unauthenticated (for MVP), and add your Replit domain to Allowed origins.
+	•	Example: https://<project>.<user>.repl.co
+	2.	Load the SDK
+	•	In DevTools → Network: confirm @elevenlabs/convai-widget-embed loads (200, not 404/blocked).
+	•	If you see CSP blocks, add this to your headers (or <meta http-equiv="Content-Security-Policy" if you’re setting CSP in HTML):
+
+script-src 'self' https://unpkg.com;
+connect-src 'self' https://api.elevenlabs.io https://api.elevenlabs.*;
+frame-src https://*.elevenlabs.io;
+
+
+	•	Re-open in the external tab (Replit’s in-pane preview sometimes blocks mic/iframe perms).
+
+	3.	Mobile Safari permission
+	•	The first mic use needs a tap. If nothing happens, add a “Start” button that calls:
+
+document.getElementById('el-agent')?.dispatchEvent(new Event('convai-open'));
+
+
+	4.	Console events
+	•	You should see [EL] ready. If you get [EL] error, copy the e.detail message—usually it’s:
+	•	invalid agent-id
+	•	domain not allow-listed
+	•	SDK blocked by CSP/network
+
+(Optional) Connecting Actions/Webhooks to your Replit API
+
+If you’re using custom actions from the agent:
+
+Express CORS (allow widget origin):
+
+app.use(require('cors')({
+  origin: [/\.repl\.co$/, 'https://unpkg.com'],
+  methods: ['POST','GET','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','x-api-key']
+}));
+
+Example action endpoint:
+
+app.post('/api/actions/add_task', async (req, res) => {
+  // validate schema from agent
+  // create task/steps in DB
+  return res.json({ ok: true, taskId: 'tsk_...' });
+});
+
+Webhook endpoint:
+
+app.post('/api/elevenlabs/webhook', (req,res) => {
+  // TODO: verify signature header per EL config
+  // handle message/transcript/session events
+  res.sendStatus(200);
+});
+
+Quick triage if it still says “widget not available”
+	•	✅ SDK script loads 200?
+	•	✅ convai-ready event fires?
+	•	✅ shadowRoot exists on <elevenlabs-convai>?
+	•	✅ Agent’s domain allowlist includes your exact Replit URL?
+	•	✅ External tab (not the in-pane preview)?
+
+Send me the console error text from convai-error (or a screenshot) and I’ll pinpoint the next fix in one shot.

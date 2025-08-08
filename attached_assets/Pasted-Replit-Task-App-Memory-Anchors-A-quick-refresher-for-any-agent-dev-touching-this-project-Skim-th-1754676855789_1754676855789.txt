@@ -1,0 +1,152 @@
+Replit Task App — Memory Anchors
+
+A quick refresher for any agent/dev touching this project. Skim this first, then build.
+
+⸻
+
+1) North Star (one sentence)
+
+A conversational, zoomable rolling to‑do system where an ElevenLabs voice agent is the user-facing liaison and GPT‑5 is the ops manager that researches, prepares, and executes steps; the app remembers how we did things so next time is faster.
+
+⸻
+
+2) Primary Roles
+	•	User: speaks/types tasks; reviews/approves automation.
+	•	ElevenLabs Agent (Liaison): voice/ASR/TTS + KB host; calls actions; receives status to brief the user.
+	•	GPT‑5 Ops Manager: parses intent → creates/updates tasks/steps; runs tools; returns deltas; writes memory.
+	•	Replit Backend: APIs, storage, embeddings, webhooks, multi‑tenant platform.
+
+⸻
+
+3) Data-Flow Postcard
+	1.	User talks to widget → ElevenLabs ASR.
+	2.	Agent interprets → Actions → hits our Replit API.
+	3.	Replit → GPT‑5 plans/executes (research, scaffold, QR, CRUD) → saves artifacts/memories.
+	4.	Replit posts ops update back to Agent.
+	5.	Agent summarizes progress to user.
+
+⸻
+
+4) Core Entities (DB mental model)
+	•	Task: title, status(backlog/today/doing/done), context(computer/phone/physical), time_window.
+	•	Step: belongs to task; status(pending/running/blocked/done); can_auto(bool); tool_hint; parent_step for sub‑steps.
+	•	Artifact: link/file/note/html attached to a step.
+	•	Memory: per‑domain key→value store (e.g., DNS path for GoDaddy, provider docs used).
+	•	Conversation/Transcript: sessions + ASR text tied to tasks.
+	•	Installation (platform): tenant/project/domain/keys for third‑party sites.
+
+⸻
+
+5) Task Anatomy (layered view)
+	•	L1 Items → user’s high‑level goals.
+	•	L2 Steps → actionable chunks, each tagged with context + time window.
+	•	L3 Sub‑steps/Automation → what the AI can do now vs. what needs user.
+
+⸻
+
+6) Context Routing
+
+Every step is labeled:
+	•	Context: Computer / Phone / Physical
+	•	Time Window: Morning / Midday / Evening / Any
+UI filters use these labels to show the right list at the right time.
+
+⸻
+
+7) Memory Model
+	•	Save successful paths (URLs, flows, provider choices, export settings) — never store raw passwords.
+	•	On next run: prefill links, suggest defaults, auto‑run prep work.
+	•	Memory keys example: dns:getskyclaim.com, print:sticker_export_profile, kb:starlight_battery_manuals_v1.
+
+⸻
+
+8) Toolbelt (ops manager)
+	•	web.search / web.fetch: gather docs, links, manuals.
+	•	files.upload / ocr.chunk: ingest PDFs/images → chunks + embeddings.
+	•	qr.generate: PNG + artifact.
+	•	replit.scaffold_page: create landing pages with an embed slot.
+	•	tasks/steps CRUD: create/update structures consistently.
+	•	kb.save/get: generic memory API.
+	•	elevenlabs.kb.upload / kb.delete / agent.update: manage KB + push status.
+
+⸻
+
+9) ElevenLabs Contracts (minimal set)
+
+Actions (Agent → Replit):
+	•	add_task{ title, context?, time_window?, steps? }
+	•	update_step_status{ step_id, status }
+	•	get_todo_list{ context?, view? }
+	•	kb_attach_doc{ agent_id, url|file }
+	•	post_ops_update{ message, deltas[] }
+
+Webhooks (ElevenLabs → Replit):
+	•	message.user, message.agent, transcript.complete, session.start/end
+(Signature verified; idempotent.)
+
+Outbound (Replit → ElevenLabs):
+	•	KB upload/delete/reindex; post status to agent context so it can brief the user.
+
+⸻
+
+10) API Surface (public, for integrators)
+	•	GET/POST /tasks (with filters context, view=items|steps|substeps)
+	•	PATCH /tasks/:id, POST /tasks/:id/steps, PATCH /steps/:id
+	•	POST /agents/:agentId/kb/documents (proxy to ElevenLabs)
+	•	GET /conversations/:id/transcript
+	•	Webhooks registration + signed deliveries
+	•	Auth: API keys per installation; widget token for client.
+
+⸻
+
+11) Security Principles
+	•	Verify all webhooks with HMAC; store event IDs to avoid replay.
+	•	Keys in Replit Secrets; encrypt sensitive values at rest.
+	•	No plaintext passwords. Store flows, not creds.
+	•	Redact PII in transcript exports on request.
+
+⸻
+
+12) MVP Quality Bars
+	•	Zero‑config voice capture: mic → task created within 3s.
+	•	Every automation leaves an artifact (link/file/note) on the step.
+	•	Memory actually reduces clicks on the second pass.
+	•	Filters show the right list for now (context + time window).
+
+⸻
+
+13) Common Failure Modes (and defaults)
+	•	Action schema mismatch → return 400 with schema hints; agent apologizes + retries with corrected payload.
+	•	Webhook storms → throttle per session; dedupe by event id.
+	•	Provider API down → mark step blocked with reason and fallback instructions.
+	•	File too big → chunk client‑side; stream upload; show progress.
+
+⸻
+
+14) Daily Operating Rhythm
+	•	Morning: “Computer” queue + items due today.
+	•	Midday: “Phone” queue while mobile.
+	•	Evening: review “Physical” + tomorrow’s top 3.
+	•	Agent posts brief status deltas to keep the voice loop tight.
+
+⸻
+
+15) Today’s Minimal Loop (demo‑ready)
+	1.	Agent add_task → Replit creates task.
+	2.	Agent kb_attach_doc → Replit fetches manual → uploads to KB → attaches artifact.
+	3.	Replit → post_ops_update → Agent explains what changed.
+	4.	Replit scaffolds /breakerbox-help page + generates QR.
+	5.	User scans QR; widget opens; agent can describe remaining steps.
+
+⸻
+
+16) Definition of Done (MVP)
+	•	Voice → task creation works.
+	•	Steps carry context/time labels.
+	•	At least one tool auto‑executes and leaves artifacts (QR or scaffold).
+	•	KB upload round‑trip proven end‑to‑end.
+	•	Public API: POST /tasks, GET /tasks, POST /agents/:id/kb/documents live.
+
+⸻
+
+Keep this page updated when flows change. If it’s not true here, it’s not the system.

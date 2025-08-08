@@ -2,9 +2,25 @@
 
 ## Overview
 
-This is a conversational AI-powered task management and automation platform that combines voice interaction, intelligent task orchestration, and self-updating capabilities. The system allows users to interact naturally through voice or text to create, manage, and execute tasks, with an AI supervisor that can propose and implement code changes to extend functionality.
+A conversational, zoomable rolling to-do system where an ElevenLabs voice agent is the user-facing liaison and GPT-5 is the ops manager that researches, prepares, and executes steps; the app remembers how we did things so next time is faster.
 
-The platform features a React frontend with shadcn/ui components, an Express.js backend with in-memory storage, and integrations for voice interaction (ElevenLabs), AI processing (OpenAI GPT), file uploads with Google Cloud Storage, and YouTube video search for task-related tutorials.
+### Primary Roles
+- **User**: speaks/types tasks; reviews/approves automation
+- **ElevenLabs Agent (Liaison)**: voice/ASR/TTS + KB host; calls actions; receives status to brief the user
+- **GPT-5 Ops Manager**: parses intent → creates/updates tasks/steps; runs tools; returns deltas; writes memory
+- **Replit Backend**: APIs, storage, embeddings, webhooks, multi-tenant platform
+
+### Current Implementation Status
+- ✅ Basic ElevenLabs widget integration with agent_8201k251883jf0hr1ym7d6dbymxc
+- ✅ Supervisor agent with conversation processing (8-second intervals when builder mode active)
+- ✅ Complete database schema matching memory anchors (Tasks, Steps, Artifacts, Memory, Installations)
+- ✅ ElevenLabs Actions API system (add_task, update_step_status, get_todo_list, kb_attach_doc, post_ops_update)
+- ✅ GPT-5 Ops Manager with intent processing and task/step creation
+- ✅ Memory model for domain-specific key-value storage
+- ✅ Context routing system (computer/phone/physical + time windows)
+- ✅ Public API surface for integrators with full CRUD operations
+- ✅ Webhook handling for ElevenLabs integration
+- 🚧 **Next Phase**: Full toolbelt implementation (web search, QR generation, page scaffolding), ElevenLabs KB management
 
 ## User Preferences
 
@@ -38,12 +54,24 @@ Preferred communication style: Simple, everyday language.
 - **Tool Execution**: Extensible tool system for web search, file processing, and external API calls
 - **Code Generation**: AI can propose new features and code modifications through a safe preview-and-approve workflow
 
-### Data Models
-- **Sessions**: User session management with unique identifiers
-- **Tasks**: Hierarchical task structure with status, priority, due dates, and attachments
-- **Conversations**: Message history between user and AI with role-based organization
-- **Proposals**: Code change requests with diff summaries and preview capabilities
-- **Files**: Uploaded file metadata with cloud storage references
+### Data Models (Target Architecture)
+- **Task**: title, status(backlog/today/doing/done), context(computer/phone/physical), time_window
+- **Step**: belongs to task; status(pending/running/blocked/done); can_auto(bool); tool_hint; parent_step for sub-steps
+- **Artifact**: link/file/note/html attached to a step
+- **Memory**: per-domain key→value store (e.g., DNS path for GoDaddy, provider docs used)
+- **Conversation/Transcript**: sessions + ASR text tied to tasks
+- **Installation**: tenant/project/domain/keys for third-party sites
+
+### Context Routing System
+Every step labeled with:
+- **Context**: Computer / Phone / Physical
+- **Time Window**: Morning / Midday / Evening / Any
+UI filters use these labels to show the right list at the right time.
+
+### Memory Model
+- Save successful paths (URLs, flows, provider choices, export settings)
+- On next run: prefill links, suggest defaults, auto-run prep work
+- Memory keys example: dns:getskyclaim.com, print:sticker_export_profile, kb:starlight_battery_manuals_v1
 
 ## External Dependencies
 
