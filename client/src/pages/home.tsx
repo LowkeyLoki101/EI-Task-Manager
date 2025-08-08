@@ -139,8 +139,7 @@ export default function HomePage() {
           <EmergentLogo className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" />
           <div className="min-w-0">
             <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">
-              <span className="sm:hidden">Emergent</span>
-              <span className="hidden sm:inline">Emergent Intelligence</span>
+              Emergent Intelligence
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate hidden sm:block">
               Conversational AI Task Management
