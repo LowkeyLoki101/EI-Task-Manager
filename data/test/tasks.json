@@ -1,0 +1,18 @@
+{
+  "tasks": [
+    {
+      "title": "Review recent conversation",
+      "description": "Analyze the recent conversation to identify tasks and produce a JSON plan.",
+      "id": "t_9836a89b-41f4-429f-b17d-def71217405d",
+      "status": "todo",
+      "priority": "med",
+      "notes": [],
+      "subtasks": [],
+      "attachments": [],
+      "meta": {
+        "createdAt": 1754676415454,
+        "updatedAt": 1754676415454
+      }
+    }
+  ]
+}

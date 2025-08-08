@@ -44,6 +44,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Task management
+  // Add task endpoint per your specifications
+  app.post("/api/tasks/add", async (req, res) => {
+    try {
+      const { sessionId, title } = req.body || {};
+      if (!sessionId || !title) {
+        return res.status(400).json({ error: "sessionId, title required" });
+      }
+
+      const dataDir = process.env.STORAGE_DIR || path.join(process.cwd(), 'data');
+      const sessionDir = path.join(dataDir, sessionId);
+      const taskFile = path.join(sessionDir, 'tasks.json');
+      
+      fs.mkdirSync(sessionDir, { recursive: true });
+      
+      let data = { tasks: [] as any[] };
+      try {
+        if (fs.existsSync(taskFile)) {
+          data = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+        }
+      } catch {}
+
+      const newTask = {
+        id: randomUUID(),
+        title,
+        status: 'todo',
+        priority: 'med',
+        due: null,
+        notes: [],
+        subtasks: [],
+        attachments: [],
+        meta: {
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        }
+      };
+
+      data.tasks.push(newTask);
+      fs.writeFileSync(taskFile, JSON.stringify(data, null, 2));
+
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Add task error:", error);
+      res.status(500).json({ error: "Failed to add task" });
+    }
+  });
+
+  // Update task endpoint per your specifications
+  app.post("/api/tasks/update", async (req, res) => {
+    try {
+      const { sessionId, id, ...patch } = req.body || {};
+      if (!sessionId || !id) {
+        return res.status(400).json({ error: "sessionId, id required" });
+      }
+
+      const dataDir = process.env.STORAGE_DIR || path.join(process.cwd(), 'data');
+      const taskFile = path.join(dataDir, sessionId, 'tasks.json');
+      
+      let data = { tasks: [] as any[] };
+      try {
+        if (fs.existsSync(taskFile)) {
+          data = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+        }
+      } catch {}
+
+      const task = data.tasks.find((t: any) => t.id === id);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+
+      Object.assign(task, patch);
+      task.meta = { ...(task.meta || {}), updatedAt: Date.now() };
+
+      fs.mkdirSync(path.dirname(taskFile), { recursive: true });
+      fs.writeFileSync(taskFile, JSON.stringify(data, null, 2));
+
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Update task error:", error);
+      res.status(500).json({ error: "Failed to update task" });
+    }
+  });
+
   app.post("/api/tasks", async (req, res) => {
     try {
       const taskData = insertTaskSchema.parse({
@@ -116,84 +198,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Supervisor endpoint
+  // AI Supervisor agent endpoint - GPT-5 planner tick
   app.post("/api/supervisor/agent", async (req, res) => {
     try {
-      const { sessionId, message } = req.body;
+      const { sessionId, slug } = req.query as any;
       if (!sessionId) {
         return res.status(400).json({ error: "sessionId required" });
       }
 
-      // Get recent conversation context
-      const messages = await storage.listMessages(sessionId, 10);
-      const tasks = await storage.listTasks(sessionId);
+      // Read events from memory
+      const key = `${sessionId}:${slug || 'task-builder'}`;
+      const events = ((global as any).__INGEST__?.[key] || []).slice(-30);
+      const convo = events.map((e: any) => `${e.role || 'user'}: ${e.text || e.type}`).join('\n');
 
-      const systemPrompt = `You are an AI Task Supervisor. Turn conversation into actionable tasks.
-Create, update, or complete tasks based on user input. Use tools when needed.
-Current tasks: ${tasks.map(t => `${t.title} (${t.status})`).join(", ")}
-
-Respond with JSON: {
-  "response": "Your response to the user",
-  "actions": [
-    {"type": "create_task", "task": {"title": "...", "priority": "high|med|low", "subtasks": [...]}},
-    {"type": "update_task", "id": "task_id", "updates": {...}},
-    {"type": "complete_task", "id": "task_id"}
-  ],
-  "tools_used": ["youtube_search", "web_search"]
-}`;
+      const SYSTEM = `
+You are the Task Supervisor.
+Turn conversation into a rolling to-do list with layered subtasks.
+When the user implies a task, create it. When details emerge, update it.
+Use tools when asked: web_search (for links), save_form (to persist structured data), run_action (placeholder exec).
+Never invent sensitive data. Be brief and explicit.
+Return JSON: { actions: [ {type:'add'|'update'|'note', task?:{...}, id? } ], questions?:[], notes?:[] }.
+`.trim();
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4o", // Using gpt-4o as gpt-5 not available yet
         messages: [
-          { role: "system", content: systemPrompt },
-          ...messages.map(m => ({ role: m.role as any, content: m.content })),
-          ...(message ? [{ role: "user" as const, content: message }] : [])
+          { role: "system", content: SYSTEM },
+          { role: "user", content: `Recent conversation:\n${convo}\n\nCurrent tasks (titles only OK). Produce JSON plan as instructed.` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.2
       });
 
-      let plan;
+      let plan: any = {};
       try {
         plan = JSON.parse(response.choices[0].message.content || "{}");
       } catch {
-        plan = { response: response.choices[0].message.content, actions: [] };
+        plan = { actions: [] };
       }
 
-      // Execute actions
-      for (const action of plan.actions || []) {
-        if (action.type === "create_task" && action.task) {
-          await storage.createTask({
-            id: `t_${randomUUID()}`,
-            sessionId,
-            title: action.task.title,
-            priority: action.task.priority || "med",
-            status: "todo",
-            subtasks: action.task.subtasks || [],
-            attachments: [],
-            notes: [],
-            due: null
-          });
-        } else if (action.type === "update_task" && action.id && action.updates) {
-          await storage.updateTask(action.id, action.updates);
-        } else if (action.type === "complete_task" && action.id) {
-          await storage.updateTask(action.id, { status: "done" });
+      // Apply plan to JSON file storage
+      const dataDir = process.env.STORAGE_DIR || path.join(process.cwd(), 'data');
+      const sessionDir = path.join(dataDir, sessionId);
+      const taskFile = path.join(sessionDir, 'tasks.json');
+      
+      // Ensure directory exists
+      fs.mkdirSync(sessionDir, { recursive: true });
+      
+      let data = { tasks: [] as any[] };
+      try {
+        if (fs.existsSync(taskFile)) {
+          data = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+        }
+      } catch {}
+
+      // Apply actions
+      for (const action of (plan.actions || [])) {
+        if (action.type === 'add' && action.task) {
+          action.task.id = action.task.id || `t_${randomUUID()}`;
+          action.task.status = action.task.status || 'todo';
+          action.task.priority = action.task.priority || 'med';
+          action.task.notes = action.task.notes || [];
+          action.task.subtasks = action.task.subtasks || [];
+          action.task.attachments = action.task.attachments || [];
+          action.task.meta = {
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          data.tasks.push(action.task);
+        }
+        if (action.type === 'update' && action.id) {
+          const task = data.tasks.find((t: any) => t.id === action.id);
+          if (task) {
+            Object.assign(task, action.patch || {});
+            task.meta = { ...(task.meta || {}), updatedAt: Date.now() };
+          }
+        }
+        if (action.type === 'note' && action.id && action.text) {
+          const task = data.tasks.find((t: any) => t.id === action.id);
+          if (task) {
+            task.notes.push(action.text);
+            task.meta = { ...(task.meta || {}), updatedAt: Date.now() };
+          }
         }
       }
 
-      // Save AI response to conversation
-      if (plan.response) {
-        await storage.createMessage({
-          sessionId,
-          role: "assistant",
-          content: plan.response
-        });
-      }
+      // Save updated tasks
+      fs.writeFileSync(taskFile, JSON.stringify(data, null, 2));
 
-      res.json(plan);
+      res.json({ ok: true, plan });
     } catch (error) {
-      console.error("AI Supervisor error:", error);
-      res.status(500).json({ error: "AI processing failed" });
+      console.error("Supervisor agent error:", error);
+      res.status(500).json({ error: "Supervisor agent failed" });
     }
   });
 
@@ -363,6 +459,27 @@ Respond with JSON: {
       res.json({ items: mockResults });
     } catch (error) {
       res.status(500).json({ error: "Web search failed" });
+    }
+  });
+
+  // Supervisor ingest endpoint - mirror conversation events from ElevenLabs widget
+  app.post("/api/supervisor/ingest", async (req, res) => {
+    try {
+      const { sessionId, slug, evt } = req.body || {};
+      if (!sessionId || !evt) {
+        return res.status(400).json({ error: "sessionId, evt required" });
+      }
+      
+      // Store events in memory for the supervisor to process
+      const key = `${sessionId}:${slug}`;
+      if (!(global as any).__INGEST__) (global as any).__INGEST__ = {};
+      if (!(global as any).__INGEST__[key]) (global as any).__INGEST__[key] = [];
+      (global as any).__INGEST__[key].push({ ts: Date.now(), ...evt });
+      
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Ingest error:", error);
+      res.status(500).json({ error: "Ingest failed" });
     }
   });
 

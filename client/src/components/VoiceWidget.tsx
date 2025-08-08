@@ -71,48 +71,36 @@ export default function VoiceWidget({ onMessage, isConnected }: VoiceWidgetProps
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.wav');
 
-      // Use ElevenLabs Conversational AI for full conversation
-      const response = await fetch('/api/voice/conversation', {
+      // Use OpenAI Whisper for transcription
+      const response = await fetch('/api/voice/transcribe', {
         method: 'POST',
         body: formData
       });
 
       if (response.ok) {
-        const conversationData = await response.json();
-        
-        // Handle the response from ElevenLabs agent
-        if (conversationData.user_message) {
-          onMessage(conversationData.user_message);
-        }
-        
-        // Play AI response if available
-        if (conversationData.audio) {
-          // Create audio element and play the response
-          const audio = new Audio();
-          audio.src = `data:audio/mpeg;base64,${conversationData.audio}`;
-          audio.play().catch(console.error);
-        }
-        
-        // In conversation mode, automatically start listening again after AI response
-        if (isConversationMode) {
-          setTimeout(() => {
-            const stream = (mediaRecorderRef.current?.stream || null) as MediaStream | null;
-            if (stream) {
-              startListening(stream);
-            }
-          }, conversationData.audio ? 3000 : 1000); // Wait longer if there's audio response
-        }
-      } else {
-        // Fallback to transcription only
-        const fallbackResponse = await fetch('/api/voice/transcribe', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (fallbackResponse.ok) {
-          const { text } = await fallbackResponse.json();
-          if (text.trim()) {
-            onMessage(text);
+        const { text } = await response.json();
+        if (text.trim()) {
+          onMessage(text);
+          
+          // Mirror conversation event to supervisor ingest
+          await fetch('/api/supervisor/ingest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: localStorage.getItem('ei_session') || 'default',
+              slug: 'task-builder',
+              evt: { type: 'transcript', role: 'user', text }
+            })
+          });
+          
+          // In conversation mode, automatically start listening again after processing
+          if (isConversationMode) {
+            setTimeout(() => {
+              const stream = (mediaRecorderRef.current?.stream || null) as MediaStream | null;
+              if (stream) {
+                startListening(stream);
+              }
+            }, 1000);
           }
         }
       }

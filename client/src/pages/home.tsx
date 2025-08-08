@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'wouter';
 import { useSessionId } from '@/hooks/useSessionId';
 import VoiceWidget from '../components/VoiceWidget';
 import ConversationHistory from '../components/ConversationHistory';
@@ -25,9 +26,7 @@ export default function Home() {
     
     const interval = setInterval(() => {
       fetch(`/api/supervisor/agent?sessionId=${sessionId}&slug=task-builder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId })
+        method: 'POST'
       }).catch(console.error);
     }, 8000);
 
@@ -86,6 +85,16 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <EmergentLogo size="md" showText={true} />
               <span className="text-sm text-slate-500 hidden sm:inline">AI-Powered Task Intelligence</span>
+              
+              {/* Navigation Links */}
+              <div className="hidden md:flex items-center space-x-4 ml-8">
+                <Link href="/assistant" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
+                  Voice Assistant
+                </Link>
+                <Link href="/proposals" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
+                  Code Proposals
+                </Link>
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">
