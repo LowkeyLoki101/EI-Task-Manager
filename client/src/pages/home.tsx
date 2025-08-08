@@ -60,6 +60,16 @@ export default function HomePage() {
 
   // ElevenLabs widget diagnostics
   useEffect(() => {
+    // Check for AudioWorklet support (common mobile issue)
+    const checkAudioSupport = () => {
+      if (typeof AudioWorkletNode === 'undefined') {
+        setWidgetStatus('error');
+        setWidgetError('AudioWorklets not supported. Try using Chrome or Firefox on desktop for full voice features.');
+        return false;
+      }
+      return true;
+    };
+
     function waitForWidget() {
       const el = document.getElementById('el-agent') as any;
       if (!el || typeof el.addEventListener !== 'function') {
@@ -76,7 +86,18 @@ export default function HomePage() {
       el.addEventListener('convai-error', (e: any) => {
         console.error('[EL] Widget error:', e.detail);
         setWidgetStatus('error');
-        setWidgetError(e.detail?.message || 'Unknown widget error');
+        
+        // Provide helpful error messages for common issues
+        let errorMessage = e.detail?.message || 'Unknown widget error';
+        if (errorMessage.includes('raw-audio-processor') || errorMessage.includes('AudioWorklet')) {
+          errorMessage = 'AudioWorklets not supported on this browser. Please use Chrome or Firefox on desktop for full voice features.';
+        } else if (errorMessage.includes('domain')) {
+          errorMessage = 'Domain not authorized. Contact admin to add this domain to ElevenLabs allowlist.';
+        } else if (errorMessage.includes('agent')) {
+          errorMessage = 'Agent configuration issue. Please check the agent ID and permissions.';
+        }
+        
+        setWidgetError(errorMessage);
       });
 
       el.addEventListener('convai-opened', () => {
@@ -97,7 +118,10 @@ export default function HomePage() {
       }, 3000);
     }
 
-    waitForWidget();
+    // Check audio support first
+    if (checkAudioSupport()) {
+      waitForWidget();
+    }
   }, []);
 
   const openWidget = () => {
@@ -176,8 +200,15 @@ export default function HomePage() {
                 </div>
                 
                 {widgetError && (
-                  <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                    {widgetError}
+                  <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800">
+                    <div className="font-medium mb-1">Voice Assistant Error</div>
+                    <div className="mb-2">{widgetError}</div>
+                    {widgetError.includes('AudioWorklets') && (
+                      <div className="text-xs text-red-500 dark:text-red-400">
+                        <strong>Mobile users:</strong> The voice features work best on desktop browsers. 
+                        You can still use the text-based Actions API below.
+                      </div>
+                    )}
                   </div>
                 )}
                 
@@ -186,14 +217,18 @@ export default function HomePage() {
                     onClick={openWidget} 
                     className="w-full" 
                     variant="outline"
+                    disabled={widgetStatus === 'error'}
                     data-testid="button-open-voice"
                   >
                     <Mic className="w-4 h-4 mr-2" />
-                    Start Voice Conversation
+                    {widgetStatus === 'error' ? 'Voice Unavailable' : 'Start Voice Conversation'}
                   </Button>
                   
                   <div className="text-xs text-gray-500 dark:text-gray-400">
                     💡 Open in external tab for full permissions
+                    {navigator.userAgent.includes('Mobile') && (
+                      <><br />📱 Mobile detected: Desktop recommended for voice features</>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -290,30 +325,35 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle>Available Actions</CardTitle>
               <CardDescription>
-                Test the ElevenLabs Actions API directly
+                Test the ElevenLabs Actions API directly{widgetStatus === 'error' ? ' (Alternative to voice interface)' : ''}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="p-3 border rounded-lg">
-                  <code className="text-sm">add_task</code>
+                <div className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <code className="text-sm font-medium">add_task</code>
                   <p className="text-xs text-gray-500 mt-1">Create tasks with steps and context</p>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">POST /api/actions/add_task</div>
                 </div>
-                <div className="p-3 border rounded-lg">
-                  <code className="text-sm">update_step_status</code>
+                <div className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <code className="text-sm font-medium">update_step_status</code>
                   <p className="text-xs text-gray-500 mt-1">Mark steps as pending/running/done</p>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">POST /api/actions/update_step_status</div>
                 </div>
-                <div className="p-3 border rounded-lg">
-                  <code className="text-sm">get_todo_list</code>
+                <div className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <code className="text-sm font-medium">get_todo_list</code>
                   <p className="text-xs text-gray-500 mt-1">Retrieve filtered task lists</p>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">POST /api/actions/get_todo_list</div>
                 </div>
-                <div className="p-3 border rounded-lg">
-                  <code className="text-sm">kb_attach_doc</code>
+                <div className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <code className="text-sm font-medium">kb_attach_doc</code>
                   <p className="text-xs text-gray-500 mt-1">Upload documents to knowledge base</p>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">POST /api/actions/kb_attach_doc</div>
                 </div>
-                <div className="p-3 border rounded-lg">
-                  <code className="text-sm">post_ops_update</code>
+                <div className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <code className="text-sm font-medium">post_ops_update</code>
                   <p className="text-xs text-gray-500 mt-1">Send operational status updates</p>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">POST /api/actions/post_ops_update</div>
                 </div>
                 <div className="p-3 border rounded-lg">
                   <Button variant="outline" size="sm" className="w-full" asChild>
@@ -322,8 +362,19 @@ export default function HomePage() {
                       API Health
                     </a>
                   </Button>
+                  <div className="text-xs text-gray-500 mt-1">System status endpoint</div>
                 </div>
               </div>
+              
+              {widgetStatus === 'error' && (
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                  <div className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note for mobile users:</strong> While voice features may not work on your device, 
+                    all the core functionality is available through the API endpoints above. The system still 
+                    provides complete task management, memory storage, and workflow automation.
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
