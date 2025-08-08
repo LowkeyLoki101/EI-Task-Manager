@@ -22,11 +22,13 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ Webhook handling for ElevenLabs integration
 - ✅ CORS configuration and mobile-aware error handling
 - ✅ **System Validated**: User confirmation of full functionality on mobile device
+- ✅ **Mobile-First UI**: Simplified interface per user feedback - removed technical status cards, clean single voice interface
 - 🚧 **Next Phase**: Full toolbelt implementation (web search, QR generation, page scaffolding), ElevenLabs KB management
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Interface design: Clean, mobile-first interface without technical backend details exposed to users. Single voice interface only.
 
 ## System Architecture
 
