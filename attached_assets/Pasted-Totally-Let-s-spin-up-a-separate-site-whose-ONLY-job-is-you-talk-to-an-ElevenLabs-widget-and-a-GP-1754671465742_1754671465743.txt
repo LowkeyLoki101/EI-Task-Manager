@@ -1,0 +1,392 @@
+Totally. Let’s spin up a separate site whose ONLY job is:
+you talk to an ElevenLabs widget, and a GPT-5 supervisor quietly turns that into a rolling, layered to-do list — adding tasks, researching, filling forms, saving results, and reporting progress.
+
+Below is a tight, copy-pasteable spec + key files. It’s multi-tenant ready later, but single-tenant for speed today.
+
+⸻
+
+Project: Emergent Task Builder (Replit)
+
+0) Environment (Replit → Secrets)
+
+OPENAI_API_KEY=
+ELEVENLABS_API_KEY=
+BASE_URL=https://<your-repl>.replit.app
+BING_SEARCH_KEY=           # if you want web search
+STORAGE_DIR=/home/runner/storage   # or leave blank to use ./data
+
+
+⸻
+
+1) App shape
+	•	/ – landing + QR to /assistant
+	•	/assistant – page with:
+	•	ElevenLabs widget (liaison)
+	•	Task panel (rolling to-do with zoom in/out)
+	•	Uploads (files/screenshots)
+	•	Builder mode (optional)
+	•	API:
+	•	/api/tasks/* – add/list/update/complete
+	•	/api/files/upload – save files; return URL
+	•	/api/supervisor/ingest – mirror conv. events from widget
+	•	/api/supervisor/agent – GPT-5 planner tick (turns convo → tasks, runs tools)
+	•	/api/tools/web-search – optional web search
+	•	/api/forms/save – generic form saver (JSON blobs tied to tasks)
+	•	/api/actions/run – placeholder “do something” executor (opens room for scripts/zaps)
+
+Storage (MVP): JSON files under ./data/<sessionId>/ (tasks.json, forms.json, files/).
+(You can swap for SQLite/Prisma later with same shapes.)
+
+⸻
+
+2) Data model (MVP JSON)
+
+// tasks.json
+{
+  "tasks": [
+    {
+      "id": "t_123",
+      "title": "Analyze uploaded utility bill",
+      "status": "todo|doing|done|blocked",
+      "priority": "low|med|high",
+      "due": null,
+      "notes": ["short log entries"],
+      "subtasks": [
+        { "id": "st_1", "title": "OCR bill", "status": "done" },
+        { "id": "st_2", "title": "Compute blended rate", "status": "doing" }
+      ],
+      "attachments": [
+        { "name":"bill.pdf", "url":"/files/bill.pdf" }
+      ],
+      "meta": { "labels":["billing"], "createdAt": 0, "updatedAt": 0 }
+    }
+  ]
+}
+
+
+⸻
+
+3) Key pages
+
+pages/index.tsx — landing + QR
+
+import Link from 'next/link';
+import QRCode from 'qrcode.react';
+export default function Home(){
+  const base = process.env.NEXT_PUBLIC_BASE_URL || '';
+  const target = base ? `${base}/assistant` : '/assistant';
+  return (
+    <main style={{padding:24,fontFamily:'system-ui'}}>
+      <h1>Emergent Task Builder</h1>
+      <p>Talk to the voice widget. GPT-5 will build and maintain your rolling to-do.</p>
+      <div style={{display:'flex',gap:24,alignItems:'center',marginTop:16}}>
+        <QRCode value={target} size={180}/>
+        <div><Link href="/assistant">Open assistant</Link></div>
+      </div>
+    </main>
+  );
+}
+
+pages/assistant.tsx — widget + tasks + uploads
+
+import { useEffect, useState } from 'react';
+
+export default function Assistant(){
+  const [builderMode,setBuilderMode]=useState(false);
+  const [sessionId,setSessionId]=useState('');
+  const [tasks,setTasks]=useState<any[]>([]);
+  const slug='task-builder'; // static slug for this site
+
+  // #Instructions: generate or load a sessionId
+  useEffect(()=>{
+    const s=localStorage.getItem('ei_session')||`s_${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem('ei_session',s); setSessionId(s);
+  },[]);
+
+  // Poll tasks
+  useEffect(()=>{
+    if(!sessionId) return;
+    const i=setInterval(async ()=>{
+      const r=await fetch(`/api/tasks/list?sessionId=${sessionId}`);
+      const j=await r.json(); setTasks(j.tasks||[]);
+    },3000); return ()=>clearInterval(i);
+  },[sessionId]);
+
+  // Poll supervisor tick when builder mode ON
+  useEffect(()=>{
+    if(!builderMode||!sessionId) return;
+    const i=setInterval(()=> fetch(`/api/supervisor/agent?sessionId=${sessionId}&slug=${slug}`), 8000);
+    return ()=>clearInterval(i);
+  },[builderMode,sessionId]);
+
+  // Mock EleventLabs widget box
+  async function mirror(text:string, role='user'){
+    await fetch('/api/supervisor/ingest',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ sessionId, slug, evt:{type:'transcript',role,text} })
+    });
+  }
+
+  return (
+    <main style={{padding:24,fontFamily:'system-ui'}}>
+      <h1>Assistant</h1>
+      <label><input type="checkbox" checked={builderMode} onChange={e=>setBuilderMode(e.target.checked)}/> Builder Mode</label>
+
+      <section style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginTop:16}}>
+        <div style={{border:'1px solid #ddd',borderRadius:12,p:16}}>
+          <h3>Voice Widget (placeholder)</h3>
+          <button onClick={()=>mirror(prompt('Say something to the voice agent:')||'')}>Send utterance</button>
+          <p style={{fontSize:12,opacity:.7}}>Replace this with the real ElevenLabs widget; call /ingest on transcript events.</p>
+        </div>
+
+        <div style={{border:'1px solid #ddd',borderRadius:12,p:16}}>
+          <h3>Upload files</h3>
+          <input type="file" onChange={async (e)=>{
+            const f=e.target.files?.[0]; if(!f||!sessionId) return;
+            const fd=new FormData(); fd.append('file',f); fd.append('sessionId',sessionId);
+            const r=await fetch('/api/files/upload',{method:'POST',body:fd});
+            const j=await r.json(); alert('Uploaded: '+j.url);
+            await mirror(`I uploaded a file: ${j.url}`);
+          }}/>
+        </div>
+      </section>
+
+      <section style={{marginTop:16,border:'1px solid #ddd',borderRadius:12,padding:16}}>
+        <h3>Tasks</h3>
+        <button onClick={async ()=>{
+          const title=prompt('New task title'); if(!title||!sessionId) return;
+          await fetch('/api/tasks/add',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({sessionId,title})
+          });
+        }}>+ Add</button>
+        <ul>
+          {tasks.map(t=>(
+            <li key={t.id}>
+              <b>[{t.status}]</b> {t.title}
+              <button onClick={()=>fetch('/api/tasks/update',{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({sessionId,id:t.id,status:'done'})
+              })}>Done</button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </main>
+  );
+}
+
+
+⸻
+
+4) API — tasks (JSON storage)
+
+pages/api/tasks/list.ts
+
+import fs from 'fs'; import path from 'path';
+const dir=process.env.STORAGE_DIR||path.join(process.cwd(),'data');
+
+export default async function handler(req,res){
+  const {sessionId}=req.query as any; if(!sessionId) return res.status(400).json({error:'sessionId'});
+  const f=path.join(dir,sessionId,'tasks.json');
+  try{ const j=JSON.parse(fs.readFileSync(f,'utf8')); return res.status(200).json(j); }
+  catch{ return res.status(200).json({tasks:[]}); }
+}
+
+pages/api/tasks/add.ts
+
+import fs from 'fs'; import path from 'path'; import {randomUUID} from 'crypto';
+const dir=process.env.STORAGE_DIR||path.join(process.cwd(),'data');
+
+function load(sessionId:string){ const d=path.join(dir,sessionId); fs.mkdirSync(d,{recursive:true});
+  const f=path.join(d,'tasks.json'); try{return JSON.parse(fs.readFileSync(f,'utf8'));}catch{return {tasks:[]}}}
+function save(sessionId:string,data:any){ const d=path.join(dir,sessionId); fs.mkdirSync(d,{recursive:true});
+  fs.writeFileSync(path.join(d,'tasks.json'),JSON.stringify(data,null,2));}
+
+export default async function handler(req,res){
+  if(req.method!=='POST') return res.status(405).end();
+  const {sessionId,title}=req.body||{}; if(!sessionId||!title) return res.status(400).json({error:'sessionId,title'});
+  const data=load(sessionId);
+  data.tasks.push({id:randomUUID(),title,status:'todo',priority:'med',notes:[],subtasks:[],attachments:[],meta:{createdAt:Date.now(),updatedAt:Date.now()}});
+  save(sessionId,data); return res.status(200).json({ok:true});
+}
+
+pages/api/tasks/update.ts
+
+import fs from 'fs'; import path from 'path';
+const dir=process.env.STORAGE_DIR||path.join(process.cwd(),'data');
+const f=(s:string)=>path.join(dir,s,'tasks.json');
+
+export default async function handler(req,res){
+  if(req.method!=='POST') return res.status(405).end();
+  const {sessionId,id,...patch}=req.body||{}; if(!sessionId||!id) return res.status(400).json({error:'sessionId,id'});
+  const file=f(sessionId); let data={tasks:[] as any[]}; try{data=JSON.parse(fs.readFileSync(file,'utf8'));}catch{}
+  const t=data.tasks.find(x=>x.id===id); if(!t) return res.status(404).json({error:'task not found'});
+  Object.assign(t,patch); t.meta={...(t.meta||{}),updatedAt:Date.now()};
+  fs.mkdirSync(path.dirname(file),{recursive:true}); fs.writeFileSync(file,JSON.stringify(data,null,2));
+  return res.status(200).json({ok:true});
+}
+
+
+⸻
+
+5) API — uploads
+
+pages/api/files/upload.ts
+
+import fs from 'fs'; import path from 'path';
+export const config={api:{bodyParser:false}};
+export default async function handler(req,res){
+  if(req.method!=='POST') return res.status(405).end();
+  const boundary=req.headers['content-type']?.split('boundary=')[1]; if(!boundary) return res.status(400).json({error:'formdata'});
+  const chunks:Buffer[]=[]; for await (const c of req) chunks.push(c as Buffer);
+  const body=Buffer.concat(chunks).toString('binary');
+  const m=/name="sessionId"\r\n\r\n([^\r\n]+)/.exec(body); const sessionId=m?.[1]; if(!sessionId) return res.status(400).json({error:'sessionId'});
+  const fn=/filename="([^"]+)"/.exec(body)?.[1]||'upload.bin';
+  const start=body.indexOf('\r\n\r\n',body.indexOf('filename="'))+4; const end=body.indexOf(`\r\n--${boundary}--`);
+  const fileBuf=Buffer.from(body.slice(start,end),'binary');
+  const dir=path.join(process.cwd(),'data',sessionId,'files'); fs.mkdirSync(dir,{recursive:true});
+  const filePath=path.join(dir,fn); fs.writeFileSync(filePath,fileBuf);
+  res.status(200).json({url:`/data/${sessionId}/files/${encodeURIComponent(fn)}`});
+}
+
+In Replit, static /data might not auto-serve. For MVP, you can add a simple file server or return signed download via another API. For now, URL is a handle you can pass to tools.
+
+⸻
+
+6) Supervisor mid-layer
+
+pages/api/supervisor/ingest.ts
+
+const mem:Record<string,any[]>=(global as any).__INGEST__ ?? ((global as any).__INGEST__={});
+export default async function handler(req,res){
+  if(req.method!=='POST') return res.status(405).end();
+  const {sessionId,slug,evt}=req.body||{};
+  if(!sessionId||!evt) return res.status(400).json({error:'sessionId,evt'});
+  const key=`${sessionId}:${slug}`; mem[key]??=[]; mem[key].push({ts:Date.now(),...evt});
+  res.status(200).json({ok:true});
+}
+export function readEvents(sessionId:string,slug:string){ const key=`${sessionId}:${slug}`; const m:(any)=(global as any).__INGEST__; return m[key]||[]; }
+
+pages/api/supervisor/agent.ts — GPT-5 planner tick
+
+import OpenAI from 'openai'; import {readEvents} from './ingest';
+import fs from 'fs'; import path from 'path';
+const openai=new OpenAI({apiKey:process.env.OPENAI_API_KEY!});
+const dir=process.env.STORAGE_DIR||path.join(process.cwd(),'data');
+
+const SYSTEM=`
+You are the Task Supervisor.
+Turn conversation into a rolling to-do list with layered subtasks.
+When the user implies a task, create it. When details emerge, update it.
+Use tools when asked: web_search (for links), save_form (to persist structured data), run_action (placeholder exec).
+Never invent sensitive data. Be brief and explicit.
+Return JSON: { actions: [ {type:'add'|'update'|'note', task?:{...}, id? } ], questions?:[], notes?:[] }.
+`.trim();
+
+export default async function handler(req,res){
+  const {sessionId,slug}=req.query as any;
+  if(!sessionId) return res.status(400).json({error:'sessionId'});
+  const events=readEvents(sessionId,slug||'task-builder').slice(-30);
+  const convo=events.map(e=>`${e.role||'user'}: ${e.text||e.type}`).join('\n');
+
+  const rsp=await openai.chat.completions.create({
+    model:'gpt-5',
+    messages:[
+      {role:'system',content:SYSTEM},
+      {role:'user',content:`Recent conversation:\n${convo}\n\nCurrent tasks (titles only OK). Produce JSON plan as instructed.`}
+    ],
+    temperature:0.2
+  });
+
+  let plan:any={}; try{ plan=JSON.parse(rsp.choices[0].message.content||'{}'); }catch{}
+  // Apply plan to storage
+  const taskFile=path.join(dir,sessionId,'tasks.json');
+  fs.mkdirSync(path.dirname(taskFile),{recursive:true});
+  let data={tasks:[] as any[]}; try{ data=JSON.parse(fs.readFileSync(taskFile,'utf8')); }catch{}
+  for(const a of (plan.actions||[])){
+    if(a.type==='add' && a.task){
+      a.task.id = a.task.id || `t_${Math.random().toString(36).slice(2)}`;
+      a.task.status = a.task.status||'todo';
+      a.task.meta = {createdAt:Date.now(),updatedAt:Date.now()};
+      a.task.subtasks = a.task.subtasks||[]; a.task.notes=a.task.notes||[];
+      data.tasks.push(a.task);
+    }
+    if(a.type==='update' && a.id){
+      const t=data.tasks.find(x=>x.id===a.id); if(t){ Object.assign(t,a.patch||{}); t.meta.updatedAt=Date.now(); }
+    }
+    if(a.type==='note' && a.id && a.text){
+      const t=data.tasks.find(x=>x.id===a.id); if(t){ t.notes.push(a.text); t.meta.updatedAt=Date.now(); }
+    }
+  }
+  fs.writeFileSync(taskFile,JSON.stringify(data,null,2));
+  res.status(200).json({ok:true, plan});
+}
+
+
+⸻
+
+7) Optional tools
+
+pages/api/tools/web-search.ts
+
+export default async function handler(req,res){
+  const {q}=req.query as any; if(!q) return res.status(400).json({error:'q required'});
+  // TODO: call Bing/SerpAPI with BING_SEARCH_KEY; MVP mock:
+  res.status(200).json({items:[{title:'Mock result',url:'https://example.com',snippet:'…'}]});
+}
+
+pages/api/forms/save.ts
+
+import fs from 'fs'; import path from 'path';
+const dir=process.env.STORAGE_DIR||path.join(process.cwd(),'data');
+export default async function handler(req,res){
+  if(req.method!=='POST') return res.status(405).end();
+  const {sessionId,formId,payload}=req.body||{};
+  if(!sessionId||!formId||!payload) return res.status(400).json({error:'sessionId,formId,payload'});
+  const fp=path.join(dir,sessionId,'forms.json'); let data:any={forms:{}};
+  try{data=JSON.parse(fs.readFileSync(fp,'utf8'));}catch{}
+  data.forms[formId]=payload; fs.mkdirSync(path.dirname(fp),{recursive:true});
+  fs.writeFileSync(fp,JSON.stringify(data,null,2)); res.status(200).json({ok:true});
+}
+
+pages/api/actions/run.ts
+
+export default async function handler(req,res){
+  if(req.method!=='POST') return res.status(405).end();
+  const {action,params}=req.body||{};
+  // TODO: integrate scripts/zaps. MVP: echo.
+  return res.status(200).json({ok:true,action,params,output:"(mock) executed"});
+}
+
+
+⸻
+
+8) How it behaves
+	•	User speaks to the ELEVENLABS widget → your component calls /api/supervisor/ingest with the transcript.
+	•	Every 8s, /api/supervisor/agent runs GPT-5 → emits a JSON plan like:
+
+{
+  "actions":[
+    {"type":"add","task":{"title":"Research breaker reset steps","priority":"med","subtasks":[{"id":"st1","title":"Open manual"},{"id":"st2","title":"Summarize"}]}},
+    {"type":"note","id":"t_abc","text":"User says heat advisory in forecast."}
+  ],
+  "questions":["Do you want me to create a checklist and text it to you?"]
+}
+
+
+	•	The plan is applied to tasks.json.
+	•	Task panel refreshes and shows updated list; uploads get attached; forms saved; web search can be called when needed.
+
+⸻
+
+9) Next wins (when you’re ready)
+	•	Swap JSON for SQLite + Prisma
+	•	Replace placeholder widget with the real ElevenLabs SDK (stream transcripts to /ingest)
+	•	Add auth (so sessions tie to accounts)
+	•	Add calendar/reminders (ics or Google) as a tool
+	•	Add playbooks (repeatable task templates) the supervisor can instantiate
+
+⸻
+
+If you want, I’ll now drop in:
+	•	a small task “zoom” API (/api/tasks/summary and /api/tasks/detail/:id) and
+	•	tweak the Supervisor so it chooses zoom level on demand (e.g., “zoom out the day”, “zoom in on bill analysis”).

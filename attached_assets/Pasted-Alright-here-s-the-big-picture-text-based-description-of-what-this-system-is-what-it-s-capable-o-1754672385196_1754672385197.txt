@@ -1,0 +1,171 @@
+Alright — here’s the big-picture, text-based description of what this system is, what it’s capable of, and how it’s meant to feel from the user’s point of view — with real-world examples spanning different tools, file types, and modes.
+
+⸻
+
+What This Is
+
+This is a self-updating, conversational development and automation platform.
+At its core:
+	•	You have an agent (GPT-5 in Agent Mode) connected to an ElevenLabs voice/text widget.
+	•	The agent isn’t just talking — it has tools that let it:
+	•	Manage rolling to-do lists and workflows.
+	•	Execute actions (search, scrape, fetch data, run scripts, process files, send messages).
+	•	Propose new tools or features by editing the platform’s own code in a safe, reviewable way.
+	•	All of this runs in a web app on Replit, with proposal/preview/approval workflows so changes are safe, reversible, and auditable.
+
+The result:
+You can have a real conversation with your platform about what you want it to do right now, and it will either do it or teach itself how to do it by updating its own code (subject to your approval).
+
+⸻
+
+Core Features
+
+1. Conversational Task & Workflow Management
+	•	Rolling To-Do List: Add, complete, update tasks through natural conversation.
+	•	Layered Tasks: Tasks can have sub-tasks, deadlines, and reminders.
+	•	Zoom In/Out: Ask for a high-level summary of progress or the gritty details.
+	•	Contextual Actions: Attach files, links, or resources directly to a task.
+
+💡 Example:
+User: “Add a task to submit my taxes by April 15 and attach the IRS PDF guide.”
+Agent: Adds the task, downloads the IRS PDF, attaches it, and sets a reminder for April 10.
+
+⸻
+
+2. Multi-Tool Execution
+
+The agent can invoke server-side tools that perform actions the model itself can’t natively do. Examples:
+	•	Web Search: Finds current info or how-tos.
+	•	YouTube Search: Attaches relevant tutorial videos to tasks.
+	•	Weather Lookup: Pulls local forecast data.
+	•	File Processing: OCR PDFs, extract CSV data, parse JSON.
+	•	Communications: Send SMS via Twilio, email via SendGrid.
+	•	Automation: Fill and submit forms with Playwright scripts.
+
+💡 Example:
+User: “Remind me to change the cabin filter in my 2017 Corolla and give me a video.”
+Agent: Creates the task with a due date, finds a top YouTube tutorial, and sets the system to open that video in a modal when the reminder hits.
+
+⸻
+
+3. File Uploads & Data Handling
+	•	Drag-and-drop or click to upload files in the UI.
+	•	Agent can read, summarize, and act on files.
+	•	Can chain uploads to other actions:
+	•	Summarize a meeting transcript.
+	•	Extract a table from a PDF and email it.
+	•	Append the contents to a knowledge base.
+
+💡 Example:
+User uploads a customer CSV → Agent parses it → Creates a report of top 10 customers → Emails it to the sales team.
+
+⸻
+
+4. Code-Updating Agent
+
+If the agent sees it’s missing a capability, it can:
+	1.	Propose a code change with specific files/contents.
+	2.	You review the proposal in /proposals — see affected files, open a preview, and approve/reject.
+	3.	Approved changes are backed up, applied, and logged with rollback support.
+
+Safe editing rules:
+	•	Only allowed in whitelisted directories.
+	•	Must pass through a human approval step.
+	•	Every change is tagged and reversible.
+
+💡 Example:
+User: “I want the assistant to be able to look up package tracking info by UPS code.”
+Agent:
+	•	Notices there’s no trackUPS tool.
+	•	Proposes pages/api/tools/trackUPS.ts and a UI button on /assistant.
+	•	You preview, approve, and it’s live.
+
+⸻
+
+5. Preview & Rollback
+	•	Preview Mode: View the app with proposed changes applied temporarily.
+	•	Approval: Approve changes once you’re happy.
+	•	Rollback: Instantly revert to a tagged backup if the new code fails.
+
+💡 Example:
+You approve a change to add a “Daily Weather Summary” tool, but it causes an error on startup → Click Rollback → Back to the last stable state.
+
+⸻
+
+6. Supervisor/Builder Intelligence
+
+The GPT-5 agent is the supervisor — it:
+	•	Decides which tool to use.
+	•	Decides when to propose new tools/code.
+	•	Keeps track of the conversation and task state.
+	•	Posts short status updates in chat when it makes progress.
+
+It also respects:
+	•	Human gatekeeping for sensitive actions (e.g., sending SMS/emails).
+	•	Branding/tenant boundaries if running in a multi-client environment.
+
+⸻
+
+Workflow From the User’s Perspective
+	1.	Open the App
+	•	You see your assistant chat, tasks panel, and upload area.
+	•	A “Builder Mode” toggle controls whether the agent can propose code changes.
+	2.	Have a Conversation
+	•	Speak or type what you want — from “summarize this PDF” to “add a tool for XYZ.”
+	•	The agent either:
+	•	Executes the request with existing tools.
+	•	Proposes a new capability with code changes.
+	3.	Review Proposals
+	•	New proposals appear in /proposals with:
+	•	Commit-style message.
+	•	List of changed files.
+	•	Preview link.
+	4.	Approve or Reject
+	•	Approve: The system backs up the current code, applies the changes, logs them.
+	•	Reject: Deletes the proposal folder.
+	5.	Use the New Feature
+	•	Once approved, the agent can immediately use the new tool or UI element.
+	6.	Rollback if Needed
+	•	If anything breaks, go to /proposals → select a backup → Restore.
+
+⸻
+
+Real-World Scenarios
+
+Data Workflow
+	•	Upload last month’s utility bills (PDF).
+	•	Agent OCRs → Extracts usage → Compares to solar production data in CSV.
+	•	Generates a savings report PDF.
+	•	Emails it to a client.
+
+Self-Expansion
+	•	You say: “I want a button to auto-fill a quote form with our client’s info from the CRM.”
+	•	Agent writes the Playwright script and a /api/tools/fillQuoteForm.ts.
+	•	Proposes code — you approve.
+	•	Now you can say: “Fill a quote for client #123” and it does it.
+
+Training a New Capability
+	•	Need a custom AI prompt for writing marketing emails.
+	•	Agent creates prompts/emailMarketer.md and updates system prompt to include it.
+	•	After approval, you can ask: “Write a product launch email for our solar pergola” and get a consistent style every time.
+
+Safety-Critical Rollbacks
+	•	Agent adds a new chart library, but it causes a UI crash.
+	•	You click Rollback in backups — back to stable code in seconds.
+
+⸻
+
+The Feel We’re Aiming For
+
+It should feel like:
+	•	You’re the product manager: you describe what you want, the agent either does it now or builds the capability to do it.
+	•	Everything is reversible: proposals, previews, backups give you confidence to say “yes” without fear.
+	•	Context is alive: tasks, files, conversation all feed into the agent’s next step.
+	•	Multi-modal: text, voice, files, videos, and code all move through the same conversational interface.
+
+⸻
+
+If you want, I can also draft a capability map that organizes all these features into Now, Near-term, and Future so you can prioritize development and tool onboarding.
+That would make it dead simple for a dev (or the agent itself) to know what’s ready vs. what needs building.
+
+Do you want me to do that?

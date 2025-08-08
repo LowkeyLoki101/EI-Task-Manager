@@ -1,0 +1,268 @@
+Sweet — here are the drop-in files you asked for so you can review/approve code proposals, preview them, and let the Supervisor call the SCM tools. All snippets include #Instructions and are copy-paste ready.
+
+⸻
+
+pages/proposals/index.tsx
+
+A tiny dashboard to review proposals, approve/reject, and rollback to a backup tag.
+
+// pages/proposals/index.tsx
+// #Instructions
+// - Lists ./proposals and ./backups folders
+// - Lets you Approve (apply), Reject (delete), and Rollback (restore tag)
+// - Works with the /api/dev/* routes we created earlier
+
+import { useEffect, useState } from "react";
+
+type Proposal = { id: string; message: string; diffSummary: string[]; previewUrl: string; createdAt: number };
+type Backup = { tag: string; time: string };
+
+export default function ProposalsPage() {
+  const [propsList, setPropsList] = useState<Proposal[]>([]);
+  const [backups, setBackups] = useState<Backup[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  async function refresh() {
+    const p = await fetch("/api/dev/list").then(r => r.json());
+    setPropsList(p.proposals || []);
+    setBackups(p.backups || []);
+  }
+  useEffect(() => { refresh(); }, []);
+
+  async function approve(id: string) {
+    setLoading(true);
+    const r = await fetch("/api/dev/approve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    if (!r.ok) alert("approve failed");
+    await refresh(); setLoading(false);
+  }
+  async function reject(id: string) {
+    setLoading(true);
+    const r = await fetch("/api/dev/reject", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    if (!r.ok) alert("reject failed");
+    await refresh(); setLoading(false);
+  }
+  async function rollback(tag: string) {
+    if (!confirm(`Rollback to ${tag}?`)) return;
+    setLoading(true);
+    const r = await fetch("/api/dev/rollback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tag }) });
+    if (!r.ok) alert("rollback failed");
+    await refresh(); setLoading(false);
+  }
+
+  return (
+    <main style={{ padding: 24, fontFamily: "system-ui" }}>
+      <h1>Agent Proposals & Rollbacks</h1>
+      {loading && <p>Working…</p>}
+
+      <section style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
+        <div>
+          <h2>Open Proposals</h2>
+          {!propsList.length && <p>No proposals yet.</p>}
+          {propsList.map(p => (
+            <div key={p.id} style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <b>{p.id}</b>
+                <small>{new Date(p.createdAt).toLocaleString()}</small>
+              </div>
+              <p>{p.message}</p>
+              <details>
+                <summary>Files ({p.diffSummary.length})</summary>
+                <ul>{p.diffSummary.map(f => <li key={f}><code>{f}</code></li>)}</ul>
+              </details>
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <a href={p.previewUrl} target="_blank" rel="noreferrer">Preview</a>
+                <button onClick={() => approve(p.id)}>Approve</button>
+                <button onClick={() => reject(p.id)} style={{ opacity: 0.8 }}>Reject</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <h2>Backups</h2>
+          {!backups.length && <p>No backups yet.</p>}
+          <ul>
+            {backups.map(b => (
+              <li key={b.tag} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                <code>{b.tag}</code> <small style={{ opacity: 0.7 }}>{b.time}</small>
+                <button onClick={() => rollback(b.tag)} style={{ marginLeft: "auto" }}>Restore</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+
+⸻
+
+pages/api/dev/list.ts
+
+Lists proposals/backups for the UI above.
+
+// pages/api/dev/list.ts
+// #Instructions
+// - Reads ./proposals/*/meta.json and ./backups/*
+// - Returns arrays for the dashboard
+
+import fs from "fs"; import path from "path";
+
+export default async function handler(req, res) {
+  const root = process.cwd();
+  const propDir = path.join(root, "proposals");
+  const bakDir = path.join(root, "backups");
+  const proposals = [];
+  if (fs.existsSync(propDir)) {
+    for (const id of fs.readdirSync(propDir)) {
+      const metaPath = path.join(propDir, id, "meta.json");
+      if (fs.existsSync(metaPath)) {
+        try {
+          const m = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+          proposals.push({ id: m.id, message: m.message, diffSummary: m.diffSummary || [], previewUrl: m.previewUrl, createdAt: m.createdAt || Date.now() });
+        } catch {}
+      }
+    }
+  }
+  const backups = [];
+  if (fs.existsSync(bakDir)) {
+    for (const tag of fs.readdirSync(bakDir)) {
+      backups.push({ tag, time: new Date(Number(tag.replace("rel_", "")) || Date.now()).toLocaleString() });
+    }
+  }
+  res.status(200).json({ proposals, backups });
+}
+
+
+⸻
+
+pages/api/dev/reject.ts
+
+Deletes a proposal folder.
+
+// pages/api/dev/reject.ts
+import fs from "fs"; import path from "path";
+export default async function handler(req, res){
+  if (req.method !== "POST") return res.status(405).end();
+  const { id } = req.body || {};
+  if (!id) return res.status(400).json({ error: "id" });
+  const dir = path.join(process.cwd(), "proposals", id);
+  if (!fs.existsSync(dir)) return res.status(404).json({ error: "not found" });
+  fs.rmSync(dir, { recursive: true, force: true });
+  res.status(200).json({ ok: true });
+}
+
+
+⸻
+
+pages/preview/[id].tsx
+
+Simple preview page that loads your app with the proposal overlay (your code should check ?preview=<id> or this route’s param).
+
+// pages/preview/[id].tsx
+// #Instructions
+// - Use this page as a stable URL to view a proposal
+// - Your server code (e.g., lib/previewLoader) should read from proposals/<id>/ first
+import { useRouter } from "next/router";
+
+export default function Preview() {
+  const { query } = useRouter();
+  const id = String(query.id || "");
+  return (
+    <main style={{ padding: 24, fontFamily: "system-ui" }}>
+      <h1>Preview: {id}</h1>
+      <p>This page is using proposal overlay <code>{id}</code>. Your components should resolve files from <code>proposals/{id}</code> first.</p>
+      <p>Tip: Add a banner in your layout if <code>preview</code> is present.</p>
+    </main>
+  );
+}
+
+If you’re using a helper like loadFileWithPreview(relPath, previewId), pass previewId = router.query.id as string.
+
+⸻
+
+Supervisor tool relay (SCM tools)
+
+Add these tool schemas and handlers to your Supervisor /api/supervisor/agent route.
+
+// Inside your tools array:
+{
+  type: "function",
+  function: {
+    name: "scm_propose_change",
+    description: "Create a code change proposal with file edits",
+    parameters: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+        edits: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { path: { type: "string" }, content: { type: "string" } },
+            required: ["path", "content"]
+          }
+        }
+      },
+      required: ["message", "edits"]
+    }
+  }
+},
+{
+  type: "function",
+  function: {
+    name: "scm_get_status",
+    description: "Fetch proposal status/meta",
+    parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] }
+  }
+},
+{
+  type: "function",
+  function: {
+    name: "scm_request_approval",
+    description: "Ask human to review proposal; posts a link into chat",
+    parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] }
+  }
+}
+
+Tool call dispatch in your callTool():
+
+case "scm_propose_change": {
+  const r = await fetch(`${process.env.BASE_URL}/api/dev/propose`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(args)
+  });
+  return await r.json();
+}
+case "scm_get_status": {
+  const r = await fetch(`${process.env.BASE_URL}/api/dev/status?id=${encodeURIComponent(args.id)}`);
+  return await r.json();
+}
+case "scm_request_approval": {
+  // Drop a message into the chat with a link to /proposals
+  const link = `${process.env.BASE_URL}/proposals`;
+  return await fetch(`${process.env.BASE_URL}/api/supervisor/post-message`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug: args.id, message: `[Builder] Review proposal ${args.id} → ${link}` })
+  }).then(r=>r.json());
+}
+
+And nudge the system prompt so GPT-5 uses these safely:
+
+#Instructions (Supervisor SCM)
+- When missing functionality requires code, draft minimal diffs and call scm_propose_change with the files you need.
+- Include a clear commit-style message explaining the change and why it’s needed.
+- After proposing, call scm_request_approval so a human can review in /proposals.
+- Do NOT attempt to approve or rollback; humans control those.
+
+
+⸻
+
+Quick test (5 min)
+	1.	Go to /proposals — should show “No proposals yet.”
+	2.	Ask your Supervisor to “add a /api/tools/echo route and a button on /assistant to call it.”
+	3.	It should call scm_propose_change → you’ll see a new item on /proposals.
+	4.	Click Preview to sanity-check, then Approve.
+	5.	If busted, Rollback to the previous tag.
+
+Want the optional extras (Git branch + PR mode, or a real file diff viewer)? Say the word and I’ll bolt them on.

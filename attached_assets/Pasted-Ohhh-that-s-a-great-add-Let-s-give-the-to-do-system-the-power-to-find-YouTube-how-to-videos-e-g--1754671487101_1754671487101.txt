@@ -1,0 +1,259 @@
+Ohhh that’s a great add. Let’s give the to-do system the power to find YouTube how-to videos (e.g., “change a tire for a 2018 Honda Civic”) and pop a video window right when a task is due.
+
+Below is drop-in code with #Instructions so you can paste into Replit.
+
+⸻
+
+1) Extend the task model (videos + reminders)
+
+Your tasks already live in data/<sessionId>/tasks.json. We’ll add:
+	•	dueAt (ms timestamp)
+	•	remind (boolean)
+	•	resources[] (e.g., YouTube results)
+
+Example task object:
+
+{
+  "id": "t_123",
+  "title": "Change tire — 2018 Honda Civic",
+  "status": "todo",
+  "dueAt": 1733718000000,
+  "remind": true,
+  "resources": [
+    {
+      "type": "youtube",
+      "id": "dQw4w9WgXcQ",
+      "title": "How to change a tire (2018 Civic)",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    }
+  ],
+  "meta": { "createdAt": 0, "updatedAt": 0 }
+}
+
+You don’t need a migration—just let tasks pick up these fields as they’re added.
+
+⸻
+
+2) YouTube Search tool (server-side)
+
+Use the YouTube Data API v3.
+Replit Secrets: YOUTUBE_API_KEY=<your key>
+
+Create pages/api/tools/youtubeSearch.ts:
+
+// pages/api/tools/youtubeSearch.ts
+// #Instructions
+// 1) Set YOUTUBE_API_KEY in Secrets.
+// 2) GET /api/tools/youtubeSearch?q=<query>&max=5
+// 3) Returns compact results the LLM/UI can consume.
+
+import type { NextApiRequest, NextApiResponse } from "next";
+
+const KEY = process.env.YOUTUBE_API_KEY || "";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { q, max = "5" } = req.query as any;
+    if (!KEY) return res.status(400).json({ error: "Missing YOUTUBE_API_KEY" });
+    if (!q) return res.status(400).json({ error: "q required" });
+
+    const url = new URL("https://www.googleapis.com/youtube/v3/search");
+    url.searchParams.set("part", "snippet");
+    url.searchParams.set("type", "video");
+    url.searchParams.set("maxResults", String(max));
+    url.searchParams.set("q", String(q));
+    url.searchParams.set("key", KEY);
+
+    const r = await fetch(url.toString());
+    if (!r.ok) return res.status(r.status).json({ error: "youtube error" });
+    const j = await r.json();
+
+    const items = (j.items || []).map((it: any) => ({
+      id: it.id?.videoId,
+      title: it.snippet?.title,
+      url: `https://www.youtube.com/watch?v=${it.id?.videoId}`,
+      channel: it.snippet?.channelTitle,
+      thumb: it.snippet?.thumbnails?.medium?.url
+    }));
+
+    res.status(200).json({ items });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+}
+
+
+⸻
+
+3) Video modal component (frontend)
+
+Create components/VideoModal.tsx:
+
+// components/VideoModal.tsx
+// #Instructions
+// Simple modal that embeds a YouTube video by id.
+
+import { useEffect } from "react";
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  video?: { id: string; title?: string };
+};
+
+export default function VideoModal({ open, onClose, video }: Props) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    if (open) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open || !video?.id) return null;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+      display: "grid", placeItems: "center", zIndex: 50
+    }}>
+      <div style={{ background: "#fff", borderRadius: 12, width: "min(900px, 95vw)", padding: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h3 style={{ margin: 0 }}>{video.title || "How-to video"}</h3>
+          <button onClick={onClose}>✕</button>
+        </div>
+        <div style={{ marginTop: 12, position: "relative", paddingBottom: "56.25%", height: 0 }}>
+          <iframe
+            src={`https://www.youtube.com/embed/${video.id}`}
+            title={video.title || "YouTube video"}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "0" }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+4) Assistant page: add “Find YouTube” and auto-open at due time
+
+Open pages/assistant.tsx and:
+	•	Import modal & add state
+	•	Add a Find Video button per task
+	•	Add a tiny scheduler that opens the video at dueAt
+
+// at top:
+import VideoModal from '@/components/VideoModal';
+
+export default function Assistant(){
+  // ...
+  const [videoOpen,setVideoOpen]=useState(false);
+  const [video,setVideo]=useState<{id:string;title?:string}>();
+
+  // --- Find video helper ---
+  async function findVideoForTask(task:any){
+    const makeModelYear = prompt("Describe the exact car (e.g., '2018 Honda Civic EX')", task.title || "");
+    if (!makeModelYear) return;
+    const q = `how to change a tire ${makeModelYear}`;
+    const r = await fetch(`/api/tools/youtubeSearch?q=${encodeURIComponent(q)}&max=5`);
+    const j = await r.json();
+    if (!j.items?.length) return alert("No videos found.");
+    const pick = j.items[0]; // #Instructions: for MVP take top; later offer a chooser UI.
+    // open modal now
+    setVideo({ id: pick.id, title: pick.title });
+    setVideoOpen(true);
+    // optionally: attach to the task as a resource
+    await fetch('/api/tasks/update', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        sessionId,
+        id: task.id,
+        patch: { resources: [...(task.resources||[]), { type:'youtube', id: pick.id, title: pick.title, url: pick.url }] }
+      })
+    });
+  }
+
+  // --- Scheduler: check reminders every 20s ---
+  useEffect(()=>{
+    if(!sessionId) return;
+    const timer = setInterval(()=>{
+      (async ()=>{
+        const r = await fetch(`/api/tasks/list?sessionId=${sessionId}`);
+        const j = await r.json();
+        const now = Date.now();
+        // find the first due task with a youtube resource
+        for (const t of (j.tasks||[])) {
+          if (t.remind && t.dueAt && now >= t.dueAt && (t.resources||[]).some((r:any)=>r.type==='youtube')) {
+            const vid = (t.resources||[]).find((r:any)=>r.type==='youtube');
+            setVideo({ id: vid.id, title: vid.title });
+            setVideoOpen(true);
+            // one-shot reminder: turn off remind
+            await fetch('/api/tasks/update',{
+              method:'POST',headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ sessionId, id: t.id, patch: { remind:false } })
+            });
+            break;
+          }
+        }
+      })();
+    }, 20000);
+    return ()=>clearInterval(timer);
+  },[sessionId]);
+
+  // ... inside return(), under <section> Tasks UI list item:
+  // add a "Find video" and "Set reminder" UI per task
+  // (this is a minimal patch to your existing list)
+}
+
+Inside your <li> that renders each task, add:
+
+<button onClick={()=>findVideoForTask(t)}>Find video</button>
+<button onClick={async ()=>{
+  const when = prompt("Remind at (ISO or minutes from now). e.g., '15' for 15 minutes", "15");
+  if (!when) return;
+  const dueAt = /^\d+$/.test(when) ? (Date.now() + Number(when)*60*1000) : Date.parse(when);
+  await fetch('/api/tasks/update',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ sessionId, id: t.id, patch: { dueAt, remind: true } })
+  });
+}}>Set reminder</button>
+
+At the bottom of the page JSX, add the modal:
+
+<VideoModal open={videoOpen} onClose={()=>setVideoOpen(false)} video={video}/>
+
+
+⸻
+
+5) Let the Supervisor do it automatically (optional, but awesome)
+
+In pages/api/supervisor/agent.ts (your GPT-5 planner tick), let it attach videos when it sees tasks like “change tire” / “replace filter” / etc.:
+	•	When it creates/updates a task, include a sub-action like:
+
+{
+  "type": "update",
+  "id": "t_123",
+  "patch": {
+    "resources": [
+      {"type":"youtube","id":"<videoId>","title":"<title>","url":"https://www.youtube.com/watch?v=<videoId>"}
+    ],
+    "dueAt": 1733718000000,
+    "remind": true
+  }
+}
+
+	•	To get a videoId, the Supervisor can call your youtubeSearch tool (you can expose it similarly to how we exposed web_search before).
+	•	Or keep it user-approved: Supervisor proposes top 3 videos → asks “pick one?” → you store the choice.
+
+⸻
+
+6) Safety & UX tips
+	•	Always allow user override if the chosen video isn’t the right model/year.
+	•	Consider caching video picks per make/model/year so next time it’s instant.
+	•	If reminders need to fire exactly at wall-clock times, you’ll eventually want a server job (cron). For MVP, the tab-based interval works fine.
+
+⸻
+
+If you want, I can add a little chooser UI (thumbnail grid of top 5 videos) instead of auto-picking the top result. It’s ~25 more lines. Want me to drop that in too?

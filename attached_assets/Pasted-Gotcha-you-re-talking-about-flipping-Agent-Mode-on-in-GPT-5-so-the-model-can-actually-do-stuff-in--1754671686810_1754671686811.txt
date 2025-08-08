@@ -1,0 +1,198 @@
+Gotcha—you’re talking about flipping Agent Mode on (in GPT-5) so the model can actually do stuff in a sandbox: browse, run code, write files, call APIs, fill forms—then stitching that with Replit + ElevenLabs. Here’s how to use it and how to patch the gaps where the built-in “virtual environment” falls short.
+
+⸻
+
+What “Agent Mode” gives you
+
+Think of it as a tool-calling runtime with a sandbox:
+	•	Built-ins (varies by provider/plan): web browsing/fetch, code execution, file I/O, “computer use”/headless browser.
+	•	Tool schema: you expose server endpoints (or local actions) as JSON-callable tools; the model chooses when to call them.
+	•	State: model memory + files it’s created in the sandbox + conversation context.
+
+You’ll wire ElevenLabs widget → conversational layer → Agent Mode (GPT-5) with a tool registry → your actions proxy on Replit. The model is the planner; your proxy actually does the work.
+
+⸻
+
+When to use Agent Mode vs. Replit scripts
+
+Use Agent Mode for:
+	•	Short, interactive steps: fetch page, parse table, draft email, generate file, quick research.
+	•	Iterative reasoning loops: “Try A → didn’t work → adjust → try B.”
+
+Use Replit jobs/scripts (outside Agent Mode) for:
+	•	Long-running or flaky tasks (hours, big downloads, large OCR).
+	•	Anything needing deterministic pipelines (ETL, PDF batch, nightly sync).
+	•	Actions needing headless browsers with strict control (Playwright flows) or 2FA.
+
+You’ll expose those Replit jobs as tools the agent can invoke.
+
+⸻
+
+Minimal wiring you need
+
+1) Define an Actions Proxy (one API the model calls)
+	•	Route: POST /api/agent/actions
+	•	Input: { sessionId, action: "web.search"|"files.write"|"run.python"|..., args: {...} }
+	•	Output: { ok, data, error? }
+	•	The proxy dispatches to safe implementations (server-side), logs, and returns.
+
+// /pages/api/agent/actions.ts
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end();
+  const { sessionId, action, args } = req.body || {};
+  try {
+    switch (action) {
+      case 'web.search':      return res.json(await webSearch(args));
+      case 'web.fetch':       return res.json(await webFetch(args));
+      case 'files.write':     return res.json(await filesWrite(sessionId, args));
+      case 'files.read':      return res.json(await filesRead(sessionId, args));
+      case 'run.node':        return res.json(await runNode(args));       // small, time-boxed
+      case 'run.python':      return res.json(await runPython(args));     // small, time-boxed
+      case 'playwright.flow': return res.json(await runPlaywrightFlow(args)); // “computer use”
+      case 'queue.job':       return res.json(await enqueueJob(args));    // long running
+      default: return res.status(400).json({ ok:false, error:'unknown_action' });
+    }
+  } catch (e:any) {
+    return res.status(500).json({ ok:false, error: e.message });
+  }
+}
+
+2) Register tools to GPT-5 (Agent Mode)
+
+Give the model a tool manifest (function schema). Example:
+
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "web_search",
+      "description": "Search the web and return top results.",
+      "parameters": { "type":"object", "properties":{"q":{"type":"string"}}, "required":["q"] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "files_write",
+      "description": "Write text to a file in the session workspace.",
+      "parameters": {
+        "type":"object",
+        "properties":{"path":{"type":"string"},"content":{"type":"string"}},
+        "required":["path","content"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "youtube_search",
+      "description": "Find how-to videos; return videoId/title/url.",
+      "parameters": { "type":"object","properties":{"q":{"type":"string"},"max":{"type":"number"}}, "required":["q"] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "queue_job",
+      "description": "Submit a long-running job (ETL/OCR/batch). Returns jobId.",
+      "parameters": { "type":"object","properties":{"kind":{"type":"string"},"payload":{"type":"object"}}, "required":["kind","payload"] }
+    }
+  }
+]
+
+In your server tick (Supervisor), when GPT-5 calls a tool, relay to /api/agent/actions with your action names.
+
+3) Safety rails you must apply
+	•	Time + size limits for code runs (e.g., 10s, 64MB).
+	•	Network allowlist for web fetch (only public docs, not your internal admin).
+	•	Path sandbox (only allow /data/<sessionId>/...).
+	•	Secrets never in browser; all keys stay server-side.
+	•	Human confirm before sending emails/SMS or submitting forms.
+
+⸻
+
+Filling the gaps Agent Mode may have
+
+Some providers lock down:
+	•	File system perms or no binary deps → fall back to your Replit runner via queue_job.
+	•	Headless UI automation not available → use Playwright scripts (your code), expose as playwright.flow.
+	•	No external program execution → prebuild microservices (OCR, PDF split, Whisper) and call them via HTTP tools.
+	•	Session persistence limited → store your own memory (tasks.json, forms.json, kb.json) keyed by sessionId.
+
+Example: Playwright “fill form” flow
+	1.	Model plans: “Open site, search, fill checkout.”
+	2.	It calls tool:
+
+{
+  "name": "playwright.flow",
+  "arguments": {
+    "script": "checkout",
+    "params": { "url": "https://example.com", "email": "x@y.com", "zip":"77001" }
+  }
+}
+
+	3.	Your server runs scripts/checkout.ts in a hardened worker, returns { ok:true, artifacts:[screenshotUrl], events:[...] }.
+
+⸻
+
+How this works with your stack
+
+ElevenLabs widget = liaison
+	•	Captures voice/text, displays replies.
+	•	For every transcript chunk: POST to /api/supervisor/ingest.
+
+GPT-5 Supervisor (Agent Mode ON)
+	•	Reads recent convo + task state.
+	•	Decides next actions:
+	•	Update the rolling to-do (add/complete/subtasks/due times).
+	•	Call tools (search, fetch, write, run code, Playwright).
+	•	Save outputs (files, forms).
+	•	Ask clarifying questions via the chat when needed.
+	•	Returns a plan JSON which your server applies (so UI updates are deterministic).
+
+Replit executor & jobs
+	•	The /api/agent/actions proxy handles quick calls.
+	•	/api/agent/actions -> queue_job posts long work to a job queue (BullMQ, simple cron, or Replit background task).
+	•	Jobs write artifacts to /data/<sessionId>/... and post a note back into the chat or tasks.
+
+⸻
+
+Concrete examples the model can do (today)
+	•	“Find a video and set a reminder”
+Calls youtube_search → adds task “Change tire” with resources[] → sets dueAt → at time, opens your video modal.
+	•	“Research breaker box labeling best practices and draft a PDF”
+web_search → files_write (markdown) → run.node to render MD → save /files/labeling-guide.pdf.
+	•	“Fill this warranty form”
+Collect fields conversationally → forms.save → playwright.flow to submit site form → return confirmation screenshot.
+	•	“Summarize this PDF and email it to me”
+Upload → OCR/parse (job if large) → summary → send_email.
+
+⸻
+
+Drop-in: one tool call from the model → your proxy
+
+(If you’re already using the Supervisor /tick route, just add this relay.)
+
+// inside your GPT-5 tool handler:
+const toolReturn = await fetch(`${process.env.BASE_URL}/api/agent/actions`, {
+  method: 'POST',
+  headers: { 'Content-Type':'application/json' },
+  body: JSON.stringify({
+    sessionId,
+    action: mapToAction(tc.function.name), // e.g., web_search -> 'web.search'
+    args: JSON.parse(tc.function.arguments||'{}')
+  })
+}).then(r=>r.json());
+
+
+⸻
+
+TL;DR setup checklist
+	1.	Create /api/agent/actions proxy with safe dispatch + limits.
+	2.	Register tool schemas to GPT-5 (web_search, web_fetch, files.{read,write}, run.{node,python}, youtube_search, playwright.flow, queue_job, forms.save, send_email, send_sms).
+	3.	Add confirmation rule for comms.
+	4.	Add job queue for long tasks and a “job finished” notifier.
+	5.	Keep session memory (tasks, forms, files) in your storage.
+	6.	Use ElevenLabs purely as the user liaison; all real work funnels through the Agent Mode tool chain.
+
+If you want, I can hand you a ready-to-paste tool manifest + action proxy that includes a tiny Playwright runner and a job queue stub—so Agent Mode is live in like 15 minutes.
