@@ -1,0 +1,371 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertTaskSchema, insertConversationSchema, insertProposalSchema, insertFileSchema, insertSessionSchema } from "@shared/schema";
+import { randomUUID } from "crypto";
+import OpenAI from "openai";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-fake-key-for-development" 
+});
+
+const upload = multer({
+  dest: 'uploads/',
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Session management
+  app.post("/api/sessions", async (req, res) => {
+    try {
+      const sessionData = insertSessionSchema.parse(req.body);
+      const session = await storage.createSession(sessionData);
+      res.json(session);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid session data" });
+    }
+  });
+
+  app.get("/api/sessions/:id", async (req, res) => {
+    try {
+      const session = await storage.getSession(req.params.id);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch session" });
+    }
+  });
+
+  // Task management
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const taskData = insertTaskSchema.parse({
+        ...req.body,
+        id: req.body.id || `t_${randomUUID()}`
+      });
+      const task = await storage.createTask(taskData);
+      res.json(task);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid task data" });
+    }
+  });
+
+  app.get("/api/tasks", async (req, res) => {
+    try {
+      const { sessionId } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+      const tasks = await storage.listTasks(sessionId as string);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch tasks" });
+    }
+  });
+
+  app.put("/api/tasks/:id", async (req, res) => {
+    try {
+      const updates = insertTaskSchema.partial().parse(req.body);
+      const task = await storage.updateTask(req.params.id, updates);
+      res.json(task);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid task update" });
+    }
+  });
+
+  app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+      await storage.deleteTask(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete task" });
+    }
+  });
+
+  // Conversation management
+  app.post("/api/conversations", async (req, res) => {
+    try {
+      const messageData = insertConversationSchema.parse(req.body);
+      const message = await storage.createMessage(messageData);
+      res.json(message);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid message data" });
+    }
+  });
+
+  app.get("/api/conversations", async (req, res) => {
+    try {
+      const { sessionId, limit } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+      const messages = await storage.listMessages(
+        sessionId as string, 
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // AI Supervisor endpoint
+  app.post("/api/supervisor/agent", async (req, res) => {
+    try {
+      const { sessionId, message } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+
+      // Get recent conversation context
+      const messages = await storage.listMessages(sessionId, 10);
+      const tasks = await storage.listTasks(sessionId);
+
+      const systemPrompt = `You are an AI Task Supervisor. Turn conversation into actionable tasks.
+Create, update, or complete tasks based on user input. Use tools when needed.
+Current tasks: ${tasks.map(t => `${t.title} (${t.status})`).join(", ")}
+
+Respond with JSON: {
+  "response": "Your response to the user",
+  "actions": [
+    {"type": "create_task", "task": {"title": "...", "priority": "high|med|low", "subtasks": [...]}},
+    {"type": "update_task", "id": "task_id", "updates": {...}},
+    {"type": "complete_task", "id": "task_id"}
+  ],
+  "tools_used": ["youtube_search", "web_search"]
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages.map(m => ({ role: m.role as any, content: m.content })),
+          ...(message ? [{ role: "user" as const, content: message }] : [])
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.2
+      });
+
+      let plan;
+      try {
+        plan = JSON.parse(response.choices[0].message.content || "{}");
+      } catch {
+        plan = { response: response.choices[0].message.content, actions: [] };
+      }
+
+      // Execute actions
+      for (const action of plan.actions || []) {
+        if (action.type === "create_task" && action.task) {
+          await storage.createTask({
+            id: `t_${randomUUID()}`,
+            sessionId,
+            title: action.task.title,
+            priority: action.task.priority || "med",
+            status: "todo",
+            subtasks: action.task.subtasks || [],
+            attachments: [],
+            notes: [],
+            due: null
+          });
+        } else if (action.type === "update_task" && action.id && action.updates) {
+          await storage.updateTask(action.id, action.updates);
+        } else if (action.type === "complete_task" && action.id) {
+          await storage.updateTask(action.id, { status: "done" });
+        }
+      }
+
+      // Save AI response to conversation
+      if (plan.response) {
+        await storage.createMessage({
+          sessionId,
+          role: "assistant",
+          content: plan.response
+        });
+      }
+
+      res.json(plan);
+    } catch (error) {
+      console.error("AI Supervisor error:", error);
+      res.status(500).json({ error: "AI processing failed" });
+    }
+  });
+
+  // YouTube search
+  app.get("/api/tools/youtube-search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q) {
+        return res.status(400).json({ error: "Query required" });
+      }
+
+      const youtubeApiKey = process.env.YOUTUBE_API_KEY || process.env.GOOGLE_API_KEY;
+      if (!youtubeApiKey) {
+        return res.status(500).json({ error: "YouTube API key not configured" });
+      }
+
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${encodeURIComponent(q as string)}&type=video&key=${youtubeApiKey}`;
+      
+      const response = await fetch(searchUrl);
+      const data = await response.json();
+
+      const videos = data.items?.map((item: any) => ({
+        id: item.id.videoId,
+        title: item.snippet.title,
+        description: item.snippet.description,
+        thumbnail: item.snippet.thumbnails.medium.url,
+        url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+        embedUrl: `https://www.youtube.com/embed/${item.id.videoId}`
+      })) || [];
+
+      res.json({ videos });
+    } catch (error) {
+      console.error("YouTube search error:", error);
+      res.status(500).json({ error: "YouTube search failed" });
+    }
+  });
+
+  // File upload
+  app.post("/api/files/upload", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file || !req.body.sessionId) {
+        return res.status(400).json({ error: "File and sessionId required" });
+      }
+
+      const fileId = randomUUID();
+      const fileExt = path.extname(req.file.originalname);
+      const filename = `${fileId}${fileExt}`;
+      const filePath = path.join('uploads', filename);
+      
+      // Move file to permanent location
+      fs.renameSync(req.file.path, filePath);
+
+      const file = await storage.createFile({
+        id: fileId,
+        sessionId: req.body.sessionId,
+        filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        url: `/uploads/${filename}`
+      });
+
+      res.json(file);
+    } catch (error) {
+      console.error("File upload error:", error);
+      res.status(500).json({ error: "File upload failed" });
+    }
+  });
+
+  // Serve uploaded files
+  app.get("/uploads/:filename", (req, res) => {
+    const filePath = path.join(process.cwd(), 'uploads', req.params.filename);
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).json({ error: "File not found" });
+    }
+  });
+
+  app.get("/api/files", async (req, res) => {
+    try {
+      const { sessionId } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+      const files = await storage.listFiles(sessionId as string);
+      res.json(files);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch files" });
+    }
+  });
+
+  // Code proposals
+  app.post("/api/proposals", async (req, res) => {
+    try {
+      const proposalData = insertProposalSchema.parse({
+        ...req.body,
+        id: req.body.id || `p_${randomUUID()}`
+      });
+      const proposal = await storage.createProposal(proposalData);
+      res.json(proposal);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid proposal data" });
+    }
+  });
+
+  app.get("/api/proposals", async (req, res) => {
+    try {
+      const { sessionId } = req.query;
+      const proposals = await storage.listProposals(sessionId as string);
+      res.json(proposals);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch proposals" });
+    }
+  });
+
+  app.put("/api/proposals/:id", async (req, res) => {
+    try {
+      const updates = insertProposalSchema.partial().parse(req.body);
+      const proposal = await storage.updateProposal(req.params.id, updates);
+      res.json(proposal);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid proposal update" });
+    }
+  });
+
+  app.delete("/api/proposals/:id", async (req, res) => {
+    try {
+      await storage.deleteProposal(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete proposal" });
+    }
+  });
+
+  // System stats
+  app.get("/api/stats", async (req, res) => {
+    try {
+      const { sessionId } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+      const stats = await storage.getSystemStats(sessionId as string);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // Web search endpoint
+  app.get("/api/tools/web-search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q) {
+        return res.status(400).json({ error: "Query required" });
+      }
+
+      // Mock web search - in production, integrate with Bing Search API
+      const mockResults = [
+        {
+          title: `Search results for: ${q}`,
+          url: "https://example.com",
+          snippet: "Mock search result for development purposes"
+        }
+      ];
+
+      res.json({ items: mockResults });
+    } catch (error) {
+      res.status(500).json({ error: "Web search failed" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
