@@ -366,6 +366,90 @@ Respond with JSON: {
     }
   });
 
+  // Voice transcription endpoint
+  app.post("/api/voice/transcribe", upload.single('audio'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No audio file provided" });
+      }
+
+      const elevenlabsKey = process.env.ELEVENLABS_API_KEY;
+      if (!elevenlabsKey) {
+        return res.status(500).json({ error: "ElevenLabs API key not configured" });
+      }
+
+      // Use OpenAI Whisper for transcription (more reliable than ElevenLabs for transcription)
+      const transcriptionResponse = await openai.audio.transcriptions.create({
+        file: fs.createReadStream(req.file.path),
+        model: 'whisper-1',
+      });
+
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({ text: transcriptionResponse.text });
+    } catch (error) {
+      console.error("Voice transcription error:", error);
+      
+      // Clean up file on error
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      
+      res.status(500).json({ error: "Transcription failed" });
+    }
+  });
+
+  // Voice synthesis endpoint
+  app.post("/api/voice/synthesize", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ error: "Text required" });
+      }
+
+      const elevenlabsKey = process.env.ELEVENLABS_API_KEY;
+      if (!elevenlabsKey) {
+        return res.status(500).json({ error: "ElevenLabs API key not configured" });
+      }
+
+      // Use ElevenLabs for text-to-speech
+      const voiceId = "21m00Tcm4TlvDq8ikWAM"; // Default voice ID
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': elevenlabsKey
+        },
+        body: JSON.stringify({
+          text: text,
+          model_id: "eleven_monolingual_v1",
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.5
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${response.status}`);
+      }
+
+      const audioBuffer = await response.arrayBuffer();
+      
+      res.set({
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': audioBuffer.byteLength.toString()
+      });
+      
+      res.send(Buffer.from(audioBuffer));
+    } catch (error) {
+      console.error("Voice synthesis error:", error);
+      res.status(500).json({ error: "Voice synthesis failed" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
