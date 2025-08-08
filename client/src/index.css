@@ -9,32 +9,32 @@
   --card-foreground: hsl(210 25% 7.8431%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(210 25% 7.8431%);
-  --primary: hsl(203.8863 88.2845% 53.1373%);
-  --primary-foreground: hsl(0 0% 100%);
+  --primary: hsl(42 80% 55%);  /* Gold primary - Emergent Intelligence brand */
+  --primary-foreground: hsl(210 25% 7.8431%);  /* Dark text on gold */
   --secondary: hsl(210 25% 7.8431%);
   --secondary-foreground: hsl(0 0% 100%);
   --muted: hsl(240 1.9608% 90%);
   --muted-foreground: hsl(210 25% 7.8431%);
-  --accent: hsl(211.5789 51.3514% 92.7451%);
-  --accent-foreground: hsl(203.8863 88.2845% 53.1373%);
+  --accent: hsl(42 30% 95%);  /* Light gold accent */
+  --accent-foreground: hsl(42 80% 40%);  /* Darker gold for text */
   --destructive: hsl(356.3033 90.5579% 54.3137%);
   --destructive-foreground: hsl(0 0% 100%);
   --border: hsl(201.4286 30.4348% 90.9804%);
   --input: hsl(200 23.0769% 97.4510%);
-  --ring: hsl(202.8169 89.1213% 53.1373%);
-  --chart-1: hsl(203.8863 88.2845% 53.1373%);
+  --ring: hsl(42 80% 55%);  /* Gold focus ring */
+  --chart-1: hsl(42 80% 55%);  /* Gold primary for charts */
   --chart-2: hsl(159.7826 100% 36.0784%);
   --chart-3: hsl(42.0290 92.8251% 56.2745%);
   --chart-4: hsl(147.1429 78.5047% 41.9608%);
   --chart-5: hsl(341.4894 75.2000% 50.9804%);
   --sidebar: hsl(180 6.6667% 97.0588%);
   --sidebar-foreground: hsl(210 25% 7.8431%);
-  --sidebar-primary: hsl(203.8863 88.2845% 53.1373%);
+  --sidebar-primary: hsl(42 80% 55%);  /* Gold sidebar primary */
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(211.5789 51.3514% 92.7451%);
-  --sidebar-accent-foreground: hsl(203.8863 88.2845% 53.1373%);
+  --sidebar-accent: hsl(42 30% 95%);  /* Light gold sidebar accent */
+  --sidebar-accent-foreground: hsl(42 80% 55%);  /* Gold sidebar text */
   --sidebar-border: hsl(205.0000 25.0000% 90.5882%);
-  --sidebar-ring: hsl(202.8169 89.1213% 53.1373%);
+  --sidebar-ring: hsl(42 80% 55%);  /* Gold sidebar focus ring */
   --font-sans: Open Sans, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
@@ -52,38 +52,38 @@
 }
 
 .dark {
-  --background: hsl(0 0% 0%);
-  --foreground: hsl(200 6.6667% 91.1765%);
-  --card: hsl(228 9.8039% 10%);
-  --card-foreground: hsl(0 0% 85.0980%);
-  --popover: hsl(0 0% 0%);
-  --popover-foreground: hsl(200 6.6667% 91.1765%);
-  --primary: hsl(203.7736 87.6033% 52.5490%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(195.0000 15.3846% 94.9020%);
-  --secondary-foreground: hsl(210 25% 7.8431%);
-  --muted: hsl(0 0% 9.4118%);
-  --muted-foreground: hsl(210 3.3898% 46.2745%);
-  --accent: hsl(205.7143 70% 7.8431%);
-  --accent-foreground: hsl(203.7736 87.6033% 52.5490%);
+  --background: hsl(220 20% 8%);  /* Rich dark background matching logo */
+  --foreground: hsl(0 0% 95%);  /* Bright white text */
+  --card: hsl(220 15% 12%);  /* Darker cards */
+  --card-foreground: hsl(0 0% 90%);
+  --popover: hsl(220 20% 8%);
+  --popover-foreground: hsl(0 0% 95%);
+  --primary: hsl(42 85% 58%);  /* Bright gold primary for dark mode */
+  --primary-foreground: hsl(220 20% 8%);  /* Dark text on gold */
+  --secondary: hsl(220 15% 15%);
+  --secondary-foreground: hsl(0 0% 95%);
+  --muted: hsl(220 15% 10%);
+  --muted-foreground: hsl(0 0% 60%);
+  --accent: hsl(220 15% 15%);  /* Dark accent with subtle gold hint */
+  --accent-foreground: hsl(42 85% 58%);  /* Gold accent text */
   --destructive: hsl(356.3033 90.5579% 54.3137%);
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(210 5.2632% 14.9020%);
-  --input: hsl(207.6923 27.6596% 18.4314%);
-  --ring: hsl(202.8169 89.1213% 53.1373%);
-  --chart-1: hsl(203.8863 88.2845% 53.1373%);
+  --border: hsl(220 15% 18%);  /* Subtle borders */
+  --input: hsl(220 15% 15%);
+  --ring: hsl(42 85% 58%);  /* Gold focus ring */
+  --chart-1: hsl(42 85% 58%);  /* Gold primary for charts */
   --chart-2: hsl(159.7826 100% 36.0784%);
   --chart-3: hsl(42.0290 92.8251% 56.2745%);
   --chart-4: hsl(147.1429 78.5047% 41.9608%);
   --chart-5: hsl(341.4894 75.2000% 50.9804%);
-  --sidebar: hsl(228 9.8039% 10%);
-  --sidebar-foreground: hsl(0 0% 85.0980%);
-  --sidebar-primary: hsl(202.8169 89.1213% 53.1373%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(205.7143 70% 7.8431%);
-  --sidebar-accent-foreground: hsl(203.7736 87.6033% 52.5490%);
-  --sidebar-border: hsl(205.7143 15.7895% 26.0784%);
-  --sidebar-ring: hsl(202.8169 89.1213% 53.1373%);
+  --sidebar: hsl(220 15% 12%);
+  --sidebar-foreground: hsl(0 0% 90%);
+  --sidebar-primary: hsl(42 85% 58%);  /* Gold sidebar primary */
+  --sidebar-primary-foreground: hsl(220 20% 8%);
+  --sidebar-accent: hsl(220 15% 15%);
+  --sidebar-accent-foreground: hsl(42 85% 58%);  /* Gold sidebar text */
+  --sidebar-border: hsl(220 15% 18%);
+  --sidebar-ring: hsl(42 85% 58%);  /* Gold sidebar focus ring */
   --font-sans: Open Sans, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
@@ -105,5 +105,44 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Custom Emergent Intelligence brand utilities */
+  .text-success {
+    color: hsl(120 60% 50%);
+  }
+  
+  .bg-success {
+    background-color: hsl(120 60% 50%);
+  }
+  
+  .text-warning {
+    color: hsl(42 85% 58%);
+  }
+  
+  .bg-warning {
+    background-color: hsl(42 85% 58%);
+  }
+  
+  .text-error {
+    color: hsl(356 85% 55%);
+  }
+  
+  .bg-error {
+    background-color: hsl(356 85% 55%);
+  }
+
+  .bg-success\/10 {
+    background-color: hsl(120 60% 50% / 0.1);
+  }
+  
+  .bg-warning\/10 {
+    background-color: hsl(42 85% 58% / 0.1);
+  }
+  
+  .bg-error\/10 {
+    background-color: hsl(356 85% 55% / 0.1);
   }
 }

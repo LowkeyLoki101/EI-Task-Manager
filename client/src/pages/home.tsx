@@ -8,6 +8,8 @@ import CodeProposals from '../components/CodeProposals';
 import SystemStatus from '../components/SystemStatus';
 import VideoModal from '../components/VideoModal';
 import CodePreviewModal from '../components/CodePreviewModal';
+import EmergentLogo from '../components/EmergentLogo';
+import ThemeToggle from '../components/ThemeToggle';
 import type { VideoResource } from '@/lib/types';
 import type { Proposal } from '@shared/schema';
 
@@ -66,12 +68,10 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-            <svg className="w-5 h-5 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+          <div className="w-12 h-12 mx-auto mb-4 animate-pulse">
+            <EmergentLogo size="lg" showText={false} />
           </div>
-          <p className="text-slate-600">Initializing session...</p>
+          <p className="text-slate-600">Initializing Emergent Intelligence...</p>
         </div>
       </div>
     );
@@ -84,15 +84,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h1 className="text-xl font-semibold text-slate-900">Emergent Task Builder</h1>
-              </div>
-              <span className="text-sm text-slate-500 hidden sm:inline">AI-Powered Productivity Platform</span>
+              <EmergentLogo size="md" showText={true} />
+              <span className="text-sm text-slate-500 hidden sm:inline">AI-Powered Task Intelligence</span>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -110,8 +103,11 @@ export default function Home() {
                 </label>
               </div>
               
-              <div className="text-sm text-slate-500 hidden sm:block">
-                Session: <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded" data-testid="session-id">{sessionId}</span>
+              <div className="flex items-center space-x-3">
+                <ThemeToggle />
+                <div className="text-sm text-slate-500 hidden sm:block">
+                  Session: <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded" data-testid="session-id">{sessionId}</span>
+                </div>
               </div>
             </div>
           </div>

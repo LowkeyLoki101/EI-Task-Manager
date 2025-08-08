@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import EmergentLogo from '../components/EmergentLogo';
 import type { Proposal } from '@shared/schema';
 
 export default function Proposals() {
@@ -56,12 +57,7 @@ export default function Proposals() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <a href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h1 className="text-xl font-semibold text-slate-900">Emergent Task Builder</h1>
+                <EmergentLogo size="md" showText={true} />
               </a>
             </div>
             <a 
