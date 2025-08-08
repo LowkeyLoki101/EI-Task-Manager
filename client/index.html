@@ -16,8 +16,16 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- ElevenLabs ConvAI Widget SDK -->
-    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+    <!-- ElevenLabs ConvAI Widget SDK with WebRTC Support -->
+    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed@latest" async type="text/javascript"></script>
+    <script>
+      // Configure widget for WebRTC mode (better mobile support)
+      window.elevenLabsConfig = {
+        connectionType: 'webrtc',
+        fallbackMode: true,
+        mobileOptimized: true
+      };
+    </script>
     
     <!-- ElevenLabs Widget Diagnostics -->
     <script>

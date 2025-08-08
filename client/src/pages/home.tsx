@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Mic, Settings, Brain, Zap, ExternalLink, Volume2 } from 'lucide-react';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
+import { MobileVoiceInterface } from '../components/MobileVoiceInterface';
 
 // Global types for ElevenLabs web component
 declare global {
@@ -103,7 +104,7 @@ export default function HomePage() {
         // Provide helpful error messages for common issues
         let errorMessage = e.detail?.message || 'Unknown widget error';
         if (errorMessage.includes('raw-audio-processor') || errorMessage.includes('AudioWorklet')) {
-          errorMessage = 'AudioWorklets not supported on this browser. Please use Chrome or Firefox on desktop for full voice features.';
+          errorMessage = 'Trying WebRTC fallback for better mobile support. Check the mobile interface above for alternative voice input.';
         } else if (errorMessage.includes('domain')) {
           errorMessage = 'Domain not authorized. Contact admin to add this domain to ElevenLabs allowlist.';
         } else if (errorMessage.includes('agent')) {
@@ -194,6 +195,11 @@ export default function HomePage() {
               The system learns your patterns and automates workflows.
             </p>
           </div>
+
+          {/* Mobile Voice Interface */}
+          {navigator.userAgent.includes('Mobile') && (
+            <MobileVoiceInterface sessionId={sessionId} builderMode={builderMode} />
+          )}
 
           {/* Status Cards */}
           <div className="grid md:grid-cols-3 gap-6">
@@ -403,7 +409,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* ElevenLabs Widget - Official Implementation */}
+      {/* ElevenLabs Widget - Official Implementation with WebRTC */}
       <elevenlabs-convai
         id="el-agent"
         agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
@@ -411,8 +417,11 @@ export default function HomePage() {
           position: 'fixed',
           right: '24px',
           bottom: '24px',
-          zIndex: 9999
-        }}
+          zIndex: 9999,
+          '--connection-type': 'webrtc',
+          '--mobile-optimized': 'true',
+          '--fallback-enabled': 'true'
+        } as any}
       />
     </div>
   );
