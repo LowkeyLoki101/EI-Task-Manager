@@ -1,244 +1,345 @@
 import { useState, useEffect } from 'react';
 import { useSessionId } from '@/hooks/useSessionId';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Mic, Settings, Brain, Zap, ExternalLink, Volume2 } from 'lucide-react';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
 
-// Global type for ElevenLabs
+// Global types for ElevenLabs web component
 declare global {
-  interface Window {
-    ElevenLabs: any;
+  namespace JSX {
+    interface IntrinsicElements {
+      'elevenlabs-convai': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        'agent-id'?: string;
+      };
+    }
   }
 }
 
-// ElevenLabs Voice Assistant Component
-function ElevenLabsVoiceAssistant({ sessionId, builderMode }: { sessionId: string; builderMode: boolean }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function HomePage() {
+  const sessionId = useSessionId();
+  const [builderMode, setBuilderMode] = useState(false);
+  const [widgetStatus, setWidgetStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [widgetError, setWidgetError] = useState<string | null>(null);
 
+  // Initialize ElevenLabs widget with diagnostics
   useEffect(() => {
-    if (!sessionId) return;
+    // Supervisor processing for Builder Mode
+    if (!builderMode || !sessionId) return;
 
-    const slug = "task-builder";
-
-    // Mirror function - sends conversation events to supervisor ingest
-    const mirrorToSupervisor = async (evt: any) => {
+    const interval = setInterval(async () => {
       try {
-        await fetch('/api/supervisor/ingest', {
+        const response = await fetch('/api/supervisor/ingest', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sessionId,
-            slug,
-            evt
+            conversation: 'Builder mode supervision check',
+            builderMode: true
           })
         });
-      } catch (error) {
-        console.error('Mirror function error:', error);
-      }
-    };
-
-    function initWidget() {
-      if (!window.ElevenLabs) {
-        setError('ElevenLabs widget not available');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        console.log('Initializing ElevenLabs widget with agent:', 'agent_8201k251883jf0hr1ym7d6dbymxc');
         
-        window.ElevenLabs.init({
-          agentId: 'agent_8201k251883jf0hr1ym7d6dbymxc',
-          onMessage: (message) => {
-            console.log('ElevenLabs message:', message);
-            mirrorToSupervisor({
-              type: 'message',
-              role: message.role || 'user',
-              text: message.text || message.content,
-              timestamp: Date.now()
-            });
-          },
-          onStateChange: (state) => {
-            console.log('ElevenLabs state change:', state);
-            mirrorToSupervisor({
-              type: 'state_change',
-              state,
-              timestamp: Date.now()
-            });
-          },
-          onError: (error) => {
-            console.error('ElevenLabs error:', error);
-            setError(`ElevenLabs error: ${error.message || error}`);
-            mirrorToSupervisor({
-              type: 'error',
-              error: error.message || error,
-              timestamp: Date.now()
-            });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.tasksCreated > 0) {
+            console.log(`Builder mode: Created ${result.tasksCreated} tasks`);
           }
-        });
-        
-        console.log('ElevenLabs widget initialized successfully');
-        setIsLoading(false);
+        }
       } catch (error) {
-        console.error('Widget initialization error:', error);
-        setError('Failed to initialize voice assistant');
-        setIsLoading(false);
+        console.error('Supervisor processing error:', error);
       }
-    }
-
-    // Load ElevenLabs script if not already loaded
-    if (!window.ElevenLabs) {
-      const script = document.createElement('script');
-      script.src = 'https://elevenlabs.io/convai-widget/index.js';
-      script.async = true;
-      
-      script.onload = () => {
-        console.log('ElevenLabs script loaded successfully');
-        initWidget();
-      };
-      
-      script.onerror = () => {
-        console.error('Failed to load ElevenLabs script');
-        setError('Failed to load ElevenLabs widget');
-        setIsLoading(false);
-      };
-
-      document.head.appendChild(script);
-    } else {
-      console.log('ElevenLabs already loaded');
-      initWidget();
-    }
-  }, [sessionId]);
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-foreground">Emergent Task Builder</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Talk naturally to create and manage your tasks with AI-powered conversation
-        </p>
-        <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-          <span>Session: <span className="font-mono" data-testid="text-session">{sessionId}</span></span>
-          <span>•</span>
-          <span className={builderMode ? "text-green-600 font-medium" : "text-orange-600"}>
-            Builder Mode: {builderMode ? "ON" : "OFF"}
-          </span>
-        </div>
-      </div>
-
-      {/* Instructions */}
-      <div className="bg-card border rounded-lg p-6" data-testid="instructions-card">
-        <h2 className="text-lg font-semibold mb-4">How to use</h2>
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <p>• Click the microphone to start a conversation with your AI assistant</p>
-          <p>• Speak naturally about tasks you want to create or manage</p>
-          <p>• The AI will automatically create and organize your tasks</p>
-          <p>• Enable Builder Mode above to activate automatic task processing</p>
-        </div>
-        
-        {/* Debug info */}
-        <div className="mt-4 p-3 bg-muted rounded text-xs">
-          <strong>Debug Info:</strong>
-          <br />Agent ID: agent_8201k251883jf0hr1ym7d6dbymxc
-          <br />Session: {sessionId}
-          <br />Widget Status: {isLoading ? 'Loading...' : error ? 'Error' : 'Ready'}
-          <br />Builder Mode: {builderMode ? 'Active (supervisor runs every 8s)' : 'Inactive'}
-          {error && <><br />Error: {error}</>}
-        </div>
-      </div>
-
-      {/* ElevenLabs Widget Container */}
-      <div className="bg-card border rounded-lg p-6" data-testid="widget-container">
-        <h2 className="text-lg font-semibold mb-4">Voice Assistant</h2>
-        <div id="elevenlabs-widget" className="min-h-[400px]">
-          {/* ElevenLabs widget will be injected here */}
-        </div>
-        
-        {/* Fallback instructions */}
-        <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
-          <p><strong>If the widget doesn't appear:</strong></p>
-          <ol className="list-decimal list-inside mt-2 space-y-1">
-            <li>Check browser console for any script loading errors</li>
-            <li>Ensure you have a stable internet connection</li>
-            <li>Try refreshing the page</li>
-            <li>Verify the ElevenLabs agent ID is correct: agent_8201k251883jf0hr1ym7d6dbymxc</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function Home() {
-  const sessionId = useSessionId();
-  const [builderMode, setBuilderMode] = useState(false);
-
-  // Poll supervisor when builder mode is on
-  useEffect(() => {
-    if (!builderMode || !sessionId) return;
-    
-    const interval = setInterval(() => {
-      fetch(`/api/supervisor/agent?sessionId=${sessionId}&slug=task-builder`, {
-        method: 'POST'
-      }).catch(console.error);
-    }, 8000);
+    }, 8000); // 8-second intervals as specified
 
     return () => clearInterval(interval);
   }, [builderMode, sessionId]);
 
-  if (!sessionId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="text-4xl">⚡</div>
-          <div className="text-lg text-muted-foreground">Initializing session...</div>
-        </div>
-      </div>
-    );
-  }
+  // ElevenLabs widget diagnostics
+  useEffect(() => {
+    function waitForWidget() {
+      const el = document.getElementById('el-agent') as any;
+      if (!el || typeof el.addEventListener !== 'function') {
+        return setTimeout(waitForWidget, 150);
+      }
+
+      // Event listeners for diagnostics
+      el.addEventListener('convai-ready', () => {
+        console.log('[EL] Widget ready');
+        setWidgetStatus('ready');
+        setWidgetError(null);
+      });
+
+      el.addEventListener('convai-error', (e: any) => {
+        console.error('[EL] Widget error:', e.detail);
+        setWidgetStatus('error');
+        setWidgetError(e.detail?.message || 'Unknown widget error');
+      });
+
+      el.addEventListener('convai-opened', () => {
+        console.log('[EL] Widget opened');
+      });
+
+      el.addEventListener('convai-closed', () => {
+        console.log('[EL] Widget closed');
+      });
+
+      // Failsafe check
+      setTimeout(() => {
+        if (!el.shadowRoot) {
+          console.error('[EL] Widget not upgraded (no shadowRoot). Check CSP/allowlist/SDK.');
+          setWidgetStatus('error');
+          setWidgetError('Widget not upgraded - check console for CSP or SDK loading issues');
+        }
+      }, 3000);
+    }
+
+    waitForWidget();
+  }, []);
+
+  const openWidget = () => {
+    const el = document.getElementById('el-agent') as any;
+    if (el?.dispatchEvent) {
+      el.dispatchEvent(new Event('convai-open'));
+    }
+  };
 
   return (
-    <div className="bg-slate-50 font-sans min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <EmergentLogo size="md" showText={true} />
-              <span className="text-sm text-slate-500 hidden sm:inline">AI-Powered Voice Task Intelligence</span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-slate-600">Builder Mode</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer" 
-                    checked={builderMode}
-                    onChange={(e) => setBuilderMode(e.target.checked)}
-                    data-testid="toggle-builder-mode"
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                </label>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <ThemeToggle />
-                <div className="text-sm text-slate-500 hidden sm:block">
-                  Session: <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded" data-testid="session-id">{sessionId}</span>
-                </div>
-              </div>
-            </div>
+      <header className="flex items-center justify-between p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-3">
+          <EmergentLogo className="w-8 h-8" />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Emergent Intelligence
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Conversational AI Task Management
+            </p>
           </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="builder-mode" className="text-sm">Builder Mode</Label>
+            <Switch
+              id="builder-mode"
+              checked={builderMode}
+              onCheckedChange={setBuilderMode}
+              data-testid="switch-builder-mode"
+            />
+          </div>
+          <ThemeToggle />
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ElevenLabsVoiceAssistant sessionId={sessionId} builderMode={builderMode} />
-      </div>
+      <main className="container mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto space-y-8">
+          
+          {/* Hero Section */}
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Your AI-Powered Task Assistant
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Speak naturally to create, organize, and manage your tasks. 
+              The system learns your patterns and automates workflows.
+            </p>
+          </div>
+
+          {/* Status Cards */}
+          <div className="grid md:grid-cols-3 gap-6">
+            
+            {/* Voice Assistant Status */}
+            <Card className="border-l-4 border-l-blue-500">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Volume2 className="w-5 h-5 text-blue-500" />
+                  <CardTitle className="text-lg">Voice Assistant</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant={widgetStatus === 'ready' ? 'default' : widgetStatus === 'error' ? 'destructive' : 'secondary'}
+                    data-testid="badge-widget-status"
+                  >
+                    {widgetStatus === 'ready' ? 'Ready' : widgetStatus === 'error' ? 'Error' : 'Loading'}
+                  </Badge>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Agent: 8201k251883jf0hr1ym7d6dbymxc
+                  </span>
+                </div>
+                
+                {widgetError && (
+                  <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                    {widgetError}
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Button 
+                    onClick={openWidget} 
+                    className="w-full" 
+                    variant="outline"
+                    data-testid="button-open-voice"
+                  >
+                    <Mic className="w-4 h-4 mr-2" />
+                    Start Voice Conversation
+                  </Button>
+                  
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    💡 Open in external tab for full permissions
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Builder Mode Status */}
+            <Card className="border-l-4 border-l-green-500">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-green-500" />
+                  <CardTitle className="text-lg">Builder Mode</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant={builderMode ? 'default' : 'secondary'}>
+                    {builderMode ? 'Active' : 'Inactive'}
+                  </Badge>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    GPT-5 Ops Manager
+                  </span>
+                </div>
+                
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {builderMode 
+                    ? 'Processing conversations every 8 seconds to create structured tasks and steps'
+                    : 'Voice conversations will be logged but not processed into tasks'
+                  }
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Session Info */}
+            <Card className="border-l-4 border-l-purple-500">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-purple-500" />
+                  <CardTitle className="text-lg">Session</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-sm font-mono text-gray-600 dark:text-gray-400 break-all">
+                  {sessionId}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Memory Anchors</Badge>
+                  <Badge variant="outline">Context Routing</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Features */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                System Features
+              </CardTitle>
+              <CardDescription>
+                Comprehensive AI-powered task management architecture
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Core Architecture</h4>
+                  <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <li>✓ ElevenLabs Voice Assistant Integration</li>
+                    <li>✓ GPT-5 Ops Manager with Intent Processing</li>
+                    <li>✓ Memory Anchors Database Schema</li>
+                    <li>✓ Context Routing (Computer/Phone/Physical)</li>
+                    <li>✓ Time Window Management</li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-4">
+                  <h4 className="font-semibold">API Surface</h4>
+                  <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <li>✓ ElevenLabs Actions API</li>
+                    <li>✓ Task/Step CRUD Operations</li>
+                    <li>✓ Domain-Specific Memory Storage</li>
+                    <li>✓ Webhook Integration</li>
+                    <li>✓ Public API for Integrators</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* API Endpoints */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Actions</CardTitle>
+              <CardDescription>
+                Test the ElevenLabs Actions API directly
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-3 border rounded-lg">
+                  <code className="text-sm">add_task</code>
+                  <p className="text-xs text-gray-500 mt-1">Create tasks with steps and context</p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <code className="text-sm">update_step_status</code>
+                  <p className="text-xs text-gray-500 mt-1">Mark steps as pending/running/done</p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <code className="text-sm">get_todo_list</code>
+                  <p className="text-xs text-gray-500 mt-1">Retrieve filtered task lists</p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <code className="text-sm">kb_attach_doc</code>
+                  <p className="text-xs text-gray-500 mt-1">Upload documents to knowledge base</p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <code className="text-sm">post_ops_update</code>
+                  <p className="text-xs text-gray-500 mt-1">Send operational status updates</p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <a href="/api/health" target="_blank" className="flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" />
+                      API Health
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+
+      {/* ElevenLabs Widget - Official Implementation */}
+      <elevenlabs-convai
+        id="el-agent"
+        agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
+        style={{
+          position: 'fixed',
+          right: '24px',
+          bottom: '24px',
+          zIndex: 9999
+        }}
+      />
     </div>
   );
 }

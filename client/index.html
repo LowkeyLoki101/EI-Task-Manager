@@ -3,10 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://replit.com;
+      connect-src 'self' https://api.elevenlabs.io https://api.elevenlabs.* ws: wss:;
+      frame-src 'self' https://*.elevenlabs.io;
+      media-src 'self' https://*.elevenlabs.io blob: data:;
+      style-src 'self' 'unsafe-inline';
+    " />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- ElevenLabs ConvAI Widget SDK -->
+    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+    
+    <!-- ElevenLabs Widget Diagnostics -->
+    <script>
+      (function waitForWC() {
+        const el = document.getElementById('el-agent');
+        if (!el || typeof el.addEventListener !== 'function') {
+          return setTimeout(waitForWC, 150);
+        }
+        el.addEventListener('convai-ready',  () => console.log('[EL] ready'));
+        el.addEventListener('convai-error',  e => console.error('[EL] error', e.detail));
+        el.addEventListener('convai-opened', () => console.log('[EL] opened'));
+        el.addEventListener('convai-closed', () => console.log('[EL] closed'));
+
+        // Failsafe: if SDK didn't upgrade the element
+        setTimeout(() => {
+          if (!el.shadowRoot) {
+            console.error('[EL] widget not upgraded (no shadowRoot). Check CSP/allowlist/SDK 404s.');
+          }
+        }, 3000);
+      })();
+    </script>
+    
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
