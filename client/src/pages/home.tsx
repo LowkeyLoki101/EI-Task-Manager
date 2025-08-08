@@ -60,13 +60,26 @@ export default function HomePage() {
 
   // ElevenLabs widget diagnostics
   useEffect(() => {
-    // Check for AudioWorklet support (common mobile issue)
-    const checkAudioSupport = () => {
-      if (typeof AudioWorkletNode === 'undefined') {
+    // Enhanced mobile and iframe detection
+    const checkEnvironment = () => {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isInIframe = window !== window.top;
+      const isReplitDev = window.location.hostname.includes('replit.dev') || window.location.hostname.includes('repl.co');
+      
+      // Mobile in Replit dev environment - common restrictions
+      if (isMobile && (isInIframe || isReplitDev)) {
         setWidgetStatus('error');
-        setWidgetError('AudioWorklets not supported. Try using Chrome or Firefox on desktop for full voice features.');
+        setWidgetError('Mobile browser in dev environment. Voice features limited. Use desktop browser or open in new tab for full functionality.');
         return false;
       }
+      
+      // AudioWorklet support check
+      if (typeof AudioWorkletNode === 'undefined') {
+        setWidgetStatus('error');
+        setWidgetError('AudioWorklets not supported. Try Chrome/Firefox on desktop or open in external tab.');
+        return false;
+      }
+      
       return true;
     };
 
@@ -108,18 +121,27 @@ export default function HomePage() {
         console.log('[EL] Widget closed');
       });
 
-      // Failsafe check
+      // Failsafe check with mobile-specific messaging
       setTimeout(() => {
         if (!el.shadowRoot) {
           console.error('[EL] Widget not upgraded (no shadowRoot). Check CSP/allowlist/SDK.');
           setWidgetStatus('error');
-          setWidgetError('Widget not upgraded - check console for CSP or SDK loading issues');
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          const errorMsg = isMobile 
+            ? 'Widget failed to initialize on mobile. Please try desktop browser or open in external tab.'
+            : 'Widget not upgraded - check console for CSP or SDK loading issues';
+          setWidgetError(errorMsg);
+        } else {
+          // Widget loaded successfully
+          console.log('[EL] Widget successfully upgraded with shadowRoot');
+          setWidgetStatus('ready');
+          setWidgetError(null);
         }
-      }, 3000);
+      }, 5000); // Increased timeout for mobile
     }
 
-    // Check audio support first
-    if (checkAudioSupport()) {
+    // Check environment first
+    if (checkEnvironment()) {
       waitForWidget();
     }
   }, []);
@@ -225,7 +247,10 @@ export default function HomePage() {
                   <div className="text-xs text-gray-500 dark:text-gray-400">
                     💡 Open in external tab for full permissions
                     {navigator.userAgent.includes('Mobile') && (
-                      <><br />📱 Mobile detected: Desktop recommended for voice features</>
+                      <><br />📱 Mobile + dev environment: Use desktop browser for voice features</>
+                    )}
+                    {navigator.userAgent.includes('Mobile') && window.location.hostname.includes('replit') && (
+                      <><br />🔧 API endpoints work fine - voice widget may have mobile restrictions</>
                     )}
                   </div>
                 </div>
