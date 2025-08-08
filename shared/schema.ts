@@ -147,7 +147,7 @@ export const updateStepStatusActionSchema = z.object({
 
 export const getTodoListActionSchema = z.object({
   context: z.enum(['computer', 'phone', 'physical']).optional(),
-  view: z.enum(['items', 'steps', 'substeps']).optional(),
+  view: z.enum(['items', 'steps', 'substeps', 'tasks']).optional(),
 });
 
 export const kbAttachDocActionSchema = z.object({

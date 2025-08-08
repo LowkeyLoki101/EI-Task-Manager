@@ -107,8 +107,8 @@ export function registerElevenLabsActions(app: Express) {
       
       let result: any = { tasks };
 
-      // If view is steps or substeps, include step details
-      if (parsedAction.view === 'steps' || parsedAction.view === 'substeps') {
+      // If view is steps, substeps, or tasks, include step details
+      if (parsedAction.view === 'steps' || parsedAction.view === 'substeps' || parsedAction.view === 'tasks') {
         const tasksWithSteps = await Promise.all(tasks.map(async (task) => {
           const steps = await storage.listSteps(task.id);
           return { ...task, steps };
@@ -297,7 +297,7 @@ Respond in JSON format: { "tasks": [{ "title": string, "context": string, "timeW
       return { tasks: createdTasks, processed: true };
     } catch (error) {
       console.error('Intent processing error:', error);
-      return { tasks: [], processed: false, error: error.message };
+      return { tasks: [], processed: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
     }
   }
 }
