@@ -134,21 +134,27 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
-      <header className="flex items-center justify-between p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 relative z-50">
-        <div className="flex items-center gap-3 min-w-0 flex-shrink">
-          <EmergentLogo className="w-8 h-8 flex-shrink-0" />
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">
+      <header className="flex items-center justify-between p-4 sm:p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 relative z-50">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-4">
+          <EmergentLogo className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" />
+          <div className="min-w-0 hidden xs:block sm:block">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">
               Emergent Intelligence
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
               Conversational AI Task Management
             </p>
           </div>
+          <div className="min-w-0 xs:hidden">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate">
+              Emergent
+            </h1>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="builder-mode" className="text-sm">Builder Mode</Label>
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Label htmlFor="builder-mode" className="text-xs sm:text-sm whitespace-nowrap hidden sm:inline">Builder Mode</Label>
+            <Label htmlFor="builder-mode" className="text-xs whitespace-nowrap sm:hidden">Builder</Label>
             <Switch
               id="builder-mode"
               checked={builderMode}
