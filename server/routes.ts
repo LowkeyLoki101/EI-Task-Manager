@@ -366,8 +366,8 @@ Respond with JSON: {
     }
   });
 
-  // Voice transcription endpoint
-  app.post("/api/voice/transcribe", upload.single('audio'), async (req, res) => {
+  // ElevenLabs Conversational AI endpoint
+  app.post("/api/voice/conversation", upload.single('audio'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No audio file provided" });
@@ -378,7 +378,55 @@ Respond with JSON: {
         return res.status(500).json({ error: "ElevenLabs API key not configured" });
       }
 
-      // Use OpenAI Whisper for transcription (more reliable than ElevenLabs for transcription)
+      const agentId = "agent_8201k251883jf0hr1ym7d6dbymxc";
+      
+      // Read audio file as buffer
+      const audioBuffer = fs.readFileSync(req.file.path);
+      
+      // Send audio to ElevenLabs Conversational AI
+      const formData = new FormData();
+      const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
+      formData.append('audio', audioBlob, 'recording.wav');
+
+      const conversationResponse = await fetch(`https://api.elevenlabs.io/v1/convai/conversation?agent_id=${agentId}`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': elevenlabsKey
+        },
+        body: formData
+      });
+
+      if (!conversationResponse.ok) {
+        throw new Error(`ElevenLabs Conversation API error: ${conversationResponse.status}`);
+      }
+
+      // Get the response which should include both transcription and AI response
+      const conversationData = await conversationResponse.json();
+      
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json(conversationData);
+    } catch (error) {
+      console.error("Voice conversation error:", error);
+      
+      // Clean up file on error
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      
+      res.status(500).json({ error: "Voice conversation failed" });
+    }
+  });
+
+  // Voice transcription endpoint (fallback)
+  app.post("/api/voice/transcribe", upload.single('audio'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No audio file provided" });
+      }
+
+      // Use OpenAI Whisper for transcription
       const transcriptionResponse = await openai.audio.transcriptions.create({
         file: fs.createReadStream(req.file.path),
         model: 'whisper-1',
