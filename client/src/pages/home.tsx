@@ -131,11 +131,11 @@ export default function HomePage() {
                   <br />
                   <br />
                   <small className="text-sm opacity-75">
-                    Voice interface ready! Look for the microphone bubble in the bottom right corner.
+                    Voice interface active! Click the chat bubble in the bottom right corner.
                     <br />
-                    Click it and say: "Create a task to write a blog post" - it will automatically process your request.
+                    Type or speak: "Create a task to write a blog post" and it will automatically create the task.
                     <br />
-                    Debug buttons (top right) to manually open/close the widget if needed.
+                    Note: Voice mode requires opening in a new tab outside Replit preview.
                   </small>
                 </p>
               </div>

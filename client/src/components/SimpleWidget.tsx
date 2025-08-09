@@ -18,6 +18,14 @@ export default function SimpleWidget({ agentId }: Props) {
     const widget = document.createElement('elevenlabs-convai');
     widget.setAttribute('agent-id', agentId);
     widget.setAttribute('id', 'el-widget');
+    
+    // Enable chat-only mode in Replit preview to avoid AudioWorklet error
+    const isReplitPreview = window.location.hostname.includes('replit.dev');
+    if (isReplitPreview) {
+      widget.setAttribute('chat-only', 'true');
+      console.log("[SimpleWidget] Chat-only mode enabled for Replit preview");
+    }
+    
     widget.style.position = 'fixed';
     widget.style.bottom = '24px';
     widget.style.right = '24px';
