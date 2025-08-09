@@ -45,33 +45,64 @@ export default function DirectChatWidget({ agentId }: Props) {
     setIsLoading(true);
 
     try {
-      // Send to our backend which will process via GPT-5 and ElevenLabs
-      const response = await fetch('/api/chat/process', {
+      // Create a new chat session for GPT-5 processing
+      const sessionId = 'direct-chat-' + Math.random().toString(36).substring(7);
+      
+      // Step 1: Store user message
+      await fetch('/api/conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMessage,
-          agentId,
-          sessionId: 'direct-chat-' + Date.now()
+          sessionId,
+          role: 'user',
+          content: userMessage
+        })
+      });
+
+      // Step 2: Process with supervisor (GPT-5)
+      const response = await fetch('/api/supervisor/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          builderMode: false,
+          context: 'computer'
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        const assistantMessage: Message = {
-          role: 'assistant',
-          content: data.response || 'I received your message and will help you with that task.',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-
-        // If there's audio, play it
-        if (data.audioUrl) {
-          const audio = new Audio(data.audioUrl);
-          audio.play().catch(console.error);
+        
+        // Get the AI response from conversations
+        const conversationsResponse = await fetch(`/api/conversations/${sessionId}`);
+        if (conversationsResponse.ok) {
+          const conversations = await conversationsResponse.json();
+          const lastAssistantMessage = conversations.reverse().find((msg: any) => msg.role === 'assistant');
+          
+          if (lastAssistantMessage) {
+            const assistantMessage: Message = {
+              role: 'assistant',
+              content: lastAssistantMessage.content,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, assistantMessage]);
+          }
         }
+
+        // Show tasks created if any
+        if (data.tasksCreated > 0) {
+          const statusMessage: Message = {
+            role: 'assistant', 
+            content: `✅ Created ${data.tasksCreated} task${data.tasksCreated > 1 ? 's' : ''} from your request.`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, statusMessage]);
+        }
+
       } else {
-        throw new Error('Failed to send message');
+        const errorData = await response.text();
+        console.error('Supervisor API Error:', errorData);
+        throw new Error('Failed to process message');
       }
     } catch (error) {
       console.error('Chat error:', error);

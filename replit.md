@@ -40,10 +40,12 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **Voice Sanity Page**: Successfully diagnosed widget - configuration is correct!
 - ✅ **Widget Configuration**: Domain allowlist working, Web Widget enabled, agent responding
 - ✅ **Widget Integration**: Successfully moved working configuration from sanity test to main app
-- ✅ **Smart Fallback System**: Text chat only shows when voice widget fails, voice mode prioritized
+- ✅ **Smart Fallback System**: Text chat only shows when voice widget fails, voice mode prioritized  
 - ✅ **Event-Driven Architecture**: Widget ready events properly gate Actions API and UI states
-- 🚧 **Current Phase**: Testing full voice integration in external browser tab
-- 🚧 **Next**: Steps Visualizer component integration, ElevenLabs Actions API wiring
+- ✅ **GPT-5 Text Chat Fixed**: DirectChatWidget now properly connects to supervisor with GPT-5
+- ⚠️ **ElevenLabs Dashboard Config**: Voice widget needs Web Widget enabled and domain allowlist configured
+- 🚧 **Current Phase**: ElevenLabs dashboard configuration to enable voice mode
+- 🚧 **Next**: Steps Visualizer component integration, full voice + Actions API testing
 
 ## User Preferences
 
