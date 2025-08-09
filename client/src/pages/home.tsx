@@ -100,7 +100,9 @@ export default function HomePage() {
                   Ready to start
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Click the microphone button in the bottom-right corner for voice chat, or use the blue chat button for text
+                  Two chat options available in the bottom-right corner:
+                  <br />• Microphone button for voice conversations
+                  <br />• Blue chat button for text conversations
                 </p>
               </div>
             </div>

@@ -97,7 +97,7 @@ export default function DirectChatWidget({ agentId }: Props) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white z-50"
+        className="fixed bottom-6 right-24 w-14 h-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white z-50"
         data-testid="button-open-chat"
       >
         <MessageCircle className="w-6 h-6" />
@@ -106,7 +106,7 @@ export default function DirectChatWidget({ agentId }: Props) {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-80 h-96 shadow-xl z-50" data-testid="card-chat-widget">
+    <Card className="fixed bottom-6 right-24 w-80 h-96 shadow-xl z-50" data-testid="card-chat-widget">
       <CardContent className="p-0 h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-blue-600 text-white rounded-t-lg">
