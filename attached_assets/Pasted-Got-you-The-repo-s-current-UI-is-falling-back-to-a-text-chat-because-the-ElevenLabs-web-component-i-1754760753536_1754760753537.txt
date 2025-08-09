@@ -1,0 +1,146 @@
+Got you. The repo’s current UI is falling back to a text-chat because the ElevenLabs web component isn’t fully initializing. Let’s do a clean, surgical fix so conversational mode works first, then we plug it back into your app.
+
+Here’s the fastest path that will work in Replit today.
+
+1) Create a minimal “voice sanity” page
+
+Add a bare page that does nothing except mount the ElevenLabs widget and print useful console events. This removes any app-side interference.
+
+Create client/public/voice-sanity.html with this exact content:
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Voice Sanity</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- If you use a CSP, loosen it for this page (uncomment and tune):
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self' https:;
+                   script-src 'self' https://unpkg.com 'unsafe-inline';
+                   connect-src 'self' https://api.elevenlabs.io https:;
+                   frame-src https://*.elevenlabs.io https:;">
+    -->
+    <style>
+      body { font-family: ui-sans-serif, system-ui; margin: 0; }
+      .dock { position: fixed; right: 24px; bottom: 24px; z-index: 9999; }
+      .bar { position: fixed; left: 0; right: 0; top: 0; padding: 10px; font-size: 12px;
+             background: #0f172a; color: #e2e8f0; display: flex; gap: 12px; align-items: center; }
+      .pill { border: 1px solid #475569; border-radius: 999px; padding: 4px 8px; }
+      button { border-radius: 12px; padding: 8px 12px; border: 1px solid #cbd5e1; background: white; }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <span class="pill">Voice sanity page — isolates the widget from your app</span>
+      <button id="open">Open widget</button>
+      <button id="close">Close widget</button>
+      <span id="status" class="pill">status: loading…</span>
+    </div>
+
+    <!-- The actual web component -->
+    <elevenlabs-convai
+      id="el-agent"
+      agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
+      class="dock"
+    ></elevenlabs-convai>
+
+    <!-- Official SDK -->
+    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+    <!-- Diagnostics -->
+    <script>
+      (function ready() {
+        const el = document.getElementById('el-agent');
+        const status = document.getElementById('status');
+        if (!el || !el.addEventListener) return setTimeout(ready, 100);
+
+        el.addEventListener('convai-ready',  () => { console.log('[EL] ready'); status.textContent = 'status: ready'; });
+        el.addEventListener('convai-opened', () => { console.log('[EL] opened'); status.textContent = 'status: opened'; });
+        el.addEventListener('convai-closed', () => { console.log('[EL] closed'); status.textContent = 'status: closed'; });
+        el.addEventListener('convai-error',  e => { console.error('[EL] error', e.detail); status.textContent = 'status: error'; });
+
+        document.getElementById('open').onclick  = () => el.dispatchEvent(new Event('convai-open'));
+        document.getElementById('close').onclick = () => el.dispatchEvent(new Event('convai-close'));
+
+        // If the SDK never upgraded the element (no shadowRoot) warn loudly
+        setTimeout(() => {
+          if (!el.shadowRoot) {
+            console.error('[EL] widget not upgraded (no shadowRoot). Check domain allowlist, CSP, or SDK 404.');
+            status.textContent = 'status: not upgraded (check console)';
+          }
+        }, 3000);
+      })();
+    </script>
+  </body>
+</html>
+
+2) Serve it and open in an external tab
+
+If you’re using Vite:
+	•	Put the file in client/public/voice-sanity.html
+	•	Run your dev scripts, then open:
+https://<your-replit>.repl.co/voice-sanity.html (or Vite’s external URL)
+	•	Important: use the external tab/window, not the in-pane preview. Mic and iframes can be blocked in the in-pane view.
+
+3) Flip the switches in ElevenLabs
+
+In your ElevenLabs Agent (the one with agent_8201k251883jf0hr1ym7d6dbymxc):
+	•	Turn Web Widget = ON
+	•	Set Public / Unauthenticated = ON (MVP) — you can lock it down later
+	•	Allowed origins / domain allowlist: add your exact Replit URL(s), e.g.
+https://<project>.<username>.repl.co
+(If you have a Vite dev host, add that too.)
+	•	Save; wait 30–60 seconds; hard refresh the sanity page
+
+If you still see errors:
+	•	Console → Network: confirm the SDK (@elevenlabs/convai-widget-embed) loads with 200
+	•	Console → Errors: if you see domain/agent ID errors, that’s an allowlist or agent toggle issue
+	•	If you use a CSP, loosen it per the meta tag shown (or your server headers)
+
+4) Remove your app’s text fallback (temporarily)
+
+Some of your UI tries to render a plain text chat if the widget isn’t “ready”. That can mask the underlying issue.
+	•	Wherever you detect widget readiness (e.g., convai-ready), hide the text chat.
+	•	Until you see [EL] ready, don’t render any fallback. Let the error surface.
+
+5) Wire Actions/Webhooks only after the widget is ready
+
+Once the sanity page shows status: ready and you can open the bubble, then re-enable Actions:
+	•	In ElevenLabs, for each Action (e.g., add_task, get_todo_list, etc.), point it to:
+	•	POST https://<your-replit>.repl.co/api/actions/add_task
+	•	On your server, ensure CORS allows the widget’s origin:
+
+app.use(require('cors')({
+  origin: [/\.repl\.co$/, 'http://localhost:5173'],
+  methods: ['GET','POST','PATCH','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','x-api-key']
+}));
+
+
+	•	Webhook endpoint:
+
+app.post('/api/elevenlabs/webhook', (req,res) => {
+  // TODO: verify signature if configured
+  // handle: message.user, message.agent, transcript.complete, session.start/end
+  res.sendStatus(200);
+});
+
+
+
+6) Common blockers (and the exact fix)
+	•	“Widget not available” → SDK didn’t load, or element wasn’t upgraded
+Fix: ensure the unpkg script 200’s; check CSP; use external tab; confirm the agent ID and allowlist.
+	•	Mic doesn’t open on iOS → needs user gesture
+Fix: press the Open widget button on the sanity page once (satisfies gesture).
+	•	403 from ElevenLabs → domain not allow-listed
+Fix: copy the exact Replit domain (https, no trailing slash) into the agent allowlist.
+
+⸻
+
+After it works
+	•	Keep the voice-sanity.html committed as a regression check.
+	•	Now embed the same <elevenlabs-convai> line + script in your real app’s layout (near end of <body>).
+	•	Re-enable your to-do UI, but gate it behind the convai-ready event so the voice widget always wins when available.
+
+If you try this and the sanity page still shows “not upgraded”, grab the console errors and I’ll give you a drop-in patch for CSP or an alternate CDN path.

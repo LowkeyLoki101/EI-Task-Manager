@@ -106,6 +106,13 @@ export default function HomePage() {
                   <br />
                   <br />Ready to create and manage tasks with AI assistance.
                   <br />Powered by GPT-5 for intelligent task breakdown and automation.
+                  <br />
+                  <br />
+                  <small className="text-sm opacity-75">
+                    <a href="/voice-sanity.html" target="_blank" className="text-blue-500 hover:text-blue-700 underline">
+                      Test voice widget isolation →
+                    </a>
+                  </small>
                 </p>
               </div>
             </div>

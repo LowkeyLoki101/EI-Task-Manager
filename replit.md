@@ -36,6 +36,8 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **Action Endpoints Ready**: /api/actions/research, /api/actions/qr, /api/actions/scaffold_page fully implemented
 - ✅ **Enhanced CORS**: Proper CORS configuration for ElevenLabs widget and API access in server/index.ts
 - ✅ **Widget Event Relay**: ConvAI event handling via /api/convai/relay for frontend widget events
+- ✅ **Voice Sanity Page**: Created /voice-sanity.html for isolated widget testing and diagnostics
+- 🚧 **Current**: ElevenLabs widget configuration (domain allowlist, Web Widget toggle)
 - 🚧 **Next Phase**: Steps Visualizer component integration, ElevenLabs KB management
 
 ## User Preferences
