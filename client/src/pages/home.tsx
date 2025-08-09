@@ -1,26 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useSessionId } from '@/hooks/useSessionId';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
-
-// TypeScript support for ElevenLabs custom element
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'elevenlabs-convai': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      > & { 'agent-id': string };
-    }
-  }
-}
+import VoiceWidget from '../components/VoiceWidget';
 
 export default function HomePage() {
   const sessionId = useSessionId();
   const [builderMode, setBuilderMode] = useState(false);
-  const mounted = useRef(false);
 
   // Supervisor processing for Builder Mode  
   useEffect(() => {
@@ -52,39 +40,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [builderMode, sessionId]);
 
-  // Prevent double mounting under React StrictMode
-  useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
-  }, []);
 
-  // ElevenLabs Widget Diagnostics (React-friendly)
-  useEffect(() => {
-    if (!mounted.current) return;
-    
-    console.log('[Diagnostics] Home page mounted');
-
-    const checkWidget = () => {
-      const widgets = document.querySelectorAll('elevenlabs-convai');
-      console.log(`[Diagnostics] Found ${widgets.length} widget(s) in DOM`);
-      
-      if (widgets.length > 1) {
-        console.warn('[Diagnostics] MULTIPLE widgets detected - this can cause conflicts!');
-      }
-      
-      if (widgets.length >= 1) {
-        const widget = widgets[0];
-        const agentId = widget.getAttribute('agent-id');
-        const chatOnly = widget.getAttribute('chat-only');
-        console.log(`[Diagnostics] Widget agent-id: ${agentId}`);
-        console.log(`[Diagnostics] Widget chat-only: ${chatOnly}`);
-      }
-    };
-
-    checkWidget();
-    const timer = setTimeout(checkWidget, 2000);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -152,13 +108,11 @@ export default function HomePage() {
       </main>
 
       {/* ElevenLabs Widget - Clean Implementation */}
-      {mounted.current && (
-        <elevenlabs-convai 
-          agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
-          chat-only="true"
-          style={{ display: 'block' }}
-        />
-      )}
+      <VoiceWidget
+        agentId="agent_8201k251883jf0hr1ym7d6dbymxc"
+        /* true if you are testing in the Replit preview frame; false in real tab */
+        chatOnly={true}
+      />
     </div>
   );
 }

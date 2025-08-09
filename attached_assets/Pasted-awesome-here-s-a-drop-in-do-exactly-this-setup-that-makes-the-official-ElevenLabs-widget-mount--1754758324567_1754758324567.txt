@@ -1,0 +1,191 @@
+awesome — here’s a drop-in, “do exactly this” setup that makes the official ElevenLabs widget mount cleanly in your Replit/Vite React app, with event logs and a hook you can use to forward transcripts/status to your backend.
+
+⸻
+
+1) Load the widget once (global HTML)
+
+index.html (at repo root, Vite default)
+Add this inside <head> and remove any other ElevenLabs scripts/diagnostics you had:
+
+<!-- ElevenLabs ConvAI Widget SDK -->
+<script
+  src="https://unpkg.com/@elevenlabs/convai-widget-embed@latest"
+  async
+  type="text/javascript">
+</script>
+
+That’s it for HTML. Do not import this script in React again.
+
+⸻
+
+2) A clean React component that mounts the widget (client-only)
+
+src/components/VoiceWidget.tsx
+
+import { useEffect } from "react";
+
+/** Let TS accept the custom element */
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "elevenlabs-convai": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      > & {
+        "agent-id": string;
+        "chat-only"?: string | boolean;
+      };
+    }
+  }
+}
+
+type Props = {
+  agentId: string;
+  /** Set true while developing inside Replit preview to avoid AudioWorklet issues */
+  chatOnly?: boolean;
+};
+
+/**
+ * Mounts the official ElevenLabs ConvAI web component.
+ * - No custom SDK/audio init here (prevents collisions).
+ * - Includes lightweight diagnostics + event listeners.
+ */
+export default function VoiceWidget({ agentId, chatOnly = false }: Props) {
+  useEffect(() => {
+    // DIAGNOSTICS: confirm element + agent id
+    const el = document.querySelector("elevenlabs-convai");
+    console.log("[EL] widget present:", !!el, "agent-id:", el?.getAttribute("agent-id"));
+
+    // Optional: listen for widget lifecycle events
+    const onReady = (e: Event) => console.log("[EL] convai-ready", e);
+    const onError = (e: Event) => console.error("[EL] convai-error", e);
+    const onStatus = (e: Event) => console.log("[EL] convai-status", e);
+
+    window.addEventListener("convai-ready", onReady as EventListener);
+    window.addEventListener("convai-error", onError as EventListener);
+    window.addEventListener("convai-status", onStatus as EventListener);
+
+    return () => {
+      window.removeEventListener("convai-ready", onReady as EventListener);
+      window.removeEventListener("convai-error", onError as EventListener);
+      window.removeEventListener("convai-status", onStatus as EventListener);
+    };
+  }, []);
+
+  return (
+    <elevenlabs-convai
+      agent-id={agentId}
+      /* keep chat-only during dev inside Replit preview pane; remove in prod */
+      {...(chatOnly ? { "chat-only": "true" } : {})}
+      style={{ display: "block" }}
+    />
+  );
+}
+
+
+⸻
+
+3) Render the widget once in your app
+
+src/App.tsx (or your top page component)
+
+import VoiceWidget from "./components/VoiceWidget";
+
+export default function App() {
+  return (
+    <main className="min-h-screen">
+      {/* … your UI … */}
+      <VoiceWidget
+        agentId="agent_8201k251883jf0hr1ym7d6dbymxc"
+        /* true if you are testing in the Replit preview frame; false in real tab */
+        chatOnly={true}
+      />
+    </main>
+  );
+}
+
+Important: Do not render <elevenlabs-convai> anywhere else (no duplicates in MobileVoiceInterface, layouts, etc.).
+
+⸻
+
+4) (Optional) Forward conversation events to your backend
+
+If you want to capture transcripts/status as the user talks, add a tiny event relay. The widget dispatches events on window. We’ll tap them and POST to your API.
+
+Add to VoiceWidget.tsx inside the same useEffect:
+
+useEffect(() => {
+  const relay = (type: string) => (evt: any) => {
+    try {
+      // evt.detail may contain structured info (depends on widget event)
+      fetch("/api/convai/relay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, detail: evt?.detail ?? null, ts: Date.now() })
+      }).catch(() => {});
+    } catch {}
+  };
+
+  const onUtterance = relay("utterance");
+  const onTranscript = relay("transcript");
+  const onToolCall = relay("tool_call");
+  const onToolResult = relay("tool_result");
+
+  window.addEventListener("convai-utterance", onUtterance as EventListener);
+  window.addEventListener("convai-transcript", onTranscript as EventListener);
+  window.addEventListener("convai-tool-call", onToolCall as EventListener);
+  window.addEventListener("convai-tool-result", onToolResult as EventListener);
+
+  return () => {
+    window.removeEventListener("convai-utterance", onUtterance as EventListener);
+    window.removeEventListener("convai-transcript", onTranscript as EventListener);
+    window.removeEventListener("convai-tool-call", onToolCall as EventListener);
+    window.removeEventListener("convai-tool-result", onToolResult as EventListener);
+  };
+}, []);
+
+Example Express handler (Replit server server.js):
+
+app.post("/api/convai/relay", express.json(), async (req, res) => {
+  // TODO: persist to DB if you want; keep it small for performance
+  console.log("[relay]", req.body.type, req.body.detail);
+  res.json({ ok: true });
+});
+
+(You already have a post-call webhook; this is just for live “during-call” breadcrumbs.)
+
+⸻
+
+5) Remove anything that collides
+
+Search your repo and comment out any code that initializes another ElevenLabs runtime:
+	•	Files you mentioned: elevenlabs-actions.ts, elevenlabs-sdk.ts, enhanced-actions.ts
+	•	Any code that:
+	•	calls createClient, startSession, startCall, or similar
+	•	creates its own AudioContext or AudioWorkletNode
+	•	manually connects mic streams to an ElevenLabs client
+
+The widget must be the only voice stack on the page.
+
+⸻
+
+6) Test the right way
+	1.	Click “Open in new tab” from Replit so it’s a top-level HTTPS page (not the preview iframe).
+	2.	You should see your correct agent logo immediately.
+	3.	Open DevTools → Console: you’ll see [EL] convai-ready once it boots.
+	4.	When you’re ready to test voice, set chatOnly={false} in App.tsx and reload in the new tab.
+
+(If you must stay in the preview pane while coding: keep chatOnly={true} to avoid the AudioWorklet error.)
+
+⸻
+
+7) Quick checklist (to avoid past issues)
+	•	Only 1 script tag (the one in index.html).
+	•	Only 1 <elevenlabs-convai> rendered.
+	•	No diagnostics that query/modify the element.
+	•	The agent’s Tools use Authorization: Bearer {{TOOLS_TOKEN}} and Content-Type: application/json.
+	•	System prompt references the exact tool names you registered (lookup_customer, create_report_link, create_qr, send_sms, open_map).
+
+⸻
+
+If you want me to review specific snippets (your current index.html + VoiceWidget.tsx), drop them in and I’ll mark the exact lines to delete or tweak.

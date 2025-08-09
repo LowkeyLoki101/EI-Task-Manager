@@ -1,0 +1,48 @@
+From what you’ve posted, the “works here but not there” behavior is almost certainly because the current Replit integration isn’t actually mounting the official ConvAI web component in the way ElevenLabs expects.
+
+In the working environment, you’re doing the bare-minimum, “official” widget embed:
+
+<elevenlabs-convai agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"></elevenlabs-convai>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+That gives the ElevenLabs SDK control over:
+	•	Creating the internal <audio> and AudioWorklet pipelines.
+	•	Negotiating a session with the agent ID you’ve provided.
+	•	Injecting its own styles and assets into the shadow DOM.
+
+In the Replit build you showed in the spec, they didn’t drop that embed directly. Instead, they hard-coded “11 labs” logic into a React/TypeScript component and may be:
+	•	Omitting the <script> that “upgrades” the <elevenlabs-convai> element.
+	•	Wrapping the widget in a custom container without forwarding the right attributes.
+	•	Running it inside the IDE preview iframe or under an iframe sandbox/CSP that blocks AudioWorklets or the raw-audio-processor module.
+	•	Passing a bad or placeholder agent-id so it falls back to a default “no-logo” shell.
+
+That’s why you see “wrong logo” and no connection — the embed isn’t actually talking to your public agent; it’s instantiating a local stub.
+
+The fix is to make the Replit version mount the widget exactly the way the working environment does, or at least follow the safe-mount order from the official example ￼:
+
+<elevenlabs-convai
+  id="el-agent"
+  agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
+  style="position:fixed; right:24px; bottom:24px; z-index:9999;"
+></elevenlabs-convai>
+
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed@latest" async type="text/javascript"></script>
+
+And then, if you need debugging, attach listeners to convai-ready/convai-error so you can see:
+	•	If the agent ID is rejected (invalid or domain not allow-listed).
+	•	If the SDK failed to upgrade the element (no shadowRoot).
+	•	If the browser blocked the AudioWorklet for CSP/HTTPS reasons.
+
+Also, check the widget’s prerequisites ￼:
+	1.	The agent in ElevenLabs is set to Public and has your Replit URL on its allowed origins list.
+	2.	You’re opening the app in an external HTTPS tab, not the IDE preview frame.
+	3.	Your CSP/headers allow:
+
+script-src 'self' https://unpkg.com;
+connect-src 'self' https://api.elevenlabs.io https://api.elevenlabs.*;
+frame-src https://*.elevenlabs.io;
+
+
+	4.	You’re loading the latest SDK script after the element.
+
+If you want, I can rewrite the Replit React component so it mounts the <elevenlabs-convai> element untouched, loads the SDK, and then lets you hook into its events for sending transcripts to your API. That would preserve the exact behavior of your “works here” environment while still giving you React-side control. Would you like me to do that?

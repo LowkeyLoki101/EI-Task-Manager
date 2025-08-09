@@ -205,6 +205,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ConvAI Event Relay
+  app.post('/api/convai/relay', async (req, res) => {
+    // Forward conversation events from ElevenLabs widget
+    console.log('[ConvAI Relay]', req.body.type, req.body.detail);
+    res.json({ ok: true });
+  });
+
   // Supervisor Agent with GPT-5 Ops Manager
   app.post("/api/supervisor/ingest", async (req, res) => {
     try {
