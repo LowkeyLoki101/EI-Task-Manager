@@ -37,6 +37,8 @@ export default function VoiceWidget({ agentId, chatOnly = true }: Props) {
     },
     onError: (error) => {
       console.error('[EL] Error:', error);
+      // Show user-friendly error message
+      alert('Voice connection failed. Please try the text chat instead or check your microphone permissions.');
     },
   });
 
@@ -45,14 +47,27 @@ export default function VoiceWidget({ agentId, chatOnly = true }: Props) {
       // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Start the conversation with your agent
-      await conversation.startSession({
+      // Start the conversation with your agent  
+      console.log('Starting session with agent:', agentId);
+      const conversationId = await conversation.startSession({
         agentId: agentId,
+        // Use websocket connection type
         connectionType: 'websocket'
       });
+      
+      console.log('Voice conversation started:', conversationId);
 
     } catch (error) {
       console.error('Failed to start conversation:', error);
+      // More detailed error logging
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        // Show specific error to user
+        alert(`Voice chat failed: ${error.message}. Please use the blue text chat button instead.`);
+      } else {
+        alert('Voice chat is currently unavailable. Please use the blue text chat button for now.');
+      }
     }
   }, [conversation, agentId]);
 
