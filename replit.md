@@ -43,9 +43,12 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **Smart Fallback System**: Text chat only shows when voice widget fails, voice mode prioritized  
 - ✅ **Event-Driven Architecture**: Widget ready events properly gate Actions API and UI states
 - ✅ **GPT-5 Text Chat Fixed**: DirectChatWidget now properly connects to supervisor with GPT-5
+- ✅ **Official Web Component**: Replaced React SDK with official ElevenLabs web component embed
+- ✅ **Enhanced CORS**: Comprehensive CORS configuration for all ElevenLabs domains and Replit
+- ✅ **Action Endpoints Ready**: All five Actions API endpoints tested and working correctly
 - ⚠️ **ElevenLabs Dashboard Config**: Voice widget needs Web Widget enabled and domain allowlist configured
 - 🚧 **Current Phase**: ElevenLabs dashboard configuration to enable voice mode
-- 🚧 **Next**: Steps Visualizer component integration, full voice + Actions API testing
+- 🚧 **Next**: Voice mode testing once dashboard configured
 
 ## User Preferences
 

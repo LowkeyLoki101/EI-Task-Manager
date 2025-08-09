@@ -1,0 +1,74 @@
+Looks like your screenshot is showing a pretty solid diagnosis — the app is running but the integration with ElevenLabs is failing because of four main gaps:
+
+From your list:
+	1.	Switch from React SDK back to web component – This will cut out the extra React layer that can block the widget from initializing properly and let you follow ElevenLabs’ documented embed flow.
+	2.	Improve CORS setup – Right now your server’s CORS might not allow all the origins the widget will use (e.g., your Replit domain, localhost:5173 in dev, ElevenLabs API domain for callbacks).
+	3.	Add a Vite dev proxy – Without it, local dev calls to /api from the React client hit CORS or fail entirely.
+	4.	Fix Action endpoints – Make sure payloads and URLs match exactly what ElevenLabs sends when the agent calls an action.
+
+⸻
+
+Here’s how I’d apply those fixes step-by-step:
+
+1. Web component instead of React SDK
+Replace your current React wrapper with the official embed:
+
+<elevenlabs-convai agent-id="YOUR_AGENT_ID"></elevenlabs-convai>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+Make sure:
+	•	The agent is set to “Public” in the ElevenLabs dashboard
+	•	Your dev and production domains are in its Allowed Origins
+	•	Test in an external browser tab, not the in-pane preview
+
+⸻
+
+2. Expand your CORS config
+In server/index.ts or wherever Express is bootstrapped:
+
+app.use(cors({
+  origin: [
+    /\.repl\.co$/,               // your Replit previews
+    "http://localhost:5173",     // vite dev
+    "https://unpkg.com"          // for ElevenLabs SDK
+  ],
+  methods: ["GET", "POST", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-key"]
+}));
+
+
+⸻
+
+3. Vite proxy for dev
+In vite.config.ts:
+
+export default defineConfig({
+  server: {
+    proxy: {
+      "/api": "http://localhost:3000" // your backend port
+    }
+  }
+});
+
+This way local API calls go straight to your backend without CORS headaches.
+
+⸻
+
+4. Action endpoint fixes
+Make sure your server endpoints match the Actions you’ve defined in ElevenLabs:
+
+app.post("/api/actions/add_task", (req, res) => {
+  // validate against the schema ElevenLabs expects
+  // create the task and return a JSON payload the agent can read back
+  res.json({ ok: true, taskId: "tsk_123" });
+});
+
+app.post("/api/actions/get_todo_list", (req, res) => {
+  res.json({ items: [], steps: [] });
+});
+
+Check the ElevenLabs action schema in the dashboard and make sure your JSON keys match exactly — even a slight mismatch can make the agent ignore the response.
+
+⸻
+
+If you want, I can rewrite your vite.config.ts and server/index.ts exactly for these changes and give you the correct <elevenlabs-convai> embed so you can paste them in without guessing. Do you want me to do that next?
