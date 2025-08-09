@@ -16,8 +16,12 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- ElevenLabs Widget - EXACTLY as documentation says (no extra attributes) -->
-    <elevenlabs-convai agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"></elevenlabs-convai>
+    <!-- ElevenLabs Widget - with positioning like voice-sanity.html -->
+    <elevenlabs-convai 
+      id="el-agent"
+      agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
+      style="position: fixed; right: 24px; bottom: 24px; z-index: 9999;"
+    ></elevenlabs-convai>
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
