@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Session Test</title>
+</head>
+<body>
+    <h1>Session ID Test</h1>
+    <p>Frontend Session ID: <span id="session-id">Loading...</span></p>
+    <button onclick="createTestTask()">Create Test Task</button>
+    <div id="result"></div>
+    
+    <script>
+        // Get frontend session ID (same logic as useSessionId hook)
+        let stored = localStorage.getItem('ei_session');
+        if (!stored) {
+            stored = `s_${Math.random().toString(36).slice(2)}`;
+            localStorage.setItem('ei_session', stored);
+        }
+        document.getElementById('session-id').textContent = stored;
+        
+        async function createTestTask() {
+            try {
+                const response = await fetch('/api/chat/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: stored,
+                        message: 'Create a task to test the connection between frontend and backend'
+                    })
+                });
+                const result = await response.json();
+                document.getElementById('result').innerHTML = 
+                    `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
