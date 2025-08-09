@@ -1,36 +1,43 @@
 // Enhanced ElevenLabs SDK integration with voice features
-// Note: This is a placeholder implementation until ElevenLabs SDK is properly configured
+import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 
-// Mock client for development - will be replaced with actual SDK calls when API key is provided
-const mockClient = {
-  generate: async (params: any) => {
-    // Return empty audio buffer for development
-    return new ArrayBuffer(0);
-  },
-  voices: {
-    getAll: async () => ({
-      voices: [
-        { voice_id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" },
-        { voice_id: "AZnzlk1XvdvUeBnXmlld", name: "Domi" }
-      ]
-    })
-  }
-};
+const elevenlabs = new ElevenLabsClient({
+  apiKey: process.env.ELEVENLABS_API_KEY
+});
 
 export class VoiceService {
   
   // Generate voice synthesis for system responses
   async synthesizeVoice(text: string, voiceId?: string): Promise<ArrayBuffer> {
     try {
-      // For development, return mock audio buffer
-      // TODO: Replace with actual ElevenLabs SDK call when API key is configured
-      const audioBuffer = await mockClient.generate({
-        voice: voiceId || "21m00Tcm4TlvDq8ikWAM",
-        text: text,
-        model_id: "eleven_monolingual_v1",
-      });
+      const audioStream = await elevenlabs.textToSpeech.convert(
+        voiceId || "21m00Tcm4TlvDq8ikWAM",
+        {
+          text: text,
+          modelId: "eleven_monolingual_v1",
+        }
+      );
 
-      return audioBuffer;
+      // Convert ReadableStream to ArrayBuffer
+      const reader = audioStream.getReader();
+      const chunks: Uint8Array[] = [];
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+
+      const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+      const result = new Uint8Array(totalLength);
+      let offset = 0;
+      
+      for (const chunk of chunks) {
+        result.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      return result.buffer;
     } catch (error) {
       console.error('Voice synthesis error:', error);
       throw new Error('Failed to synthesize voice');
@@ -75,7 +82,7 @@ export class VoiceService {
   // Get voice settings and capabilities
   async getVoiceCapabilities() {
     try {
-      const voices = await mockClient.voices.getAll();
+      const voices = await elevenlabs.voices.getAll();
       return {
         voices: voices.voices,
         models: ["eleven_monolingual_v1", "eleven_multilingual_v1"],
