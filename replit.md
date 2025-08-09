@@ -46,9 +46,13 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **Official Web Component**: Replaced React SDK with official ElevenLabs web component embed
 - ✅ **Enhanced CORS**: Comprehensive CORS configuration for all ElevenLabs domains and Replit
 - ✅ **Action Endpoints Ready**: All five Actions API endpoints tested and working correctly
-- ⚠️ **ElevenLabs Dashboard Config**: Voice widget needs Web Widget enabled and domain allowlist configured
-- 🚧 **Current Phase**: ElevenLabs dashboard configuration to enable voice mode
-- 🚧 **Next**: Voice mode testing once dashboard configured
+- ✅ **Voice Transcript Integration**: Added missing convai-message, convai-transcript, convai-utterance event handlers
+- ✅ **Voice → Task Flow**: Voice input now routes to /api/conversations → supervisor processing → task creation
+- ✅ **Actions API Connected**: convai-action-call events route to /api/actions/* endpoints
+- ✅ **Debug Controls**: Manual open/close buttons for widget troubleshooting
+- ✅ **ElevenLabs Dashboard Configured**: Voice widget working with microphone permissions granted
+- 🚧 **Current Phase**: Full voice-to-task creation testing and validation
+- 🚧 **Next**: User testing of complete voice workflow
 
 ## User Preferences
 

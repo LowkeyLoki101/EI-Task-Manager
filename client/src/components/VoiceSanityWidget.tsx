@@ -28,22 +28,104 @@ export default function VoiceSanityWidget({ agentId }: Props) {
         return;
       }
 
-      // Add event listeners matching voice-sanity.html
+      // Add ALL event listeners from working voice-sanity.html
       el.addEventListener('convai-ready', () => { 
-        console.log('[EL] Widget ready - enabling voice mode, disabling text fallback'); 
+        console.log('[EL] ready - WIDGET IS WORKING!'); 
         document.dispatchEvent(new Event('convai-ready'));
       });
       
       el.addEventListener('convai-opened', () => { 
-        console.log('[EL] Widget opened - conversation UI visible'); 
+        console.log('[EL] opened - conversation UI visible'); 
       });
       
       el.addEventListener('convai-closed', () => { 
-        console.log('[EL] Widget closed'); 
+        console.log('[EL] closed'); 
       });
       
       el.addEventListener('convai-error', (e: Event) => { 
-        console.error('[EL] Widget error:', (e as any).detail); 
+        console.error('[EL] error', (e as any).detail); 
+      });
+
+      // CRITICAL: Add transcript and conversation events (missing from current implementation)
+      el.addEventListener('convai-message', (e: Event) => {
+        const detail = (e as any).detail;
+        console.log('[EL] message received:', detail);
+        
+        // Send transcript to our backend for processing
+        if (detail?.content || detail?.transcript) {
+          fetch('/api/conversations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: agentId + '-voice-session',
+              role: detail.role || 'user',
+              content: detail.content || detail.transcript,
+              transcript: detail.transcript
+            })
+          }).then(() => {
+            // Trigger supervisor processing
+            return fetch('/api/supervisor/ingest', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId: agentId + '-voice-session',
+                builderMode: true,
+                context: 'phone'
+              })
+            });
+          }).catch(console.error);
+        }
+      });
+
+      el.addEventListener('convai-transcript', (e: Event) => {
+        const detail = (e as any).detail;
+        console.log('[EL] transcript:', detail);
+        
+        // Send transcript to conversation system
+        if (detail?.text || detail?.content) {
+          fetch('/api/conversations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: agentId + '-voice-session',
+              role: 'user',
+              content: detail.text || detail.content,
+              transcript: detail.text || detail.content
+            })
+          }).catch(console.error);
+        }
+      });
+
+      el.addEventListener('convai-utterance', (e: Event) => {
+        const detail = (e as any).detail;
+        console.log('[EL] utterance (user spoke):', detail);
+      });
+
+      // Action events - connect to our Actions API
+      el.addEventListener('convai-action-call', (e: Event) => {
+        const detail = (e as any).detail;
+        console.log('[EL] action call:', detail);
+        
+        // Route action calls to our endpoints
+        if (detail?.action && detail?.parameters) {
+          const actionUrl = `/api/actions/${detail.action}`;
+          fetch(actionUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: agentId + '-voice-session',
+              ...detail.parameters
+            })
+          }).then(response => response.json())
+            .then(result => {
+              console.log('[EL] action result:', result);
+              // Send result back to widget if needed
+              el.dispatchEvent(new CustomEvent('convai-action-result', { 
+                detail: { actionId: detail.actionId, result } 
+              }));
+            })
+            .catch(console.error);
+        }
       });
 
       // Check if widget upgraded correctly (from voice-sanity.html)
@@ -71,16 +153,40 @@ export default function VoiceSanityWidget({ agentId }: Props) {
   }, [agentId]);
 
   return (
-    <elevenlabs-convai
-      id="el-agent-main"
-      agent-id={agentId}
-      style={{
-        position: 'fixed',
-        right: '24px',
-        bottom: '24px',
-        zIndex: 9999
-      }}
-    />
+    <>
+      <elevenlabs-convai
+        id="el-agent-main"
+        agent-id={agentId}
+        className="dock"
+        style={{
+          position: 'fixed',
+          right: '24px',
+          bottom: '24px',
+          zIndex: 9999
+        }}
+      />
+      {/* Control buttons for debugging */}
+      <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 10000, fontSize: '12px', display: 'flex', gap: '8px' }}>
+        <button
+          onClick={() => {
+            const el = document.getElementById('el-agent-main');
+            if (el) el.dispatchEvent(new Event('convai-open'));
+          }}
+          style={{ padding: '4px 8px', fontSize: '10px' }}
+        >
+          Open Widget
+        </button>
+        <button
+          onClick={() => {
+            const el = document.getElementById('el-agent-main');
+            if (el) el.dispatchEvent(new Event('convai-close'));
+          }}
+          style={{ padding: '4px 8px', fontSize: '10px' }}
+        >
+          Close Widget  
+        </button>
+      </div>
+    </>
   );
 }
 

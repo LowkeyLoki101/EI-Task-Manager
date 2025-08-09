@@ -131,9 +131,11 @@ export default function HomePage() {
                   <br />
                   <br />
                   <small className="text-sm opacity-75">
-                    Voice interface active! Look for the microphone bubble in the bottom right corner.
+                    Voice interface ready! Look for the microphone bubble in the bottom right corner.
                     <br />
-                    Click it to start talking to your AI assistant.
+                    Click it and say: "Create a task to write a blog post" - it will automatically process your request.
+                    <br />
+                    Debug buttons (top right) to manually open/close the widget if needed.
                   </small>
                 </p>
               </div>
