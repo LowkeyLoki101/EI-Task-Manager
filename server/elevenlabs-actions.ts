@@ -8,7 +8,7 @@ import {
 import { randomUUID } from "crypto";
 import OpenAI from "openai";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// GPT-5 is now available and is the latest OpenAI model
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-fake-key-for-development" 
 });
@@ -236,9 +236,9 @@ export class OpsManager {
 
   async processIntent(intent: string, context?: any) {
     try {
-      // Use GPT-4o to parse intent and create tasks/steps
+      // Use GPT-5 to parse intent and create tasks/steps
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-5",
         messages: [
           {
             role: "system",

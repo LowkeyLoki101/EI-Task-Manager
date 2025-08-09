@@ -14,7 +14,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// GPT-5 is now available and is the latest OpenAI model
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-fake-key-for-development" 
 });

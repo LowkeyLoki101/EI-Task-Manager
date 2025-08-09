@@ -7,15 +7,15 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 ### Primary Roles
 - **User**: speaks/types tasks; reviews/approves automation
 - **ElevenLabs Agent (Liaison)**: voice/ASR/TTS + KB host; calls actions; receives status to brief the user
-- **GPT-5 Ops Manager**: parses intent → creates/updates tasks/steps; runs tools; returns deltas; writes memory
+- **GPT-4o Ops Manager**: parses intent → creates/updates tasks/steps; runs tools; returns deltas; writes memory
 - **Replit Backend**: APIs, storage, embeddings, webhooks, multi-tenant platform
 
 ### Current Implementation Status
 - ✅ Official ElevenLabs web component integration with agent_8201k251883jf0hr1ym7d6dbymxc
-- ✅ Supervisor agent with conversation processing (8-second intervals when builder mode active)
+- ✅ Supervisor agent with conversation processing (8-second intervals when builder mode active)  
 - ✅ Complete database schema matching memory anchors (Tasks, Steps, Artifacts, Memory, Installations)
 - ✅ ElevenLabs Actions API system (add_task, update_step_status, get_todo_list, kb_attach_doc, post_ops_update)
-- ✅ GPT-5 Ops Manager with intent processing and task/step creation
+- ✅ GPT-5 Ops Manager with intent processing and task/step creation (latest OpenAI model)
 - ✅ Memory model for domain-specific key-value storage
 - ✅ Context routing system (computer/phone/physical + time windows)
 - ✅ Public API surface for integrators with full CRUD operations
@@ -25,9 +25,11 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **Mobile-First UI**: Simplified interface per user feedback - removed technical status cards, clean single voice interface
 - ✅ **Enhanced Actions API**: SDK-powered voice features with file operations integration
 - ✅ **Excel/CSV File Operations**: Complete read/write/update capabilities with voice feedback
-- ✅ **Voice Service Integration**: Text-to-speech synthesis for system responses and notifications
+- ✅ **Voice Service Integration**: Text-to-speech synthesis for system responses and notifications  
 - ✅ **Task Reporting**: Export tasks and steps to Excel/CSV with voice confirmations
 - ✅ **File Import System**: Import tasks from Excel/CSV files with validation and voice feedback
+- ✅ **ElevenLabs API Integration**: Fully configured with proper authentication and voice synthesis
+- ✅ **Complete Voice Stack**: Widget + Actions + SDK integration for comprehensive voice experience
 - 🚧 **Next Phase**: Full toolbelt implementation (web search, QR generation, page scaffolding), ElevenLabs KB management
 
 ## User Preferences
@@ -59,14 +61,16 @@ Interface design: Clean, mobile-first interface without technical backend detail
 - **Video Integration**: YouTube search and embedding for task-related tutorials
 
 ### AI Integration
-- **Supervisor Agent**: GPT-4 powered AI that processes conversations and manages task workflows
+- **Supervisor Agent**: GPT-5 powered AI that processes conversations and manages task workflows (using latest OpenAI model)
 - **Tool Execution**: Extensible tool system for web search, file processing, and external API calls
 - **Code Generation**: AI can propose new features and code modifications through a safe preview-and-approve workflow
+- **Voice Processing**: ElevenLabs SDK integration for text-to-speech synthesis and audio feedback
+- **File Intelligence**: AI-powered Excel/CSV processing with natural language task import/export
 
 ### Data Models (Target Architecture)
 - **Task**: title, status(backlog/today/doing/done), context(computer/phone/physical), time_window
 - **Step**: belongs to task; status(pending/running/blocked/done); can_auto(bool); tool_hint; parent_step for sub-steps
-- **Artifact**: link/file/note/html attached to a step
+- **Artifact**: link/file/note/html/excel/csv/audio attached to a step
 - **Memory**: per-domain key→value store (e.g., DNS path for GoDaddy, provider docs used)
 - **Conversation/Transcript**: sessions + ASR text tied to tasks
 - **Installation**: tenant/project/domain/keys for third-party sites
@@ -87,14 +91,32 @@ UI filters use these labels to show the right list at the right time.
 ### Cloud Services
 - **Google Cloud Storage**: File upload and storage backend
 - **Neon Database**: PostgreSQL database service (configured via Drizzle)
-- **OpenAI API**: ✅ CONNECTED - GPT-4 integration for AI processing and conversations
-- **ElevenLabs API**: ✅ CONNECTED - Conversational AI Agent (agent_8201k251883jf0hr1ym7d6dbymxc) for natural voice conversations
+- **OpenAI API**: ✅ CONNECTED - GPT-5 integration for AI processing and conversations (latest available model)
+- **ElevenLabs API**: ✅ AUTHENTICATED - Conversational AI Agent (agent_8201k251883jf0hr1ym7d6dbymxc) with valid API key
+- **ElevenLabs SDK**: ✅ INTEGRATED - JavaScript SDK for programmatic voice synthesis and TTS features
 
 ### Third-Party APIs
 - **YouTube Data API**: ✅ CONNECTED - Video search functionality for task-related tutorials
 - **Bing Search API**: Web search capabilities for information gathering (planned)
 
+### File Processing Libraries
+- **XLSX**: ✅ INSTALLED - Excel file read/write/manipulation capabilities
+- **CSV-Parser**: ✅ INSTALLED - CSV file reading with streaming support  
+- **CSV-Writer**: ✅ INSTALLED - CSV file creation with custom headers and formatting
+
+### Voice & Audio Stack
+- **ElevenLabs ConvAI Widget**: Official web component for conversational interface
+- **ElevenLabs Client SDK**: Programmatic access for voice synthesis and notifications
+- **Audio Processing**: Real-time voice feedback for task operations and file management
+
 ### Development Tools
 - **Replit Integration**: Development environment with hot reload and error reporting
 - **Drizzle Kit**: Database migration and schema management tools
 - **ESBuild**: Production build optimization for server-side code
+
+## Recent Updates (August 2025)
+- ✅ **ElevenLabs API Key Configured**: Authentication resolved, full voice stack operational
+- ✅ **Enhanced Actions Implementation**: Complete SDK integration with file operations
+- ✅ **Excel/CSV Voice Integration**: File operations now provide audio confirmations
+- ✅ **Model Upgrade**: Using GPT-5 (latest available OpenAI model as of August 2025)
+- ✅ **Mobile Voice Experience**: Optimized widget performance with chat-only mode for Replit preview
