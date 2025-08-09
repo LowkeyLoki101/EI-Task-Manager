@@ -30,6 +30,8 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **File Import System**: Import tasks from Excel/CSV files with validation and voice feedback
 - ✅ **ElevenLabs API Integration**: Fully configured with proper authentication and voice synthesis
 - ✅ **Complete Voice Stack**: Widget + Actions + SDK integration for comprehensive voice experience
+- ✅ **Dual Interface**: Voice chat (microphone permissions required) + reliable text chat fallback
+- ⚠️ **Voice Chat Status**: Working but may face browser permission restrictions in preview environments
 - 🚧 **Next Phase**: Full toolbelt implementation (web search, QR generation, page scaffolding), ElevenLabs KB management
 
 ## User Preferences
@@ -119,6 +121,7 @@ UI filters use these labels to show the right list at the right time.
 - ✅ **ElevenLabs API Validated**: Agent agent_8201k251883jf0hr1ym7d6dbymxc confirmed working with Pro subscription
 - ✅ **Complete API Stack**: Both OpenAI GPT-5 and ElevenLabs APIs fully authenticated and operational
 - ✅ **Enhanced Actions Implementation**: Complete SDK integration with file operations
-- ✅ **Excel/CSV Voice Integration**: File operations now provide audio confirmations
-- 🔧 **Widget Connectivity**: ElevenLabs ConvAI widget has endpoint version mismatch (API works, widget fetch fails)
-- ✅ **Mobile Voice Experience**: Optimized widget performance with chat-only mode for Replit preview
+- ✅ **Excel/CSV Voice Integration**: File operations now provide audio confirmations  
+- ✅ **ElevenLabs React SDK Integration**: Proper useConversation hook implementation with WebSocket connection
+- ✅ **Text Chat Fallback**: Reliable DirectChatWidget for environments with microphone restrictions
+- ✅ **Mobile Voice Experience**: Dual interface with voice + text options positioned clearly

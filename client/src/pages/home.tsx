@@ -100,9 +100,9 @@ export default function HomePage() {
                   Ready to start
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Two chat options available in the bottom-right corner:
-                  <br />• Microphone button for voice conversations
-                  <br />• Blue chat button for text conversations
+                  Ready to create and manage tasks! Two chat options available:
+                  <br />• <strong>Blue chat button</strong> - reliable text conversations  
+                  <br />• Microphone button - voice chat (requires mic permission)
                 </p>
               </div>
             </div>
