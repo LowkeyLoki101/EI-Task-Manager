@@ -451,7 +451,7 @@ Return as a complete HTML page that can be saved and used immediately.`;
     }
   });
 
-  // ConvAI Event Relay
+  // ConvAI Event Relay (Simplified version)
   app.post('/api/convai/relay', async (req, res) => {
     // Forward conversation events from ElevenLabs widget
     console.log('[ConvAI Relay]', req.body.type, req.body.detail);
@@ -593,11 +593,11 @@ Return as a complete HTML page that can be saved and used immediately.`;
     }
   });
 
-  // ConvAI Widget Event Relay
-  app.post("/api/convai/relay", async (req, res) => {
+  // ConvAI Widget Event Relay (Enhanced)
+  app.post("/api/convai/widget-relay", async (req, res) => {
     try {
       const { type, detail, ts } = req.body;
-      console.log(`[EL] ConvAI relay: ${type}`, detail);
+      console.log(`[EL] ConvAI widget event: ${type}`, detail);
       
       // Handle widget events from frontend
       switch (type) {
@@ -606,30 +606,58 @@ Return as a complete HTML page that can be saved and used immediately.`;
           break;
           
         case 'utterance':
+        case 'convai-utterance':
           // User spoke - store transcript if available
           if (detail?.transcript) {
-            const sessionId = detail.sessionId || 'default-session';
+            const sessionId = detail.sessionId || 'default';
             await storage.createMessage({
               sessionId,
               role: 'user',
               content: detail.transcript,
               transcript: detail.transcript
             });
+            console.log(`[EL] Stored user utterance: "${detail.transcript}"`);
           }
           break;
           
         case 'transcript':
+        case 'convai-transcript':
           console.log('[EL] Transcript received:', detail);
           break;
           
-        case 'tool_call':
-          console.log('[EL] Tool call received:', detail);
+        case 'action-call':
+        case 'convai-action-call':
+          console.log('[EL] Action call received:', detail);
+          
+          // Route action calls to Colby Actions API
+          if (detail?.action_name) {
+            const actionPath = `/api/actions/${detail.action_name}`;
+            console.log(`[EL] Routing action call to: ${actionPath}`);
+            
+            try {
+              // Forward to appropriate action endpoint
+              const actionResponse = await fetch(`http://localhost:5000${actionPath}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  sessionId: detail.sessionId || 'default',
+                  ...detail.parameters
+                })
+              });
+              
+              const actionResult = await actionResponse.json();
+              console.log(`[EL] Action ${detail.action_name} result:`, actionResult);
+              
+            } catch (error) {
+              console.error(`[EL] Action ${detail.action_name} failed:`, error);
+            }
+          }
           break;
       }
       
       res.json({ success: true, received: type });
     } catch (error) {
-      console.error('ConvAI relay error:', error);
+      console.error('ConvAI widget relay error:', error);
       res.status(500).json({ error: "Failed to process widget event" });
     }
   });
