@@ -4,6 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
+import TaskManager from '../components/TaskManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 
 export default function HomePage() {
@@ -116,10 +117,18 @@ export default function HomePage() {
             </p>
           </div>
 
+          {/* Task Manager - Now Connected to Main UI */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Your Tasks
+            </h3>
+            <TaskManager sessionId={sessionId} onVideoSelect={() => {}} />
+          </div>
+
           {/* Simple Call to Action */}
-          <div className="text-center py-16">
+          <div className="text-center py-8">
             <div className="max-w-md mx-auto space-y-6">
-              <div className="text-6xl">🎤</div>
+              <div className="text-4xl">🎤</div>
               <div className="space-y-3">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Ready to start

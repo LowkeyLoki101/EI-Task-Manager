@@ -33,6 +33,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Enhanced Actions with SDK integration
   registerEnhancedActions(app);
   
+  // Register Colby Actions API - matches the comprehensive Colby toolset specification
+  const { registerColbyActions } = await import("./colby-actions");
+  registerColbyActions(app);
+  
   // System Status and Diagnostics
   app.get("/api/status", async (req, res) => {
     const status = {

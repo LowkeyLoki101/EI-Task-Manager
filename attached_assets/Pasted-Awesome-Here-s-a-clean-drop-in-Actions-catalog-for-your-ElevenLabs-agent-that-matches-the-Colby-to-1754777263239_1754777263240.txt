@@ -1,0 +1,449 @@
+Awesome. Here’s a clean, drop-in Actions catalog for your ElevenLabs agent that matches the Colby toolset and your backend routes. Each action includes a tight JSON schema (what the agent will send) and the response your API should return.
+
+Use these in the ElevenLabs “Actions / Tools” config. Keep names exactly as shown.
+
+Core conventions (apply to all)
+	•	All requests include sessionId (string).
+	•	Return { ok: true, ... } on success; { ok: false, error: "..." } on failure.
+	•	IDs you return (taskId, stepId, artifactId…) are strings.
+	•	Optional: include correlationId in responses if you generate one.
+
+⸻
+
+Tasks & Steps
+
+1) tasks.create
+
+Creates a task with optional steps.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "title": "Create breaker-box help page",
+  "context": "computer",
+  "time_window": "morning",
+  "priority": "normal",
+  "steps": [
+    "Scaffold /breakerbox-help",
+    "Embed widget",
+    "Generate QR code"
+  ]
+}
+
+Response
+
+{ "ok": true, "taskId": "tsk_abc123" }
+
+2) tasks.update
+
+Update title/status/priority/context/time window.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "task_id": "tsk_abc123",
+  "title": "Breaker-box landing page",
+  "status": "today",
+  "context": "computer",
+  "time_window": "evening",
+  "priority": "high"
+}
+
+Response
+
+{ "ok": true }
+
+3) steps.add
+
+Add one step to a task.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "task_id": "tsk_abc123",
+  "title": "Publish page",
+  "context": "computer",
+  "time_window": "any",
+  "can_auto": true,
+  "parent_step_id": null
+}
+
+Response
+
+{ "ok": true, "stepId": "stp_789" }
+
+4) steps.update
+
+Update step status/metadata.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "step_id": "stp_789",
+  "status": "done",
+  "can_auto": true,
+  "blocked_reason": null
+}
+
+Response
+
+{ "ok": true }
+
+5) todo.get
+
+Fetch list/steps for context/time, with zoom level.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "context": "phone",
+  "time_window": "midday",
+  "view": "steps"   // "items" | "steps" | "substeps"
+}
+
+Response
+
+{
+  "ok": true,
+  "items": [
+    { "taskId": "tsk_1", "title": "Pay Verizon", "status": "today" }
+  ],
+  "steps": [
+    { "taskId": "tsk_2", "stepId": "stp_3", "title": "Scan QR", "status": "pending" }
+  ]
+}
+
+
+⸻
+
+Artifacts
+
+6) artifacts.add
+
+Attach a link/file/note to a step.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "step_id": "stp_789",
+  "type": "link",     // "link" | "file" | "note" | "html"
+  "label": "Preview URL",
+  "url_or_path": "https://your-replit.repl.co/breakerbox-help"
+}
+
+Response
+
+{ "ok": true, "artifactId": "art_55" }
+
+
+⸻
+
+Knowledge Base (ElevenLabs KB via your proxy)
+
+7) kb.upload
+
+Upload a document or URL into the agent’s KB.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "agent_id": "agent_8201k251883jf0hr1ym7d6dbymxc",
+  "source": "url",            // "url" | "file"
+  "url": "https://vendor.com/inverter_manual.pdf",
+  "title": "Inverter Manual"
+}
+
+Response
+
+{ "ok": true, "docId": "kbdoc_123" }
+
+8) kb.delete
+
+Remove a KB document.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "agent_id": "agent_8201k251883jf0hr1ym7d6dbymxc",
+  "doc_id": "kbdoc_123"
+}
+
+Response
+
+{ "ok": true }
+
+9) kb.reindex
+
+Reindex the KB.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "agent_id": "agent_8201k251883jf0hr1ym7d6dbymxc"
+}
+
+Response
+
+{ "ok": true, "status": "reindexing" }
+
+
+⸻
+
+Research (real web, not LLM-only)
+
+10) web.search
+
+Search the web (via your chosen API).
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "query": "SMA inverter user manual PDF",
+  "k": 5
+}
+
+Response
+
+{
+  "ok": true,
+  "results": [
+    { "title": "SMA Sunny Boy Manual", "url": "https://...", "snippet": "..." }
+  ]
+}
+
+11) web.fetch
+
+Fetch & clean a page for text extraction.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "url": "https://vendor.com/inverter_manual.html"
+}
+
+Response
+
+{
+  "ok": true,
+  "content": "Cleaned text content ...",
+  "meta": { "title": "Inverter Manual", "wordCount": 18234 }
+}
+
+
+⸻
+
+Files (uploads / OCR / embeddings)
+
+12) files.upload
+
+Prepare to upload (agent can POST a file or give a URL).
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "filename": "battery_manual.pdf",
+  "mime": "application/pdf",
+  "source": "url",
+  "url": "https://vendor.com/battery_manual.pdf"
+}
+
+Response
+
+{
+  "ok": true,
+  "fileId": "file_abc",
+  "storedPath": "/uploads/battery_manual.pdf"
+}
+
+13) files.ocr
+
+Run OCR and return text.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "file_id": "file_abc",
+  "lang": "eng"
+}
+
+Response
+
+{
+  "ok": true,
+  "text": "Recognized text ...",
+  "pages": 42
+}
+
+14) files.chunk_embed
+
+Chunk text & embed into vector store.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "file_id": "file_abc",
+  "chunk_size": 1200,
+  "overlap": 150,
+  "namespace": "starlight/manuals"
+}
+
+Response
+
+{
+  "ok": true,
+  "chunks": 128,
+  "namespace": "starlight/manuals"
+}
+
+
+⸻
+
+Utilities
+
+15) qr.generate
+
+Generate QR PNG for a URL.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "url": "https://your-replit.repl.co/breakerbox-help",
+  "label": "Breaker-box help"
+}
+
+Response
+
+{
+  "ok": true,
+  "artifactId": "art_qr1",
+  "pngPath": "/artifacts/qr_breakerbox.png"
+}
+
+16) page.scaffold
+
+Create a simple HTML page with an embed slot.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "slug": "breakerbox-help",
+  "title": "Breaker-box Help",
+  "html": "<main><h1>Breaker-box Help</h1><div id='agent-root'></div></main>"
+}
+
+Response
+
+{ "ok": true, "path": "/breakerbox-help" }
+
+
+⸻
+
+Memory (how we did it last time)
+
+17) memory.save
+
+Persist a reusable value.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "domain": "dns",
+  "key": "getskyclaim.com",
+  "value": { "path": "GoDaddy>DNS>Records", "mx_host": "aspmx.l.google.com" }
+}
+
+Response
+
+{ "ok": true }
+
+18) memory.get
+
+Retrieve a value.
+
+Request
+
+{
+  "sessionId": "sess_123",
+  "domain": "dns",
+  "key": "getskyclaim.com"
+}
+
+Response
+
+{
+  "ok": true,
+  "value": { "path": "GoDaddy>DNS>Records", "mx_host": "aspmx.l.google.com" }
+}
+
+
+⸻
+
+Action → Endpoint map (your backend)
+
+Action name	Method & Path
+tasks.create	POST /api/tasks
+tasks.update	PATCH /api/tasks/:id
+steps.add	POST /api/tasks/:id/steps
+steps.update	PATCH /api/steps/:id
+todo.get	POST /api/todo/get
+artifacts.add	POST /api/artifacts
+kb.upload	POST /api/kb/upload
+kb.delete	POST /api/kb/delete
+kb.reindex	POST /api/kb/reindex
+web.search	POST /api/actions/web_search
+web.fetch	POST /api/actions/web_fetch
+files.upload	POST /api/files/upload
+files.ocr	POST /api/files/ocr
+files.chunk_embed	POST /api/files/chunk_embed
+qr.generate	POST /api/actions/qr
+page.scaffold	POST /api/actions/scaffold_page
+memory.save	POST /api/memory/save
+memory.get	POST /api/memory/get
+
+If ElevenLabs requires one flat “Action name” rather than namespaced, you can still name them exactly as above; the web component will call the URL you configure per action. Keep the names—your system prompt references these verbs.
+
+⸻
+
+Minimal schema (paste into ElevenLabs “Action” definitions)
+
+Example: tasks.create
+
+{
+  "name": "tasks.create",
+  "description": "Create a task with optional steps, context, and time window.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "sessionId": { "type": "string" },
+      "title": { "type": "string" },
+      "context": { "type": "string", "enum": ["computer","phone","physical","any"] },
+      "time_window": { "type": "string", "enum": ["morning","midday","evening","any"] },
+      "priority": { "type": "string", "enum": ["low","normal","high"] },
+      "steps": { "type": "array", "items": { "type": "string" } }
+    },
+    "required": ["sessionId","title"]
+  }
+}
+
+Repeat this pattern for each action above (you can copy the request examples as the basis for each schema’s properties and required).
+
+⸻
+
+If you want, I can generate a single JSON file containing all 18 action definitions ready to import, and a matching Express router stub for all endpoints so your team can fill in implementations without guessing.

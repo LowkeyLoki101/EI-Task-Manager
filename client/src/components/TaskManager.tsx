@@ -15,7 +15,7 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
   const [statusFilter, setStatusFilter] = useState('all');
   const queryClient = useQueryClient();
   
-  const { data: tasks = [], isLoading } = useQuery({
+  const { data: tasksResponse = { tasks: [] }, isLoading } = useQuery({
     queryKey: ['/api/tasks', sessionId],
     queryFn: async () => {
       const response = await fetch(`/api/tasks?sessionId=${sessionId}`);
@@ -25,6 +25,9 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
     enabled: !!sessionId
   });
 
+  // Extract tasks array from response
+  const tasks = tasksResponse.tasks || tasksResponse || [];
+  
   const filteredTasks = tasks.filter((task: TaskWithSubtasks) => {
     if (statusFilter === 'all') return true;
     return task.status === statusFilter;

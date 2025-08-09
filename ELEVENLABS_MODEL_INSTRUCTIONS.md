@@ -31,7 +31,7 @@ This enables smart filtering and contextual task presentation.
 
 ### 1. Core Task Management
 
-#### `add_task`
+#### `tasks.create`
 Create new tasks with optional steps.
 
 **Parameters:**
@@ -40,175 +40,263 @@ Create new tasks with optional steps.
   "sessionId": "string (required)",
   "title": "string (required)",
   "context": "computer|phone|physical (optional, default: computer)",
-  "timeWindow": "morning|midday|evening|any (optional, default: any)",
+  "time_window": "morning|midday|evening|any (optional, default: any)",
+  "priority": "low|normal|high (optional, default: normal)",
   "steps": ["array of step titles (optional)"]
 }
 ```
 
 **Example Usage:**
 - User: "Create a task to organize my home office"
-- You: Call `add_task` with title "Organize home office", context "physical", steps like "Clear desk surface", "Organize cables", "Set up filing system"
+- You: Call `tasks.create` with title "Organize home office", context "physical", steps like "Clear desk surface", "Organize cables", "Set up filing system"
 
-#### `update_step_status`
-Update the status of specific steps.
+#### `tasks.update`
+Update task properties.
 
 **Parameters:**
 ```json
 {
-  "stepId": "string (required)",
-  "status": "pending|running|blocked|done (required)"
+  "sessionId": "string (required)",
+  "task_id": "string (required)", 
+  "title": "string (optional)",
+  "status": "backlog|today|doing|done (optional)",
+  "context": "computer|phone|physical (optional)",
+  "time_window": "morning|midday|evening|any (optional)",
+  "priority": "low|normal|high (optional)"
 }
 ```
 
-#### `get_todo_list`
-Retrieve and filter tasks for the user.
+#### `steps.add`
+Add a step to a task.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "task_id": "string (required)",
+  "title": "string (required)",
+  "context": "computer|phone|physical (optional, default: computer)",
+  "time_window": "morning|midday|evening|any (optional, default: any)",
+  "can_auto": "boolean (optional, default: false)",
+  "parent_step_id": "string (optional)"
+}
+```
+
+#### `steps.update`
+Update step status and metadata.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "step_id": "string (required)",
+  "status": "pending|running|blocked|done (optional)",
+  "can_auto": "boolean (optional)",
+  "blocked_reason": "string (optional)"
+}
+```
+
+#### `todo.get`
+Retrieve filtered task/step list.
 
 **Parameters:**
 ```json
 {
   "sessionId": "string (required)",
   "context": "computer|phone|physical (optional)",
+  "time_window": "morning|midday|evening|any (optional)", 
   "view": "items|steps|substeps|tasks (optional, default: items)"
 }
 ```
 
 **Example Usage:**
 - User: "What do I need to do on my computer today?"
-- You: Call `get_todo_list` with context "computer"
+- You: Call `todo.get` with context "computer"
 
-### 2. Research and Information
+### 2. Artifacts
 
-#### `research`
-Perform AI-powered research for task steps.
+#### `artifacts.add`
+Attach artifacts to steps.
 
 **Parameters:**
 ```json
 {
-  "stepId": "string (required)",
+  "sessionId": "string (required)",
+  "step_id": "string (required)",
+  "type": "link|file|note|html (required)",
+  "label": "string (optional)",
+  "url_or_path": "string (required)"
+}
+```
+
+### 3. Research and Web Operations
+
+#### `web.search`
+Search the web for information.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
   "query": "string (required)",
-  "sessionId": "string (required)"
+  "k": "number (optional, default: 5)"
 }
 ```
 
 **Example Usage:**
 - User: "Research the best project management tools"
-- You: Find related step, call `research` with query about project management tools
+- You: Call `web.search` with query about project management tools
 
-### 3. Content Generation
+#### `web.fetch`
+Fetch and clean web page content.
 
-#### `qr`
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "url": "string (required)"
+}
+```
+
+### 4. File Operations
+
+#### `files.upload`
+Upload files for processing.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "filename": "string (required)",
+  "mime": "string (required)",
+  "source": "url|file (required)",
+  "url": "string (optional)"
+}
+```
+
+#### `files.ocr`
+Extract text from images and PDFs.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "file_id": "string (required)",
+  "lang": "string (optional, default: eng)"
+}
+```
+
+#### `files.chunk_embed`
+Process files for vector search.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "file_id": "string (required)",
+  "chunk_size": "number (optional, default: 1200)",
+  "overlap": "number (optional, default: 150)",
+  "namespace": "string (required)"
+}
+```
+
+### 5. Knowledge Base Management
+
+#### `kb.upload`
+Upload documents to ElevenLabs knowledge base.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "agent_id": "string (required)",
+  "source": "url|file (required)",
+  "url": "string (optional)",
+  "title": "string (required)"
+}
+```
+
+#### `kb.delete`
+Remove documents from knowledge base.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "agent_id": "string (required)",
+  "doc_id": "string (required)"
+}
+```
+
+#### `kb.reindex`
+Reindex the knowledge base.
+
+**Parameters:**
+```json
+{
+  "sessionId": "string (required)",
+  "agent_id": "string (required)"
+}
+```
+
+### 6. Content Generation
+
+#### `qr.generate`
 Generate QR codes for URLs, contact info, or any text content.
 
 **Parameters:**
 ```json
 {
-  "stepId": "string (required)",
-  "content": "string (required)",
-  "label": "string (optional)",
-  "sessionId": "string (required)"
+  "sessionId": "string (required)",
+  "url": "string (required)",
+  "label": "string (optional)"
 }
 ```
 
 **Example Usage:**
 - User: "Make a QR code for my website"
-- You: Call `qr` with the website URL
+- You: Call `qr.generate` with the website URL
 
-#### `scaffold_page`
+#### `page.scaffold`
 Generate complete HTML page scaffolds for landing pages, portfolios, etc.
 
 **Parameters:**
 ```json
 {
-  "stepId": "string (required)",
-  "pageType": "string (required, e.g., 'landing page', 'portfolio', 'contact page')",
+  "sessionId": "string (required)",
+  "slug": "string (required)",
   "title": "string (required)",
-  "features": ["array of requested features (optional)"],
-  "sessionId": "string (required)"
+  "html": "string (optional)"
 }
 ```
 
-### 4. Voice and Audio Features
+### 7. Memory System
 
-#### `synthesize_voice`
-Generate voice responses and notifications.
-
-**Parameters:**
-```json
-{
-  "text": "string (required)",
-  "voiceId": "string (optional)"
-}
-```
-
-#### `task_summary`
-Generate comprehensive task summaries with optional audio.
+#### `memory.save`
+Persist reusable values for future use.
 
 **Parameters:**
 ```json
 {
   "sessionId": "string (required)",
-  "includeAudio": "boolean (default: true)"
+  "domain": "string (required)",
+  "key": "string (required)",
+  "value": "any (required)"
 }
 ```
 
-### 5. File Operations
+**Example Usage:**
+- Save successful DNS configuration: domain "dns", key "example.com", value { "host": "GoDaddy", "mx_record": "aspmx.l.google.com" }
 
-#### `create_file_report`
-Export tasks or steps to Excel/CSV files.
+#### `memory.get`
+Retrieve previously saved values.
 
 **Parameters:**
 ```json
 {
   "sessionId": "string (required)",
-  "type": "tasks|steps (required)",
-  "format": "excel|csv (required)",
-  "filters": {
-    "status": "string (optional)",
-    "context": "string (optional)",
-    "timeWindow": "string (optional)"
-  }
-}
-```
-
-#### `import_tasks`
-Import tasks from Excel/CSV files.
-
-**Parameters:**
-```json
-{
-  "sessionId": "string (required)",
-  "filePath": "string (required)"
-}
-```
-
-### 6. Knowledge Management
-
-#### `kb_attach_doc`
-Attach documents to your knowledge base.
-
-**Parameters:**
-```json
-{
-  "agentId": "string (required)",
-  "url": "string (optional)",
-  "file": "string (optional)"
-}
-```
-
-#### `post_ops_update`
-Log operational updates and system changes.
-
-**Parameters:**
-```json
-{
-  "message": "string (required)",
-  "deltas": [
-    {
-      "type": "string",
-      "id": "string", 
-      "change": "object"
-    }
-  ]
+  "domain": "string (required)",
+  "key": "string (required)"
 }
 ```
 
