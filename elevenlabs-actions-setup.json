@@ -1,0 +1,185 @@
+{
+  "description": "Complete ElevenLabs Actions setup for Colby digital operations manager - Copy these into your ElevenLabs Agent Settings > Actions",
+  "agent_id": "agent_7401k28d3x9kfdntv7cjrj6t43be",
+  "base_url": "https://your-replit-url.repl.co",
+  "actions": [
+    {
+      "name": "tasks.create",
+      "description": "Create a task with optional steps, context, and time window",
+      "url": "POST /api/tasks",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string", "description": "User session identifier"},
+          "title": {"type": "string", "description": "Task title"},
+          "context": {"type": "string", "enum": ["computer","phone","physical","any"], "default": "computer"},
+          "time_window": {"type": "string", "enum": ["morning","midday","evening","any"], "default": "any"},
+          "priority": {"type": "string", "enum": ["low","normal","high"], "default": "normal"},
+          "steps": {"type": "array", "items": {"type": "string"}, "description": "Optional initial steps"}
+        },
+        "required": ["sessionId","title"]
+      }
+    },
+    {
+      "name": "tasks.update", 
+      "description": "Update task properties like title, status, priority",
+      "url": "PATCH /api/tasks/{task_id}",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "task_id": {"type": "string"},
+          "title": {"type": "string"},
+          "status": {"type": "string", "enum": ["backlog","today","doing","done"]},
+          "context": {"type": "string", "enum": ["computer","phone","physical","any"]},
+          "time_window": {"type": "string", "enum": ["morning","midday","evening","any"]},
+          "priority": {"type": "string", "enum": ["low","normal","high"]}
+        },
+        "required": ["sessionId","task_id"]
+      }
+    },
+    {
+      "name": "steps.add",
+      "description": "Add a step to an existing task",
+      "url": "POST /api/tasks/{task_id}/steps", 
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "task_id": {"type": "string"},
+          "title": {"type": "string"},
+          "context": {"type": "string", "enum": ["computer","phone","physical","any"], "default": "computer"},
+          "time_window": {"type": "string", "enum": ["morning","midday","evening","any"], "default": "any"},
+          "can_auto": {"type": "boolean", "default": false},
+          "parent_step_id": {"type": "string"}
+        },
+        "required": ["sessionId","task_id","title"]
+      }
+    },
+    {
+      "name": "steps.update",
+      "description": "Update step status or metadata",
+      "url": "PATCH /api/steps/{step_id}",
+      "parameters": {
+        "type": "object", 
+        "properties": {
+          "sessionId": {"type": "string"},
+          "step_id": {"type": "string"},
+          "status": {"type": "string", "enum": ["pending","running","blocked","done"]},
+          "can_auto": {"type": "boolean"},
+          "blocked_reason": {"type": "string"}
+        },
+        "required": ["sessionId","step_id"]
+      }
+    },
+    {
+      "name": "todo.get",
+      "description": "Get filtered task/step list for current context and time",
+      "url": "POST /api/todo/get",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "context": {"type": "string", "enum": ["computer","phone","physical","any"]},
+          "time_window": {"type": "string", "enum": ["morning","midday","evening","any"]}, 
+          "view": {"type": "string", "enum": ["items","steps","substeps"], "default": "items"}
+        },
+        "required": ["sessionId"]
+      }
+    },
+    {
+      "name": "web.search",
+      "description": "Search the web for information",
+      "url": "POST /api/actions/web_search",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "query": {"type": "string", "description": "Search query"},
+          "k": {"type": "integer", "default": 5, "description": "Number of results"}
+        },
+        "required": ["sessionId","query"]
+      }
+    },
+    {
+      "name": "web.fetch", 
+      "description": "Fetch and clean content from a web page",
+      "url": "POST /api/actions/web_fetch",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "url": {"type": "string", "description": "URL to fetch"}
+        },
+        "required": ["sessionId","url"]
+      }
+    },
+    {
+      "name": "qr.generate",
+      "description": "Generate QR code for a URL or text",
+      "url": "POST /api/actions/qr",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "url": {"type": "string", "description": "URL or text to encode"},
+          "label": {"type": "string", "description": "Optional label for the QR code"}
+        },
+        "required": ["sessionId","url"]
+      }
+    },
+    {
+      "name": "page.scaffold",
+      "description": "Create a simple HTML page with embed slot",
+      "url": "POST /api/actions/scaffold_page",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "slug": {"type": "string", "description": "URL slug for the page"},
+          "title": {"type": "string", "description": "Page title"},
+          "html": {"type": "string", "description": "Custom HTML content"}
+        },
+        "required": ["sessionId","slug","title"]
+      }
+    },
+    {
+      "name": "memory.save",
+      "description": "Save a value to memory for reuse",
+      "url": "POST /api/memory/save",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "domain": {"type": "string", "description": "Memory domain (e.g., 'dns', 'settings')"},
+          "key": {"type": "string", "description": "Memory key"},
+          "value": {"description": "Value to store (any JSON type)"}
+        },
+        "required": ["sessionId","domain","key","value"]
+      }
+    },
+    {
+      "name": "memory.get",
+      "description": "Retrieve a value from memory",
+      "url": "POST /api/memory/get", 
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sessionId": {"type": "string"},
+          "domain": {"type": "string"},
+          "key": {"type": "string"}
+        },
+        "required": ["sessionId","domain","key"]
+      }
+    }
+  ],
+  "setup_instructions": {
+    "step1": "Go to ElevenLabs Dashboard > Your Agent > Settings > Actions",
+    "step2": "For each action above, click 'Add Action' and paste the configuration",
+    "step3": "Update base_url to your actual Replit URL (https://your-project.your-username.repl.co)",
+    "step4": "Enable 'Web Widget' and add your domain to 'Allowed Origins'",
+    "step5": "Set agent to 'Public/Unauthenticated' for testing",
+    "step6": "Use the voice-sanity.html page to test widget connection",
+    "cors_reminder": "Ensure your server has CORS enabled for ElevenLabs domains"
+  }
+}

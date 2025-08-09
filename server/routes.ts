@@ -461,13 +461,13 @@ Return as a complete HTML page that can be saved and used immediately.`;
   // Direct Chat Processing
   app.post('/api/chat/process', async (req, res) => {
     try {
-      const { message, agentId, sessionId } = req.body;
+      const { message, agentId, sessionId, hasFiles } = req.body;
       
       if (!message || !sessionId) {
         return res.status(400).json({ error: 'Message and sessionId required' });
       }
 
-      console.log(`Processing chat message for session ${sessionId}: ${message}`);
+      console.log(`Processing chat message for session ${sessionId}: ${message.slice(0, 100)}... (hasFiles: ${hasFiles})`);
 
       // Use GPT-5 to process the message and create tasks if needed
       const opsManager = new OpsManager(sessionId);
@@ -481,21 +481,27 @@ Return as a complete HTML page that can be saved and used immediately.`;
         
         console.log(`Created ${result.tasks.length} tasks from chat message`);
       } else {
-        // Just a conversational response
+        // Enhanced conversational response with document context
         try {
+          let systemPrompt = "You are Colby, a helpful AI assistant for task management. You can create tasks, analyze documents, and help organize work. Respond conversationally and offer to help create tasks or organize work based on the conversation.";
+          
+          if (hasFiles) {
+            systemPrompt += " The user has uploaded documents. Analyze the content and offer to create relevant tasks, extract key information, or organize the content into actionable items.";
+          }
+
           const chatResponse = await openai.chat.completions.create({
             model: "gpt-5-2025-08-07",
             messages: [
               {
                 role: "system",
-                content: "You are a helpful AI assistant for task management. Respond conversationally and offer to help create tasks or organize work."
+                content: systemPrompt
               },
               {
                 role: "user", 
                 content: message
               }
             ],
-            max_completion_tokens: 150
+            max_completion_tokens: 200
           });
           
           response = chatResponse.choices[0].message.content || response;

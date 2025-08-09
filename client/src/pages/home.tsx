@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
 import SimpleTaskManager from '../components/SimpleTaskManager';
+import { DirectChatInterface } from '../components/DirectChatInterface';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 
 export default function HomePage() {
@@ -124,6 +125,9 @@ export default function HomePage() {
             </h3>
             <SimpleTaskManager sessionId={sessionId} />
           </div>
+
+          {/* Direct GPT-5 Chat Interface */}
+          <DirectChatInterface />
 
           {/* Simple Call to Action */}
           <div className="text-center py-8">
