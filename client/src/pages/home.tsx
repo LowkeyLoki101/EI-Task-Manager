@@ -4,11 +4,14 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
-import SimpleWidget from '../components/SimpleWidget';
+import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 
 export default function HomePage() {
   const sessionId = useSessionId();
   const [builderMode, setBuilderMode] = useState(false);
+  
+  // Listen for ElevenLabs widget events
+  useElevenLabsEvents();
   const [isWidgetReady, setIsWidgetReady] = useState(false);
 
   // Supervisor processing for Builder Mode  
@@ -144,8 +147,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Simple Widget - Direct DOM injection to ensure it renders */}
-      <SimpleWidget agentId="agent_8201k251883jf0hr1ym7d6dbymxc" />
+      {/* Widget is now in index.html as per ElevenLabs documentation */}
     </div>
   );
 }
