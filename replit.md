@@ -33,7 +33,10 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **Dual Interface**: Voice chat (microphone permissions required) + reliable text chat fallback
 - ⚠️ **Voice Chat Status**: ElevenLabs widget loaded but requires dashboard configuration (domain allowlist)
 - ✅ **Primary Interface**: Blue text chat fully operational with GPT-5 and automatic task creation
-- 🚧 **Next Phase**: Full toolbelt implementation (web search, QR generation, page scaffolding), ElevenLabs KB management
+- ✅ **Action Endpoints Ready**: /api/actions/research, /api/actions/qr, /api/actions/scaffold_page fully implemented
+- ✅ **Enhanced CORS**: Proper CORS configuration for ElevenLabs widget and API access in server/index.ts
+- ✅ **Widget Event Relay**: ConvAI event handling via /api/convai/relay for frontend widget events
+- 🚧 **Next Phase**: Steps Visualizer component integration, ElevenLabs KB management
 
 ## User Preferences
 
@@ -126,3 +129,5 @@ UI filters use these labels to show the right list at the right time.
 - ✅ **ElevenLabs React SDK Integration**: Proper useConversation hook implementation with WebSocket connection
 - ✅ **Text Chat Fallback**: Reliable DirectChatWidget for environments with microphone restrictions
 - ✅ **Mobile Voice Experience**: Dual interface with voice + text options positioned clearly
+- ✅ **Steps Visualizer Backend**: Implemented research, QR generation, and page scaffolding endpoints
+- ✅ **System Architecture**: CORS properly configured, widget event relay system operational

@@ -26,6 +26,7 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  
   // Register ElevenLabs Actions API
   registerElevenLabsActions(app);
   
@@ -585,6 +586,47 @@ Return as a complete HTML page that can be saved and used immediately.`;
     } catch (error) {
       console.error('Supervisor ingest error:', error);
       res.status(500).json({ error: "Failed to process conversation" });
+    }
+  });
+
+  // ConvAI Widget Event Relay
+  app.post("/api/convai/relay", async (req, res) => {
+    try {
+      const { type, detail, ts } = req.body;
+      console.log(`[EL] ConvAI relay: ${type}`, detail);
+      
+      // Handle widget events from frontend
+      switch (type) {
+        case 'widget-ready':
+          console.log('[EL] Widget ready notification received');
+          break;
+          
+        case 'utterance':
+          // User spoke - store transcript if available
+          if (detail?.transcript) {
+            const sessionId = detail.sessionId || 'default-session';
+            await storage.createMessage({
+              sessionId,
+              role: 'user',
+              content: detail.transcript,
+              transcript: detail.transcript
+            });
+          }
+          break;
+          
+        case 'transcript':
+          console.log('[EL] Transcript received:', detail);
+          break;
+          
+        case 'tool_call':
+          console.log('[EL] Tool call received:', detail);
+          break;
+      }
+      
+      res.json({ success: true, received: type });
+    } catch (error) {
+      console.error('ConvAI relay error:', error);
+      res.status(500).json({ error: "Failed to process widget event" });
     }
   });
 
