@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSessionId } from '@/hooks/useSessionId';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,7 @@ declare global {
 export default function HomePage() {
   const sessionId = useSessionId();
   const [builderMode, setBuilderMode] = useState(false);
+  const mounted = useRef(false);
 
   // Supervisor processing for Builder Mode  
   useEffect(() => {
@@ -51,22 +52,32 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [builderMode, sessionId]);
 
+  // Prevent double mounting under React StrictMode
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
   // ElevenLabs Widget Diagnostics (React-friendly)
   useEffect(() => {
+    if (!mounted.current) return;
+    
     console.log('[Diagnostics] Home page mounted');
 
     const checkWidget = () => {
-      const widget = document.querySelector('elevenlabs-convai');
-      if (widget) {
-        console.log('[Diagnostics] ElevenLabs widget found in DOM');
+      const widgets = document.querySelectorAll('elevenlabs-convai');
+      console.log(`[Diagnostics] Found ${widgets.length} widget(s) in DOM`);
+      
+      if (widgets.length > 1) {
+        console.warn('[Diagnostics] MULTIPLE widgets detected - this can cause conflicts!');
+      }
+      
+      if (widgets.length >= 1) {
+        const widget = widgets[0];
         const agentId = widget.getAttribute('agent-id');
-        if (!agentId) {
-          console.warn('[Diagnostics] Widget missing agent-id attribute!');
-        } else {
-          console.log(`[Diagnostics] Widget agent-id: ${agentId}`);
-        }
-      } else {
-        console.warn('[Diagnostics] ElevenLabs widget NOT found in DOM');
+        const chatOnly = widget.getAttribute('chat-only');
+        console.log(`[Diagnostics] Widget agent-id: ${agentId}`);
+        console.log(`[Diagnostics] Widget chat-only: ${chatOnly}`);
       }
     };
 
@@ -140,8 +151,14 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* ElevenLabs Widget - Simple Implementation */}
-      <elevenlabs-convai agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"></elevenlabs-convai>
+      {/* ElevenLabs Widget - Clean Implementation */}
+      {mounted.current && (
+        <elevenlabs-convai 
+          agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
+          chat-only="true"
+          style={{ display: 'block' }}
+        />
+      )}
     </div>
   );
 }

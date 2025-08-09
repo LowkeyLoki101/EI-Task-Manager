@@ -1,0 +1,77 @@
+Gotcha—if the exact same two-line embed works on a plain page but not in this Replit build, then something in that app’s setup is hijacking or racing the widget init. From what you described (“it tried to hard-code ElevenLabs” / “conversational mode”), I’d bet the project added extra code that clashes with the official widget runtime.
+
+Here’s what typically causes your symptoms (wrong logo + AudioWorklet error) inside a React/Next/Replit build—and how to fix fast.
+
+The likely culprits
+	1.	A custom or old SDK instead of the official embed
+	•	If they installed some npm package or wrote their own audio pipeline, it can collide with the widget’s AudioWorklet and config fetch → you get the default orb (wrong logo) and the red “raw-audio-processor” error.
+	2.	Double mount / double script
+	•	React StrictMode, hot reload, or a layout rendering the widget twice causes two inits. The second wins with defaults or breaks the first → wrong logo and/or errors.
+	3.	Rendering the web component during SSR
+	•	If the <elevenlabs-convai> tag is server-rendered, hydration can fail or race with the loader → defaults show up.
+	4.	An old “diagnostics” snippet or DOM hook still running
+	•	Anything querying #el-agent, replacing attributes, or wrapping the element before the official loader finishes will stop the agent config from applying.
+	5.	Sandboxed preview
+	•	Replit’s in-IDE preview can block AudioWorklets. That explains the red error even if the agent config fetch worked. (Opening in a new tab usually fixes it.)
+
+The clean, known-good setup (React/Next, Replit)
+
+1) Load the official widget exactly once (global HTML):
+
+<!-- public/index.html or root HTML template -->
+<script
+  src="https://unpkg.com/@elevenlabs/convai-widget-embed@latest"
+  async
+  type="text/javascript"></script>
+
+2) Render the element only on the client and only once:
+
+// Widget.tsx
+import { useEffect, useRef } from "react";
+
+export default function ElevenLabsWidget() {
+  const mounted = useRef(false);
+  useEffect(() => {
+    // Avoid double-mount under StrictMode/hot reload
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  // OPTIONAL: while building inside Replit preview, force chat-only
+  return (
+    <elevenlabs-convai
+      agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
+      chat-only="true"  /* remove later for voice */
+      style={{ display: "block" }}
+    />
+  );
+}
+
+If you’re on Next.js, make it client only:
+
+// app/(whatever)/page.tsx
+"use client";
+import ElevenLabsWidget from "@/components/Widget";
+export default function Page() {
+  return <ElevenLabsWidget />;
+}
+
+3) Make sure there’s no other code touching the widget.
+Delete any diagnostics script, custom audio code, or anything that imports a different ElevenLabs runtime. Search your repo for:
+	•	convai-widget-embed (should appear once)
+	•	elevenlabs + worklet
+	•	id="el-agent" / document.querySelector('#el-agent')
+
+4) Test outside the preview iframe.
+Click “Open in new tab”. If audio now works and you see your correct orb/logo, the build is good and the preview was the blocker.
+
+Quick checks to prove it’s fixed
+	•	Network tab: you should see the SDK request your agent by ID. If that fails, the orb stays default. If it succeeds, your logo/name appear.
+	•	Elements tab: there should be one <elevenlabs-convai> node.
+	•	Console: no duplicate “registering widget” logs and no custom errors from other elevenlabs code.
+
+What to tell the dev (what they likely did “unexpected”)
+	•	They probably added an npm package or custom init that “hard-codes” audio/voice (meant for a different ElevenLabs flow) instead of letting the ConvAI Widget own the session. That breaks AudioWorklets and prevents your agent config from applying, hence the wrong logo + error.
+	•	Or they rendered the element in two places / injected the script twice.
+
+If you want, paste the layout file (where the script is included) + the component file that renders the widget and I’ll point out the exact lines to change.
