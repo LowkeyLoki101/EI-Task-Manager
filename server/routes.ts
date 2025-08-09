@@ -212,6 +212,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ ok: true });
   });
 
+  // Direct Chat Processing
+  app.post('/api/chat/process', async (req, res) => {
+    try {
+      const { message, agentId, sessionId } = req.body;
+      
+      if (!message || !sessionId) {
+        return res.status(400).json({ error: 'Message and sessionId required' });
+      }
+
+      console.log(`Processing chat message for session ${sessionId}: ${message}`);
+
+      // Use GPT-5 to process the message and create tasks if needed
+      const opsManager = new OpsManager(sessionId);
+      const result = await opsManager.processIntent(message);
+      
+      let response = "I understand. Let me help you with that task.";
+      
+      if (result.processed && result.tasks.length > 0) {
+        const taskTitles = result.tasks.map(t => t.title).join(", ");
+        response = `I've created ${result.tasks.length} task(s) for you: ${taskTitles}. You can enable Builder Mode to see automated progress.`;
+        
+        console.log(`Created ${result.tasks.length} tasks from chat message`);
+      } else {
+        // Just a conversational response
+        try {
+          const chatResponse = await openai.chat.completions.create({
+            model: "gpt-5-2025-08-07",
+            messages: [
+              {
+                role: "system",
+                content: "You are a helpful AI assistant for task management. Respond conversationally and offer to help create tasks or organize work."
+              },
+              {
+                role: "user", 
+                content: message
+              }
+            ],
+            max_completion_tokens: 150
+          });
+          
+          response = chatResponse.choices[0].message.content || response;
+        } catch (error) {
+          console.error('GPT-5 chat error:', error);
+          // Use default response
+        }
+      }
+
+      // Save the conversation
+      await storage.createMessage({
+        sessionId,
+        role: 'user',
+        content: message,
+        taskId: result.tasks[0]?.id || null,
+        transcript: message
+      });
+
+      await storage.createMessage({
+        sessionId,
+        role: 'assistant', 
+        content: response,
+        taskId: result.tasks[0]?.id || null,
+        transcript: response
+      });
+
+      res.json({
+        response,
+        tasksCreated: result.tasks.length,
+        tasks: result.tasks.map(t => ({ id: t.id, title: t.title }))
+      });
+      
+    } catch (error) {
+      console.error('Chat processing error:', error);
+      res.status(500).json({ 
+        error: "Failed to process message",
+        response: "I'm sorry, I encountered an error processing your message. Please try again."
+      });
+    }
+  });
+
   // Supervisor Agent with GPT-5 Ops Manager
   app.post("/api/supervisor/ingest", async (req, res) => {
     try {

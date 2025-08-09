@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
 import VoiceWidget from '../components/VoiceWidget';
+import DirectChatWidget from '../components/DirectChatWidget';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -99,7 +100,7 @@ export default function HomePage() {
                   Ready to start
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Look for the chat widget in the bottom-right corner to start your conversation
+                  Click the blue chat button in the bottom-right corner to start your conversation
                 </p>
               </div>
             </div>
@@ -113,6 +114,9 @@ export default function HomePage() {
         /* true if you are testing in the Replit preview frame; false in real tab */
         chatOnly={true}
       />
+      
+      {/* Fallback Direct Chat Widget */}
+      <DirectChatWidget agentId="agent_8201k251883jf0hr1ym7d6dbymxc" />
     </div>
   );
 }
