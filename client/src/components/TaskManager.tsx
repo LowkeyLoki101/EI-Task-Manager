@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { TaskWithSubtasks } from '@shared/schema';
+import type { Task } from '@shared/schema';
 import type { VideoResource } from '@/lib/types';
 
 interface TaskManagerProps {
@@ -28,7 +28,7 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
   // Extract tasks array from response
   const tasks = tasksResponse.tasks || tasksResponse || [];
   
-  const filteredTasks = tasks.filter((task: TaskWithSubtasks) => {
+  const filteredTasks = tasks.filter((task: Task) => {
     if (statusFilter === 'all') return true;
     return task.status === statusFilter;
   });
@@ -42,7 +42,7 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
     queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
   };
 
-  const handleFindVideo = async (task: TaskWithSubtasks) => {
+  const handleFindVideo = async (task: Task) => {
     try {
       const response = await fetch(`/api/tools/youtube-search?q=${encodeURIComponent(`${task.title} how to tutorial`)}`);
       const data = await response.json();
@@ -50,21 +50,7 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
       if (data.videos && data.videos.length > 0) {
         onVideoSelect(data.videos[0]);
         
-        // Update task with video attachment
-        const updatedAttachments = [
-          ...(task.attachments || []),
-          {
-            name: data.videos[0].title,
-            url: data.videos[0].embedUrl,
-            type: 'video' as const
-          }
-        ];
-        
-        await fetch(`/api/tasks/${task.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ attachments: updatedAttachments })
-        });
+        // Note: Video attachment will be handled via artifacts in future version
         
         queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
       }
@@ -155,7 +141,7 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
           </div>
         )}
 
-        {filteredTasks.map((task: TaskWithSubtasks) => (
+        {filteredTasks.map((task: Task) => (
           <div 
             key={task.id} 
             className={`border-b border-slate-100 p-4 hover:bg-slate-50 transition-colors ${

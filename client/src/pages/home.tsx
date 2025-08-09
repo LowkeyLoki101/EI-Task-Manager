@@ -4,7 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
-import TaskManager from '../components/TaskManager';
+import SimpleTaskManager from '../components/SimpleTaskManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 
 export default function HomePage() {
@@ -122,7 +122,7 @@ export default function HomePage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Your Tasks
             </h3>
-            <TaskManager sessionId={sessionId} onVideoSelect={() => {}} />
+            <SimpleTaskManager sessionId={sessionId} />
           </div>
 
           {/* Simple Call to Action */}
