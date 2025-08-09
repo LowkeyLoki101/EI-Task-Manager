@@ -16,37 +16,8 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- ElevenLabs ConvAI Widget SDK with WebRTC Support -->
+    <!-- ElevenLabs ConvAI Widget SDK -->
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed@latest" async type="text/javascript"></script>
-    <script>
-      // Configure widget for WebRTC mode (better mobile support)
-      window.elevenLabsConfig = {
-        connectionType: 'webrtc',
-        fallbackMode: true,
-        mobileOptimized: true
-      };
-    </script>
-    
-    <!-- ElevenLabs Widget Diagnostics -->
-    <script>
-      (function waitForWC() {
-        const el = document.getElementById('el-agent');
-        if (!el || typeof el.addEventListener !== 'function') {
-          return setTimeout(waitForWC, 150);
-        }
-        el.addEventListener('convai-ready',  () => console.log('[EL] ready'));
-        el.addEventListener('convai-error',  e => console.error('[EL] error', e.detail));
-        el.addEventListener('convai-opened', () => console.log('[EL] opened'));
-        el.addEventListener('convai-closed', () => console.log('[EL] closed'));
-
-        // Failsafe: if SDK didn't upgrade the element
-        setTimeout(() => {
-          if (!el.shadowRoot) {
-            console.error('[EL] widget not upgraded (no shadowRoot). Check CSP/allowlist/SDK 404s.');
-          }
-        }, 3000);
-      })();
-    </script>
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>

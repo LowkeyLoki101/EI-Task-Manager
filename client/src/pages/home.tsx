@@ -5,13 +5,14 @@ import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
 
-// Global types for ElevenLabs web component
+// TypeScript support for ElevenLabs custom element
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      'elevenlabs-convai': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'agent-id'?: string;
-      };
+      'elevenlabs-convai': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      > & { 'agent-id': string };
     }
   }
 }
@@ -49,6 +50,30 @@ export default function HomePage() {
 
     return () => clearInterval(interval);
   }, [builderMode, sessionId]);
+
+  // ElevenLabs Widget Diagnostics (React-friendly)
+  useEffect(() => {
+    console.log('[Diagnostics] Home page mounted');
+
+    const checkWidget = () => {
+      const widget = document.querySelector('elevenlabs-convai');
+      if (widget) {
+        console.log('[Diagnostics] ElevenLabs widget found in DOM');
+        const agentId = widget.getAttribute('agent-id');
+        if (!agentId) {
+          console.warn('[Diagnostics] Widget missing agent-id attribute!');
+        } else {
+          console.log(`[Diagnostics] Widget agent-id: ${agentId}`);
+        }
+      } else {
+        console.warn('[Diagnostics] ElevenLabs widget NOT found in DOM');
+      }
+    };
+
+    checkWidget();
+    const timer = setTimeout(checkWidget, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">

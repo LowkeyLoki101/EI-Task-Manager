@@ -1,0 +1,80 @@
+Got it—here’s exactly what to tell Replit to do and why.
+
+⸻
+
+What’s happening
+	•	The diagnostics snippet you added looks for #el-agent.
+	•	Your React element <elevenlabs-convai …> has no id, so the diagnostics can’t find it and complains.
+	•	You don’t actually need diagnostics for the widget to work.
+
+⸻
+
+The clean, reliable setup (recommended)
+
+1) Keep only the SDK loader in client/index.html
+
+<!-- ElevenLabs ConvAI Widget SDK -->
+<script
+  src="https://unpkg.com/@elevenlabs/convai-widget-embed@latest"
+  async
+  type="text/javascript">
+</script>
+
+Remove any diagnostics script blocks that query #el-agent.
+
+2) Render the widget in your React page (client/src/pages/home.tsx)
+
+// Optional: silence TS about the custom element
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'elevenlabs-convai': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        'agent-id': string
+      };
+    }
+  }
+}
+
+export default function Home() {
+  return (
+    <main style={{ minHeight: '100vh' }}>
+      <elevenlabs-convai agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"></elevenlabs-convai>
+    </main>
+  );
+}
+
+That’s it. The SDK attaches itself automatically and the widget appears. No extra IDs or scripts required.
+
+⸻
+
+If you want to keep diagnostics anyway (optional)
+	1.	Add the ID so the script can find the element:
+
+<elevenlabs-convai
+  id="el-agent"
+  agent-id="agent_8201k251883jf0hr1ym7d6dbymxc">
+</elevenlabs-convai>
+
+	2.	Make sure the diagnostics code runs after the element exists (e.g., in a useEffect), or keep it in index.html but behind window.onload:
+
+<script>
+  window.onload = () => {
+    const el = document.getElementById('el-agent');
+    if (!el) console.warn('Diagnostics: #el-agent not found');
+    // … your diagnostics here …
+  };
+</script>
+
+
+⸻
+
+Extra guardrails Replit should add
+	•	Load the SDK only once (only in index.html; don’t import it in React again).
+	•	If TypeScript yells about the custom element, keep the declare global block above.
+	•	If this page is server-rendered, make sure the page only renders the element on the client (e.g., no-op needed in CRA/Vite; in Next.js you’d guard with dynamic(() => Promise.resolve(Component), { ssr: false })).
+
+⸻
+
+TL;DR for Replit
+
+“Please remove the diagnostics script, keep only the ElevenLabs SDK in client/index.html, and render <elevenlabs-convai agent-id="…"> in client/src/pages/home.tsx. If you really want diagnostics, add id="el-agent" to the element and ensure the diagnostics run after load.”

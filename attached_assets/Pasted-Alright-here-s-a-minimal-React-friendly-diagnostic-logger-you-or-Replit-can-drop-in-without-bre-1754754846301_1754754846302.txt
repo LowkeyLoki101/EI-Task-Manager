@@ -1,0 +1,95 @@
+Alright — here’s a minimal, React-friendly diagnostic logger you (or Replit) can drop in without breaking anything.
+
+It will:
+	•	Detect when the ElevenLabs SDK finishes loading.
+	•	Detect when the <elevenlabs-convai> element mounts.
+	•	Log any missing configuration (like missing agent-id).
+
+⸻
+
+1) Keep your normal SDK loader in client/index.html
+
+<!-- ElevenLabs ConvAI Widget SDK -->
+<script
+  src="https://unpkg.com/@elevenlabs/convai-widget-embed@latest"
+  async
+  type="text/javascript">
+</script>
+
+
+⸻
+
+2) Update your client/src/pages/home.tsx
+
+import React, { useEffect } from 'react';
+
+// Optional TypeScript support for custom element
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'elevenlabs-convai': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      > & { 'agent-id': string };
+    }
+  }
+}
+
+export default function Home() {
+  useEffect(() => {
+    // Log when component mounts
+    console.log('[Diagnostics] Home page mounted');
+
+    // Wait a tick for DOM updates
+    const checkWidget = () => {
+      const widget = document.querySelector('elevenlabs-convai');
+      if (widget) {
+        console.log('[Diagnostics] ElevenLabs widget found in DOM');
+
+        const agentId = widget.getAttribute('agent-id');
+        if (!agentId) {
+          console.warn('[Diagnostics] Widget missing agent-id attribute!');
+        } else {
+          console.log(`[Diagnostics] Widget agent-id: ${agentId}`);
+        }
+      } else {
+        console.warn('[Diagnostics] ElevenLabs widget NOT found in DOM');
+      }
+    };
+
+    // Run on mount and after short delay (in case SDK loads slow)
+    checkWidget();
+    const timer = setTimeout(checkWidget, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <main style={{ minHeight: '100vh', padding: '2rem' }}>
+      <h1>Welcome</h1>
+      <elevenlabs-convai agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"></elevenlabs-convai>
+    </main>
+  );
+}
+
+
+⸻
+
+3) How it works
+	•	useEffect runs once when the page mounts.
+	•	It queries for the <elevenlabs-convai> element.
+	•	Logs success/failure and prints the agent-id.
+	•	Runs the check again after 2 seconds in case the widget loads slowly.
+
+⸻
+
+4) Why this is better than your old script
+	•	Works inside React — no hard-coded id="el-agent" needed.
+	•	Doesn’t block or interfere with the widget’s own scripts.
+	•	Easy to remove later when you don’t need diagnostics.
+
+⸻
+
+If you want, I can also add event listeners so it logs whenever the widget sends or receives a message — which could be really useful while wiring it to your Replit tools.
+
+Do you want me to enhance it with those event logs too?
