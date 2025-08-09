@@ -79,7 +79,13 @@ export default function VoiceWidget({ agentId, chatOnly = false }: Props) {
       agent-id={agentId}
       /* keep chat-only during dev inside Replit preview pane; remove in prod */
       {...(chatOnly ? { "chat-only": "true" } : {})}
-      style={{ display: "block" }}
+      style={{ 
+        display: "block",
+        position: "fixed",
+        bottom: "24px",
+        right: "24px",
+        zIndex: 9999
+      }}
     />
   );
 }

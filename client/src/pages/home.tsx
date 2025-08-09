@@ -99,7 +99,7 @@ export default function HomePage() {
                   Ready to start
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Click "Talk To A.I." in the bottom right to begin your conversation
+                  Look for the chat widget in the bottom-right corner to start your conversation
                 </p>
               </div>
             </div>
