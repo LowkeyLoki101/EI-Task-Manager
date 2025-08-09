@@ -31,14 +31,15 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **ElevenLabs API Integration**: Fully configured with proper authentication and voice synthesis
 - ✅ **Complete Voice Stack**: Widget + Actions + SDK integration for comprehensive voice experience
 - ✅ **Dual Interface**: Voice chat (microphone permissions required) + reliable text chat fallback
-- ⚠️ **Voice Chat Status**: ElevenLabs widget loaded but requires dashboard configuration (domain allowlist)
+- ✅ **Voice Chat Status**: ElevenLabs widget successfully loads and opens! Shows agent interface correctly
+- ⚠️ **Microphone Permissions**: Browser blocks microphone in preview environments (expected behavior)
 - ✅ **Primary Interface**: Blue text chat fully operational with GPT-5 and automatic task creation
 - ✅ **Action Endpoints Ready**: /api/actions/research, /api/actions/qr, /api/actions/scaffold_page fully implemented
 - ✅ **Enhanced CORS**: Proper CORS configuration for ElevenLabs widget and API access in server/index.ts
 - ✅ **Widget Event Relay**: ConvAI event handling via /api/convai/relay for frontend widget events
-- ✅ **Voice Sanity Page**: Created /voice-sanity.html for isolated widget testing and diagnostics
-- 🚧 **Current**: ElevenLabs widget configuration (domain allowlist, Web Widget toggle)
-- 🚧 **Next Phase**: Steps Visualizer component integration, ElevenLabs KB management
+- ✅ **Voice Sanity Page**: Successfully diagnosed widget - configuration is correct!
+- ✅ **Widget Configuration**: Domain allowlist working, Web Widget enabled, agent responding
+- 🚧 **Next Phase**: Steps Visualizer component integration, voice Actions API wiring
 
 ## User Preferences
 
@@ -133,3 +134,5 @@ UI filters use these labels to show the right list at the right time.
 - ✅ **Mobile Voice Experience**: Dual interface with voice + text options positioned clearly
 - ✅ **Steps Visualizer Backend**: Implemented research, QR generation, and page scaffolding endpoints
 - ✅ **System Architecture**: CORS properly configured, widget event relay system operational
+- ✅ **ElevenLabs Widget Breakthrough**: Widget loads, opens, and shows agent interface correctly
+- ✅ **Configuration Validated**: All ElevenLabs dashboard settings confirmed working

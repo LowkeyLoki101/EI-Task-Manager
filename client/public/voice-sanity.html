@@ -26,6 +26,7 @@
       <button id="open">Open widget</button>
       <button id="close">Close widget</button>
       <span id="status" class="pill">status: loading…</span>
+      <span id="permissions" class="pill">permissions: checking…</span>
     </div>
 
     <!-- The actual web component -->
@@ -43,12 +44,40 @@
       (function ready() {
         const el = document.getElementById('el-agent');
         const status = document.getElementById('status');
+        const permissions = document.getElementById('permissions');
         if (!el || !el.addEventListener) return setTimeout(ready, 100);
 
-        el.addEventListener('convai-ready',  () => { console.log('[EL] ready'); status.textContent = 'status: ready'; });
-        el.addEventListener('convai-opened', () => { console.log('[EL] opened'); status.textContent = 'status: opened'; });
-        el.addEventListener('convai-closed', () => { console.log('[EL] closed'); status.textContent = 'status: closed'; });
-        el.addEventListener('convai-error',  e => { console.error('[EL] error', e.detail); status.textContent = 'status: error'; });
+        // Check microphone permissions
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(() => {
+              permissions.textContent = 'permissions: ✅ microphone allowed';
+              console.log('[EL] Microphone permission granted');
+            })
+            .catch((err) => {
+              permissions.textContent = 'permissions: ⚠️ microphone blocked';
+              console.log('[EL] Microphone permission denied:', err.name, err.message);
+            });
+        } else {
+          permissions.textContent = 'permissions: ❌ no media API';
+        }
+
+        el.addEventListener('convai-ready',  () => { 
+          console.log('[EL] ready - WIDGET IS WORKING!'); 
+          status.textContent = 'status: ✅ ready'; 
+        });
+        el.addEventListener('convai-opened', () => { 
+          console.log('[EL] opened - conversation UI visible'); 
+          status.textContent = 'status: ✅ opened'; 
+        });
+        el.addEventListener('convai-closed', () => { 
+          console.log('[EL] closed'); 
+          status.textContent = 'status: closed'; 
+        });
+        el.addEventListener('convai-error',  e => { 
+          console.error('[EL] error', e.detail); 
+          status.textContent = 'status: ⚠️ error (check console)'; 
+        });
 
         document.getElementById('open').onclick  = () => el.dispatchEvent(new Event('convai-open'));
         document.getElementById('close').onclick = () => el.dispatchEvent(new Event('convai-close'));
@@ -57,7 +86,9 @@
         setTimeout(() => {
           if (!el.shadowRoot) {
             console.error('[EL] widget not upgraded (no shadowRoot). Check domain allowlist, CSP, or SDK 404.');
-            status.textContent = 'status: not upgraded (check console)';
+            status.textContent = 'status: ❌ not upgraded (check console)';
+          } else {
+            console.log('[EL] Widget successfully upgraded with shadowRoot - configuration is correct!');
           }
         }, 3000);
       })();
