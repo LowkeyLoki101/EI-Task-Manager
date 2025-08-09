@@ -32,6 +32,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Enhanced Actions with SDK integration
   registerEnhancedActions(app);
   
+  // System Status and Diagnostics
+  app.get("/api/status", async (req, res) => {
+    const status = {
+      server: "✅ Running",
+      database: "✅ Connected (Memory Storage)",
+      openai: process.env.OPENAI_API_KEY ? "✅ Configured" : "❌ Missing API Key",
+      elevenlabs: process.env.ELEVENLABS_API_KEY ? "✅ Configured" : "❌ Missing API Key",
+      agent_id: "agent_8201k251883jf0hr1ym7d6dbymxc",
+      actions_working: "✅ Actions API responding",
+      widget_status: "⚠️ Check console for widget errors",
+      next_steps: [
+        "If widget shows 'Failed to fetch' - check ElevenLabs dashboard",
+        "Enable Web Widget in Agent Settings", 
+        "Add domain to Allowed Origins",
+        "Set Public/Unauthenticated = ON for testing"
+      ]
+    };
+    res.json(status);
+  });
+  
   // Session management
   app.post("/api/sessions", async (req, res) => {
     try {

@@ -102,7 +102,11 @@ export default function HomePage() {
                 <p className="text-gray-600 dark:text-gray-400">
                   Ready to create and manage tasks! Two chat options available:
                   <br />• <strong>Blue chat button</strong> - reliable text conversations  
-                  <br />• Microphone button - voice chat (requires mic permission)
+                  <br />• Voice widget - ElevenLabs conversational AI (if configured)
+                  <br />
+                  <small className="text-sm opacity-75">
+                    Check console for widget status. Visit <strong>/api/status</strong> for diagnostics.
+                  </small>
                 </p>
               </div>
             </div>

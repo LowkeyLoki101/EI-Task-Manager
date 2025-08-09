@@ -1,158 +1,156 @@
-import { useConversation } from "@elevenlabs/react";
-import { useCallback, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { MessageCircle, MicIcon, MicOff } from "lucide-react";
+import { useEffect } from "react";
 
 interface Props {
   agentId: string;
   chatOnly?: boolean;
 }
 
-export default function VoiceWidget({ agentId, chatOnly = true }: Props) {
-  const conversation = useConversation({
-    onConnect: () => {
-      console.log('[EL] Connected to agent');
-      fetch("/api/convai/relay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "connected",
-          detail: { agentId, status: "connected" },
-        }),
-      }).catch(console.error);
-    },
-    onDisconnect: () => {
-      console.log('[EL] Disconnected from agent');
-      fetch("/api/convai/relay", {
-        method: "POST", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "disconnected",
-          detail: { agentId, status: "disconnected" },
-        }),
-      }).catch(console.error);
-    },
-    onMessage: (message) => {
-      console.log('[EL] Message:', message);
-    },
-    onError: (error) => {
-      console.error('[EL] Error:', error);
-      // Show user-friendly error message
-      alert('Voice connection failed. Please try the text chat instead or check your microphone permissions.');
-    },
-  });
-
-  const startConversation = useCallback(async () => {
-    try {
-      // Request microphone permission
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Start the conversation with your agent  
-      console.log('Starting session with agent:', agentId);
-      const conversationId = await conversation.startSession({
-        agentId: agentId,
-        // Use websocket connection type
-        connectionType: 'websocket'
-      });
-      
-      console.log('Voice conversation started:', conversationId);
-
-    } catch (error) {
-      console.error('Failed to start conversation:', error);
-      // More detailed error logging
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-        // Show specific error to user
-        alert(`Voice chat failed: ${error.message}. Please use the blue text chat button instead.`);
-      } else {
-        alert('Voice chat is currently unavailable. Please use the blue text chat button for now.');
-      }
-    }
-  }, [conversation, agentId]);
-
-  const stopConversation = useCallback(async () => {
-    await conversation.endSession();
-  }, [conversation]);
-
-  // Auto-register tool call handlers
+/**
+ * Official ElevenLabs ConvAI web component integration
+ * Using the recommended approach from ElevenLabs documentation
+ */
+export default function VoiceWidget({ agentId, chatOnly = false }: Props) {
+  
   useEffect(() => {
-    const onToolCall = async (event: Event) => {
-      const customEvent = event as any;
-      const { name, input, conversationId } = customEvent.detail;
+    const initializeWidget = () => {
+      const el = document.getElementById('el-agent');
+      console.log('[EL] Widget element:', !!el, 'Agent ID:', agentId);
       
-      console.log("[ConvAI] tool call:", name, input);
-      
-      try {
-        // Call our enhanced actions endpoint
-        const response = await fetch("/api/enhanced-actions/execute", {
-          method: "POST", 
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: name,
-            input: JSON.parse(input || "{}"),
-            conversationId,
-            agentId
-          }),
-        });
-        
-        const result = await response.json();
-        
-        // Send result back
-        window.dispatchEvent(new CustomEvent("convai-tool-result", {
-          detail: {
-            callId: customEvent.detail.callId,
-            result: JSON.stringify(result)
-          }
-        }));
-        
-      } catch (error) {
-        console.error("[ConvAI] tool call error:", error);
-        window.dispatchEvent(new CustomEvent("convai-tool-result", {
-          detail: {
-            callId: customEvent.detail.callId,
-            result: JSON.stringify({ error: "Tool execution failed" })
-          }
-        }));
+      if (!el || !el.addEventListener) {
+        setTimeout(initializeWidget, 150);
+        return;
       }
+
+      // Widget event listeners  
+      const onReady = (e: Event) => {
+        console.log('[EL] ConvAI ready', e);
+        // Notify our backend that widget is ready
+        fetch("/api/convai/relay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "widget-ready", agentId, ts: Date.now() })
+        }).catch(console.error);
+      };
+
+      const onError = (e: Event) => {
+        console.error('[EL] ConvAI error', (e as any).detail);
+        // User-friendly error handling
+        const errorDetail = (e as any).detail;
+        if (errorDetail?.message?.includes('not available') || errorDetail?.message?.includes('Failed to fetch')) {
+          console.warn('[EL] Widget setup needed: Domain allowlist or agent configuration issue');
+          console.info('[EL] Next steps: Check ElevenLabs dashboard > Agent Settings > Web Widget');
+          console.info('[EL] - Enable Web Widget');
+          console.info('[EL] - Add domain to Allowed Origins');  
+          console.info('[EL] - Set Public/Unauthenticated = ON for testing');
+        }
+      };
+
+      const onStatus = (e: Event) => console.log('[EL] ConvAI status', e);
+
+      // Conversation event handlers
+      const onUtterance = (e: Event) => {
+        console.log('[EL] User utterance', (e as any).detail);
+        fetch("/api/convai/relay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            type: "utterance", 
+            detail: (e as any).detail, 
+            ts: Date.now() 
+          })
+        }).catch(console.error);
+      };
+
+      const onTranscript = (e: Event) => {
+        console.log('[EL] Transcript', (e as any).detail);
+        fetch("/api/convai/relay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            type: "transcript", 
+            detail: (e as any).detail, 
+            ts: Date.now() 
+          })
+        }).catch(console.error);
+      };
+
+      // Tool call handlers (Actions API)
+      const onToolCall = (e: Event) => {
+        console.log('[EL] Tool call', (e as any).detail);
+        fetch("/api/convai/relay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            type: "tool_call", 
+            detail: (e as any).detail, 
+            ts: Date.now() 
+          })
+        }).catch(console.error);
+      };
+
+      const onToolResult = (e: Event) => {
+        console.log('[EL] Tool result', (e as any).detail);
+      };
+
+      // Register all event listeners
+      el.addEventListener('convai-ready', onReady);
+      el.addEventListener('convai-error', onError);
+      el.addEventListener('convai-status', onStatus);
+      el.addEventListener('convai-utterance', onUtterance);
+      el.addEventListener('convai-transcript', onTranscript);
+      el.addEventListener('convai-tool-call', onToolCall);
+      el.addEventListener('convai-tool-result', onToolResult);
+      
+      return () => {
+        el.removeEventListener('convai-ready', onReady);
+        el.removeEventListener('convai-error', onError);
+        el.removeEventListener('convai-status', onStatus);
+        el.removeEventListener('convai-utterance', onUtterance);
+        el.removeEventListener('convai-transcript', onTranscript);
+        el.removeEventListener('convai-tool-call', onToolCall);
+        el.removeEventListener('convai-tool-result', onToolResult);
+      };
     };
 
-    window.addEventListener("convai-tool-call", onToolCall as EventListener);
-    return () => window.removeEventListener("convai-tool-call", onToolCall as EventListener);
+    // Initialize after load
+    if (document.readyState === 'loading') {
+      window.addEventListener('load', initializeWidget);
+    } else {
+      setTimeout(initializeWidget, 100);
+    }
+
+    return () => {
+      window.removeEventListener('load', initializeWidget);
+    };
   }, [agentId]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <div className="flex flex-col items-end gap-2">
-        {conversation.status === 'connected' && (
-          <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg px-3 py-2 text-sm">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${conversation.isSpeaking ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
-              <span className="text-gray-700 dark:text-gray-300">
-                {conversation.isSpeaking ? 'Speaking' : 'Listening'}
-              </span>
-            </div>
-          </div>
-        )}
-        
-        {conversation.status === 'connected' ? (
-          <Button
-            onClick={stopConversation}
-            className="w-14 h-14 rounded-full shadow-lg bg-red-600 hover:bg-red-700 text-white"
-            data-testid="button-stop-voice"
-          >
-            <MicOff className="w-6 h-6" />
-          </Button>
-        ) : (
-          <Button
-            onClick={startConversation}
-            className="w-14 h-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white"
-            data-testid="button-start-voice"
-          >
-            <MicIcon className="w-6 h-6" />
-          </Button>
-        )}
-      </div>
-    </div>
+    <elevenlabs-convai
+      id="el-agent"
+      agent-id={agentId}
+      {...(chatOnly ? { 'chat-only': 'true' } : {})}
+      style={{
+        position: 'fixed',
+        right: '24px',
+        bottom: '24px',
+        zIndex: 9999
+      }}
+    />
   );
+}
+
+// TypeScript declaration for the custom element
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'elevenlabs-convai': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      > & {
+        'agent-id': string;
+        'chat-only'?: string;
+        id?: string;
+      };
+    }
+  }
 }
