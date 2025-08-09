@@ -10,6 +10,7 @@ import DirectChatWidget from '../components/DirectChatWidget';
 export default function HomePage() {
   const sessionId = useSessionId();
   const [builderMode, setBuilderMode] = useState(false);
+  const [isWidgetReady, setIsWidgetReady] = useState(false);
 
   // Supervisor processing for Builder Mode  
   useEffect(() => {
@@ -40,6 +41,28 @@ export default function HomePage() {
 
     return () => clearInterval(interval);
   }, [builderMode, sessionId]);
+
+  // Listen for ElevenLabs widget ready event
+  useEffect(() => {
+    const handleWidgetReady = () => {
+      console.log('[EL] Widget ready - enabling voice mode, disabling text fallback');
+      setIsWidgetReady(true);
+    };
+
+    const handleWidgetError = () => {
+      console.log('[EL] Widget error - keeping text fallback available');
+      setIsWidgetReady(false);
+    };
+
+    // Listen for widget events on the document
+    document.addEventListener('convai-ready', handleWidgetReady);
+    document.addEventListener('convai-error', handleWidgetError);
+
+    return () => {
+      document.removeEventListener('convai-ready', handleWidgetReady);
+      document.removeEventListener('convai-error', handleWidgetError);
+    };
+  }, []);
 
 
 
@@ -109,7 +132,10 @@ export default function HomePage() {
                   <br />
                   <br />
                   <small className="text-sm opacity-75">
-                    Voice widget ready! Enable microphone in browser settings for voice chat.
+                    {isWidgetReady 
+                      ? "🎤 Voice widget active! Click the voice bubble to start talking."
+                      : "💬 Voice widget loading... Text chat available below."
+                    }
                     <br />
                     <a href="/voice-sanity.html" target="_blank" className="text-blue-500 hover:text-blue-700 underline">
                       Voice diagnostics →
@@ -122,15 +148,16 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* ElevenLabs Widget - Clean Implementation */}
+      {/* ElevenLabs Widget - Working Configuration from Sanity Test */}
       <VoiceWidget
         agentId="agent_8201k251883jf0hr1ym7d6dbymxc"
-        /* true if you are testing in the Replit preview frame; false in real tab */
-        chatOnly={true}
+        chatOnly={false}
       />
       
-      {/* Fallback Direct Chat Widget */}
-      <DirectChatWidget agentId="agent_8201k251883jf0hr1ym7d6dbymxc" />
+      {/* Fallback Direct Chat Widget - Only show if widget fails */}
+      {!isWidgetReady && (
+        <DirectChatWidget agentId="agent_8201k251883jf0hr1ym7d6dbymxc" />
+      )}
     </div>
   );
 }

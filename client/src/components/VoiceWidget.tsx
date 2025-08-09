@@ -35,6 +35,10 @@ export default function VoiceWidget({ agentId, chatOnly = false }: Props) {
       // Widget event listeners  
       const onReady = (e: Event) => {
         console.log('[EL] ConvAI ready', e);
+        
+        // Emit event to document for main app to listen
+        document.dispatchEvent(new Event('convai-ready'));
+        
         // Notify our backend that widget is ready
         fetch("/api/convai/relay", {
           method: "POST",
@@ -45,6 +49,10 @@ export default function VoiceWidget({ agentId, chatOnly = false }: Props) {
 
       const onError = (e: Event) => {
         console.error('[EL] ConvAI error', (e as any).detail);
+        
+        // Emit event to document for main app to listen
+        document.dispatchEvent(new Event('convai-error'));
+        
         // User-friendly error handling
         const errorDetail = (e as any).detail;
         if (errorDetail?.message?.includes('not available') || errorDetail?.message?.includes('Failed to fetch')) {
