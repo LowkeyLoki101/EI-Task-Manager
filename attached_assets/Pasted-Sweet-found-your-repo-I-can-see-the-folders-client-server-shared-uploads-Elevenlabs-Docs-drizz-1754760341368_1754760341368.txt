@@ -1,0 +1,153 @@
+Sweet—found your repo. I can see the folders (client, server, shared, uploads/Elevenlabs Docs, drizzle.config.ts, etc.), so you’re already set up as a full-stack project. Let’s get you to a running, working MVP and fix the usual blockers (widget not mounting, Actions/Webhooks not wired, env gaps).  ￼
+
+Quick “make it run” checklist
+	1.	Clone & install
+
+git clone https://github.com/LowkeyLoki101/EI-Task-Manager.git
+cd EI-Task-Manager
+npm i
+
+	2.	Create .env (root)
+
+# LLM + ElevenLabs
+OPENAI_API_KEY=...
+ELEVENLABS_API_KEY=...
+ELEVENLABS_AGENT_ID=agent_8201k251883jf0hr1ym7d6dbymxc
+
+# Webhooks / Actions
+ELEVENLABS_WEBHOOK_SECRET=replace_me   # set the same in ElevenLabs
+PUBLIC_APP_URL=https://<your-replit>.repl.co
+
+# DB (Drizzle)
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+
+	3.	Dev scripts
+
+# if you have separate scripts:
+npm run dev:server   # starts Express
+npm run dev:client   # starts Vite/React
+
+# or a single script if you wired a proxy:
+npm run dev
+
+
+⸻
+
+Fix the ElevenLabs widget (the common blockers)
+
+On the page (likely in client):
+
+<elevenlabs-convai
+  id="el-agent"
+  agent-id="agent_8201k251883jf0hr1ym7d6dbymxc"
+  style="position:fixed; right:24px; bottom:24px; z-index:9999;"
+></elevenlabs-convai>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+<script>
+  window.addEventListener('load', () => {
+    const el = document.getElementById('el-agent');
+    const ready = () => {
+      if (!el || !el.addEventListener) return setTimeout(ready, 150);
+      el.addEventListener('convai-ready',  () => console.log('[EL] ready'));
+      el.addEventListener('convai-error',  e => console.error('[EL] error', e.detail));
+    };
+    ready();
+  });
+</script>
+
+In ElevenLabs dashboard
+	•	Turn Web Widget = ON, set Public/Unauthenticated = ON (MVP).
+	•	Add your Replit domain to Allowed origins.
+	•	Copy the official embed snippet (don’t hand-type).
+	•	Test in the external tab (not the in-pane preview).
+
+If console shows [EL] error about “not available / blocked domain,” it’s almost always the allow-list. Fix that and reload.
+
+⸻
+
+Wire Actions + Webhooks (server)
+
+Create CORS on your API so the widget can call Actions:
+
+// server/index.ts (or similar)
+import cors from "cors";
+app.use(cors({
+  origin: [/\.repl\.co$/, "http://localhost:5173"], // Vite dev + Replit
+  methods: ["GET","POST","PATCH","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization","x-api-key"]
+}));
+app.use(express.json());
+
+Actions (called by the agent):
+
+app.post("/api/actions/add_task", async (req, res) => {
+  // { title, context?, time_window?, steps? }
+  // TODO: validate schema, insert into tasks/steps (Drizzle)
+  return res.json({ ok: true, taskId: "tsk_..." });
+});
+
+app.post("/api/actions/get_todo_list", async (req,res) => {
+  // { context?, view? } -> return items/steps
+  return res.json({ items: [], steps: [] });
+});
+
+Webhook (events from ElevenLabs → you):
+
+app.post("/api/elevenlabs/webhook", (req,res) => {
+  // Verify HMAC/JWT signature if provided by EL (use ELEVENLABS_WEBHOOK_SECRET)
+  // Handle: message.user, message.agent, transcript.complete, session.start/end
+  // Store transcripts; create tasks from voice intents if needed
+  res.sendStatus(200);
+});
+
+KB proxy (to store docs in the agent’s KB from your backend):
+
+app.post("/api/agents/:agentId/kb/documents", async (req,res) => {
+  // Accept file or URL, fetch/clean, then call ElevenLabs KB upload API with ELEVENLABS_API_KEY
+  // Save artifact link to your DB
+  res.json({ ok: true, docId: "kbdoc_..." });
+});
+
+
+⸻
+
+Drizzle / DB sanity
+
+You’ve got drizzle.config.ts in the repo, so make sure:
+
+npx drizzle-kit generate
+npx drizzle-kit migrate
+
+If migrations fail, it’s almost always the DATABASE_URL. Confirm it’s reachable from Replit and that SSL flags match your host.
+
+⸻
+
+Frontend proxy (so client calls your server in dev)
+
+In vite.config.ts, add:
+
+server: {
+  proxy: {
+    "/api": "http://localhost:3000"
+  }
+}
+
+Then the client can call /api/... without CORS headaches in local dev.
+
+⸻
+
+Smoke test matrix
+	•	Widget loads and logs [EL] ready.
+	•	Action call from agent (e.g., add_task) hits /api/actions/add_task (watch server log).
+	•	Webhook receives a message event (log the body, 200 OK).
+	•	KB upload route returns { ok: true, docId }.
+	•	DB shows a new task after an action call.
+
+⸻
+
+If you hit a wall, send me:
+	•	The console error from the page,
+	•	The server log for the failing request,
+	•	And which step above you were on.
+
+I’ll pinpoint the exact fix and give you a drop-in patch.

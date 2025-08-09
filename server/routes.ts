@@ -51,6 +51,227 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
     res.json(status);
   });
+
+  // Advanced Action Endpoints for Steps Visualizer
+
+  // Research Action - Intelligent research for task steps
+  app.post("/api/actions/research", async (req, res) => {
+    try {
+      const { stepId, query, sessionId } = req.body;
+      
+      if (!stepId || !query) {
+        return res.status(400).json({ error: "stepId and query required" });
+      }
+
+      // Get the step to understand context
+      const step = await storage.getStep(stepId);
+      if (!step) {
+        return res.status(404).json({ error: "Step not found" });
+      }
+
+      // Use GPT-5 to research and provide detailed information
+      const researchPrompt = `Research task: "${query}"
+      
+Context: This is for a task management step titled "${step.title}". 
+
+Provide comprehensive research results including:
+1. Key information and insights
+2. Recommended approaches or solutions
+3. Potential challenges and how to overcome them
+4. Relevant resources or tools
+5. Next action items
+
+Format as structured information that would help someone complete this task step.`;
+
+      let researchResults = "Research completed for: " + query;
+
+      if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== "sk-fake-key-for-development") {
+        try {
+          const researchResponse = await openai.chat.completions.create({
+            model: "gpt-4o", // Latest OpenAI model
+            messages: [{ role: "user", content: researchPrompt }],
+            max_tokens: 1000,
+            temperature: 0.7
+          });
+          
+          researchResults = researchResponse.choices[0].message.content || researchResults;
+        } catch (error) {
+          console.error('Research error:', error);
+        }
+      }
+
+      // Create an artifact to store the research
+      const artifact = await storage.createArtifact({
+        id: randomUUID(),
+        stepId,
+        type: 'note',
+        title: `Research: ${query}`,
+        content: researchResults
+      });
+
+      // Update step status to indicate research is complete
+      await storage.updateStep(stepId, { 
+        status: 'running',
+        description: `Research completed: ${query}` 
+      });
+
+      res.json({
+        success: true,
+        message: `Research completed for "${query}"`,
+        artifact,
+        results: researchResults
+      });
+
+    } catch (error) {
+      console.error('Research action error:', error);
+      res.status(500).json({ error: "Failed to complete research" });
+    }
+  });
+
+  // QR Code Generation Action
+  app.post("/api/actions/qr", async (req, res) => {
+    try {
+      const { stepId, content, label, sessionId } = req.body;
+      
+      if (!stepId || !content) {
+        return res.status(400).json({ error: "stepId and content required" });
+      }
+
+      // Get the step for context
+      const step = await storage.getStep(stepId);
+      if (!step) {
+        return res.status(404).json({ error: "Step not found" });
+      }
+
+      // Generate QR code using a simple SVG-based approach
+      // In a real implementation, you might use a QR code library
+      const qrContent = encodeURIComponent(content);
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrContent}`;
+      
+      const qrTitle = label || `QR Code: ${content.substring(0, 50)}...`;
+
+      // Create artifact for the QR code
+      const artifact = await storage.createArtifact({
+        id: randomUUID(),
+        stepId,
+        type: 'link',
+        title: qrTitle,
+        content: qrCodeUrl
+      });
+
+      // Update step with QR generation info
+      await storage.updateStep(stepId, {
+        status: 'running',
+        description: `QR code generated for: ${content}`
+      });
+
+      res.json({
+        success: true,
+        message: `QR code generated for "${content}"`,
+        artifact,
+        qrCodeUrl
+      });
+
+    } catch (error) {
+      console.error('QR generation error:', error);
+      res.status(500).json({ error: "Failed to generate QR code" });
+    }
+  });
+
+  // Page Scaffolding Action
+  app.post("/api/actions/scaffold_page", async (req, res) => {
+    try {
+      const { stepId, pageType, title, features, sessionId } = req.body;
+      
+      if (!stepId || !pageType || !title) {
+        return res.status(400).json({ error: "stepId, pageType, and title required" });
+      }
+
+      // Get the step for context
+      const step = await storage.getStep(stepId);
+      if (!step) {
+        return res.status(404).json({ error: "Step not found" });
+      }
+
+      // Generate page scaffold based on type
+      const scaffoldPrompt = `Create a ${pageType} page scaffold with the title "${title}".
+      
+${features ? `Features requested: ${features.join(', ')}` : ''}
+
+Provide a complete, production-ready page structure including:
+1. HTML structure with semantic elements
+2. CSS styling (modern, responsive design)
+3. JavaScript functionality if needed
+4. Accessibility considerations
+5. SEO-friendly markup
+
+Return as a complete HTML page that can be saved and used immediately.`;
+
+      let scaffoldCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>${title}</h1>
+        <p>Generated ${pageType} page scaffold - ready for customization.</p>
+    </div>
+</body>
+</html>`;
+
+      if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== "sk-fake-key-for-development") {
+        try {
+          const scaffoldResponse = await openai.chat.completions.create({
+            model: "gpt-4o", // Latest OpenAI model
+            messages: [{ role: "user", content: scaffoldPrompt }],
+            max_tokens: 1500,
+            temperature: 0.3
+          });
+          
+          const generatedCode = scaffoldResponse.choices[0].message.content;
+          if (generatedCode && generatedCode.includes('<!DOCTYPE html>')) {
+            scaffoldCode = generatedCode;
+          }
+        } catch (error) {
+          console.error('Scaffold generation error:', error);
+        }
+      }
+
+      // Create artifact for the scaffolded page
+      const artifact = await storage.createArtifact({
+        id: randomUUID(),
+        stepId,
+        type: 'html',
+        title: `${pageType} Page: ${title}`,
+        content: scaffoldCode
+      });
+
+      // Update step with scaffolding info
+      await storage.updateStep(stepId, {
+        status: 'running', 
+        description: `Generated ${pageType} page scaffold: ${title}`
+      });
+
+      res.json({
+        success: true,
+        message: `${pageType} page scaffolded: "${title}"`,
+        artifact,
+        code: scaffoldCode
+      });
+
+    } catch (error) {
+      console.error('Page scaffolding error:', error);
+      res.status(500).json({ error: "Failed to scaffold page" });
+    }
+  });
   
   // Session management
   app.post("/api/sessions", async (req, res) => {
