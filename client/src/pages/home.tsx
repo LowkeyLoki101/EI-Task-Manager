@@ -4,7 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
-import VoiceSanityWidget from '../components/VoiceSanityWidget';
+import VoiceWidgetDirect from '../components/VoiceWidgetDirect';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -144,8 +144,8 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Voice Widget - Using Voice Sanity Method */}
-      <VoiceSanityWidget agentId="agent_8201k251883jf0hr1ym7d6dbymxc" />
+      {/* Voice Widget - Direct HTML injection like voice-sanity.html */}
+      <VoiceWidgetDirect agentId="agent_8201k251883jf0hr1ym7d6dbymxc" />
     </div>
   );
 }
