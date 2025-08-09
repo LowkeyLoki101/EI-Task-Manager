@@ -1,0 +1,37 @@
+Great link—this page is basically ElevenLabs’ “what SDKs exist and when to use them” hub. Here’s the quick map of what’s on it and how you’d use each piece with your setup.
+
+What “Libraries” means on ElevenLabs
+
+The docs page lists their official SDKs for building agents or adding voice to apps. The big ones you’ll care about:
+	•	JavaScript / TypeScript SDK – used in web apps to talk to Conversational AI (ConvAI), stream audio, manage sessions, and call tools from the browser. Typical when you’re embedding the widget or building a custom UI.  ￼
+	•	React / React Native SDKs – convenience layers over the JS SDK for React projects (web and RN mobile). Useful if you want tighter UI control than the widget gives.
+	•	Python & Swift SDKs – server-side automation or iOS apps; good for back-end orchestration (e.g., generating TTS, kicking off calls, saving transcripts).
+
+There’s also the ConvAI Widget (the thing you’re embedding):
+	•	You add the script tag and the custom element <elevenlabs-convai agent-id="..."> and you’re done. It’s meant to be the quickest path to a working agent on the web.  ￼
+
+How this fits your Replit app
+	•	Keep the widget for the customer-facing voice experience.
+	•	Use the JS/TS SDK (or server via Python) to do things around the conversation: save transcripts, generate links/QRs, send SMS, etc.
+	•	When you need total UI control (custom mic button, multi-panel layouts), switch to React SDK and implement the session/audio yourself.
+
+Why your “works here but not there” issue can happen
+
+That “raw-audio-processor worklet module” error usually means the page can’t initialize AudioWorklets (browser capability + secure context requirement). Common causes:
+	•	The page is running inside a sandboxed/preview iframe that blocks audio worklets.
+	•	Not served over HTTPS (AudioWorklets require a secure context).
+	•	CSP or bundler interference that prevents the widget from loading its worklet script.
+	•	Outdated widget script.
+
+Quick fixes to try:
+	1.	Open the app in a new browser tab (not the IDE preview iframe) over HTTPS.
+	2.	Use the latest widget script exactly as published:
+
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed@latest" async type="text/javascript"></script>
+<elevenlabs-convai agent-id="YOUR_AGENT_ID"></elevenlabs-convai>
+
+
+	3.	Remove any “diagnostic” or custom audio scripts you don’t need.
+	4.	If you still need a custom container, ensure no restrictive sandbox attributes or CSP rules block worklets.
+
+If you want, I can give you a tiny React snippet that mounts the widget safely and a checklist for Replit (HTTPS preview, no sandbox, CSP rules, etc.).
