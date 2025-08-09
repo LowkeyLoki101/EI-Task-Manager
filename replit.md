@@ -11,7 +11,7 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - **Replit Backend**: APIs, storage, embeddings, webhooks, multi-tenant platform
 
 ### Current Implementation Status
-- ✅ Official ElevenLabs web component integration with agent_8201k251883jf0hr1ym7d6dbymxc
+- ✅ Official ElevenLabs web component integration with agent_7401k28d3x9kfdntv7cjrj6t43be
 - ✅ Supervisor agent with conversation processing (8-second intervals when builder mode active)  
 - ✅ Complete database schema matching memory anchors (Tasks, Steps, Artifacts, Memory, Installations)
 - ✅ ElevenLabs Actions API system (add_task, update_step_status, get_todo_list, kb_attach_doc, post_ops_update)
@@ -51,7 +51,7 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **Actions API Connected**: convai-action-call events route to /api/actions/* endpoints
 - ✅ **Debug Controls**: Manual open/close buttons for widget troubleshooting
 - ✅ **ElevenLabs Dashboard Configured**: Voice widget working with microphone permissions granted
-- ✅ **ElevenLabs Model Instructions**: Comprehensive action documentation created for agent_8201k251883jf0hr1ym7d6dbymxc
+- ✅ **ElevenLabs Model Instructions**: Comprehensive action documentation created for agent_7401k28d3x9kfdntv7cjrj6t43be
 - ✅ **Complete Action Library**: All 12 action endpoints documented with parameters and examples
 - 🚧 **Current Phase**: Model instruction deployment and voice workflow testing
 - 🚧 **Next**: User testing of complete voice-to-task creation system
@@ -116,7 +116,7 @@ UI filters use these labels to show the right list at the right time.
 - **Google Cloud Storage**: File upload and storage backend
 - **Neon Database**: PostgreSQL database service (configured via Drizzle)
 - **OpenAI API**: ✅ CONNECTED - GPT-5 integration for AI processing and conversations (latest available model)
-- **ElevenLabs API**: ✅ AUTHENTICATED - Conversational AI Agent (agent_8201k251883jf0hr1ym7d6dbymxc) with valid API key
+- **ElevenLabs API**: ✅ AUTHENTICATED - Conversational AI Agent (agent_7401k28d3x9kfdntv7cjrj6t43be) with valid API key
 - **ElevenLabs SDK**: ✅ INTEGRATED - JavaScript SDK for programmatic voice synthesis and TTS features
 
 ### Third-Party APIs
@@ -140,7 +140,7 @@ UI filters use these labels to show the right list at the right time.
 
 ## Recent Updates (August 2025)
 - ✅ **GPT-5 Integration**: Successfully upgraded to GPT-5 (model: gpt-5-2025-08-07) with corrected API parameters
-- ✅ **ElevenLabs API Validated**: Agent agent_8201k251883jf0hr1ym7d6dbymxc confirmed working with Pro subscription
+- ✅ **ElevenLabs API Validated**: Agent agent_7401k28d3x9kfdntv7cjrj6t43be confirmed working with Pro subscription
 - ✅ **Complete API Stack**: Both OpenAI GPT-5 and ElevenLabs APIs fully authenticated and operational
 - ✅ **Enhanced Actions Implementation**: Complete SDK integration with file operations
 - ✅ **Excel/CSV Voice Integration**: File operations now provide audio confirmations  
