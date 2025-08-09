@@ -12,6 +12,17 @@ interface Props {
 export default function VoiceWidget({ agentId, chatOnly = false }: Props) {
   
   useEffect(() => {
+    // Handle unhandled promise rejections to prevent overlay
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (event.reason?.message?.includes('Failed to fetch') || 
+          event.reason?.toString?.().includes('ConversationalAI')) {
+        console.warn('[EL] Widget fetch error handled - needs dashboard configuration');
+        event.preventDefault(); // Prevent the error overlay
+      }
+    };
+    
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
     const initializeWidget = () => {
       const el = document.getElementById('el-agent');
       console.log('[EL] Widget element:', !!el, 'Agent ID:', agentId);
@@ -121,6 +132,7 @@ export default function VoiceWidget({ agentId, chatOnly = false }: Props) {
 
     return () => {
       window.removeEventListener('load', initializeWidget);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
     };
   }, [agentId]);
 

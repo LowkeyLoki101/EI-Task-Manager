@@ -99,14 +99,13 @@ export default function HomePage() {
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Ready to start
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Ready to create and manage tasks! Two chat options available:
-                  <br />• <strong>Blue chat button</strong> - reliable text conversations  
-                  <br />• Voice widget - ElevenLabs conversational AI (if configured)
+                <p className="text-gray-600 dark:text-gray-400 text-center">
+                  <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                    Click the blue chat button to start!
+                  </span>
                   <br />
-                  <small className="text-sm opacity-75">
-                    Check console for widget status. Visit <strong>/api/status</strong> for diagnostics.
-                  </small>
+                  <br />Ready to create and manage tasks with AI assistance.
+                  <br />Powered by GPT-5 for intelligent task breakdown and automation.
                 </p>
               </div>
             </div>

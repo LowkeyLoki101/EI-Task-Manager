@@ -31,7 +31,8 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **ElevenLabs API Integration**: Fully configured with proper authentication and voice synthesis
 - ✅ **Complete Voice Stack**: Widget + Actions + SDK integration for comprehensive voice experience
 - ✅ **Dual Interface**: Voice chat (microphone permissions required) + reliable text chat fallback
-- ⚠️ **Voice Chat Status**: Working but may face browser permission restrictions in preview environments
+- ⚠️ **Voice Chat Status**: ElevenLabs widget loaded but requires dashboard configuration (domain allowlist)
+- ✅ **Primary Interface**: Blue text chat fully operational with GPT-5 and automatic task creation
 - 🚧 **Next Phase**: Full toolbelt implementation (web search, QR generation, page scaffolding), ElevenLabs KB management
 
 ## User Preferences
