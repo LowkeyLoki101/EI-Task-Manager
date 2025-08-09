@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { registerElevenLabsActions, OpsManager } from "./elevenlabs-actions";
+import { registerEnhancedActions } from "./enhanced-actions";
 import { 
   insertTaskSchema, insertStepSchema, insertConversationSchema, 
   insertProposalSchema, insertFileSchema, insertSessionSchema,
@@ -27,6 +28,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register ElevenLabs Actions API
   registerElevenLabsActions(app);
+  
+  // Register Enhanced Actions with SDK integration
+  registerEnhancedActions(app);
   
   // Session management
   app.post("/api/sessions", async (req, res) => {

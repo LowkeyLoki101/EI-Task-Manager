@@ -40,7 +40,7 @@ export const steps = pgTable("steps", {
 export const artifacts = pgTable("artifacts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   stepId: varchar("step_id").notNull(),
-  type: text("type", { enum: ['link', 'file', 'note', 'html', 'qr'] }).notNull(),
+  type: text("type", { enum: ['link', 'file', 'note', 'html', 'qr', 'excel', 'csv', 'audio'] }).notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(), // URL, file path, text content, etc.
   metadata: json("metadata").default({}),
@@ -131,6 +131,10 @@ export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type InsertInstallation = z.infer<typeof insertInstallationSchema>;
 export type InsertProposal = z.infer<typeof insertProposalSchema>;
 export type InsertFile = z.infer<typeof insertFileSchema>;
+
+// Select types for enhanced actions
+export type SelectTask = typeof tasks.$inferSelect;
+export type SelectStep = typeof steps.$inferSelect;
 
 // Action schemas for ElevenLabs integration
 export const addTaskActionSchema = z.object({
