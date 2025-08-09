@@ -1,0 +1,1222 @@
+servers:
+  - x-fern-server-name: Production
+    url: https://api.elevenlabs.io/
+    description: Production (default). Routed to the closest region.
+  - url: https://api.us.elevenlabs.io/
+    x-fern-server-name: Production US
+    description: Production routed only to the US region.
+  - url: https://api.eu.residency.elevenlabs.io
+    x-fern-server-name: Production EU
+    description: Production route for customers with EU data residency.
+  - url: https://api.in.residency.elevenlabs.io
+    x-fern-server-name: Production India
+    description: Production route for customers with India data residency.
+x-fern-global-headers:
+  - header: xi-api-key
+    name: api-key
+tags:
+  - {}
+  - {}
+  - {}
+  - {}
+  - name: models
+    x-displayName: Models
+  - {}
+  - name: samples
+    x-displayName: Samples
+  - {}
+  - {}
+  - {}
+  - name: user
+    x-displayName: User
+  - name: usage
+    x-displayName: Usage
+
+x-fern-groups:
+  samples:
+    summary: Samples
+  voices:
+    summary: Voices
+  studio:
+    summary: Studio
+  models:
+    summary: Models
+paths:
+  /docs:
+    get:
+      x-fern-ignore: true
+  /v1/dubbing/{dubbing_id}/transcript/{language_code}:
+    get:
+      summary: Get dubbed transcript
+      x-fern-sdk-method-name: get_transcript_for_dub
+  /v1/dubbing/resource/{dubbing_id}:
+    get:
+      summary: Get dubbing resource
+  /v1/dubbing/resource/{dubbing_id}/language:
+    post:
+      summary: Add language to dubbing resource
+  /v1/dubbing/resource/{dubbing_id}/speaker/{speaker_id}/segment:
+    post:
+      summary: Add speaker segment to dubbing resource
+  /v1/dubbing/resource/{dubbing_id}/segment/{segment_id}/{language}:
+    patch:
+      summary: Modify a segment
+  /v1/dubbing/resource/{dubbing_id}/segment/{segment_id}:
+    delete:
+      summary: Delete a segment
+  /v1/dubbing/resource/{dubbing_id}/transcribe:
+    post:
+      summary: Transcribe segments
+  /v1/dubbing/resource/{dubbing_id}/translate:
+    post:
+      summary: Translate segments
+  /v1/dubbing/resource/{dubbing_id}/dub:
+    post:
+      summary: Dub segments
+  /v1/similar-voices:
+    post:
+      summary: List similar voices
+  /v1/dubbing:
+    post:
+      summary: Dub a video or audio file
+  /v1/dubbing/{dubbing_id}:
+    get:
+      summary: Get dubbing
+    delete:
+      summary: Delete dubbing
+  /v1/dubbing/{dubbing_id}/audio/{language_code}:
+    get:
+      summary: Get dubbed audio
+  /v1/text-to-speech/{voice_id}:
+    post:
+      summary: Create speech
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          path-parameters:
+            voice_id: JBFqnCBsd6RMkjVDRZzb
+          query-parameters:
+            output_format: mp3_44100_128
+          request:
+            text: 'The first move is what sets everything in motion.'
+            model_id: eleven_multilingual_v2
+      parameters:
+        - required: true
+          description: ID of the voice to be used. Use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+  /v1/text-to-speech/{voice_id}/with-timestamps:
+    post:
+      summary: Create speech with timing
+  /v1/text-to-speech/{voice_id}/stream:
+    post:
+      summary: Stream speech
+      x-fern-request-name: StreamTextToSpeechRequest
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          path-parameters:
+            voice_id: JBFqnCBsd6RMkjVDRZzb
+          query-parameters:
+            output_format: mp3_44100_128
+          request:
+            text: 'The first move is what sets everything in motion.'
+            model_id: eleven_multilingual_v2
+      parameters:
+        - required: true
+          description: ID of the voice to be used. Use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+  /v1/text-to-speech/{voice_id}/stream/with-timestamps:
+    post:
+      summary: Stream speech with timing
+      x-fern-request-name: StreamTextToSpeechWithTimestampsRequest
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          path-parameters:
+            voice_id: JBFqnCBsd6RMkjVDRZzb
+          query-parameters:
+            output_format: mp3_44100_128
+          request:
+            text: 'The first move is what sets everything in motion.'
+            model_id: eleven_multilingual_v2
+      parameters:
+        - required: true
+          description: ID of the voice to be used. Use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+  /v1/speech-to-speech/{voice_id}:
+    post:
+      summary: Voice changer
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          path-parameters:
+            voice_id: JBFqnCBsd6RMkjVDRZzb
+          query-parameters:
+            output_format: mp3_44100_128
+          request:
+            model_id: eleven_multilingual_sts_v2
+      parameters:
+        - required: true
+          description: ID of the voice to be used. Use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+  /v1/speech-to-speech/{voice_id}/stream:
+    post:
+      summary: Voice changer stream
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          path-parameters:
+            voice_id: JBFqnCBsd6RMkjVDRZzb
+          query-parameters:
+            output_format: mp3_44100_128
+          request:
+            model_id: eleven_multilingual_sts_v2
+      parameters:
+        - required: true
+          description: ID of the voice to be used. Use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+
+  # ==============
+  # SPEECH TO TEXT
+  # ==============
+  /v1/speech-to-text:
+    post:
+      summary: Create transcript
+      requestBody:
+        content:
+          multipart/form-data:
+            encoding:
+              additional_formats:
+                contentType: application/json
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                'oneOf':
+                  [
+                    { '$ref': '#/components/schemas/SpeechToTextChunkResponseModel' },
+                    { '$ref': '#/components/schemas/MultichannelSpeechToTextResponseModel' },
+                    { '$ref': '#/components/schemas/SpeechToTextWebhookResponseModel' },
+                  ]
+                'anyOf': null
+  # /v1/speech-to-text/stream:
+  #   post:
+  #     summary: Stream transcript
+  #     description: Transcribe an audio or video file with a streamed response. <br> <Note> This endpoint is currently only available to alpha users and is subject to change. </Note>
+  # ================
+  # Sound Effects
+  # ================
+  /v1/text-to-dialogue:
+    post:
+      summary: Create dialogue
+      description: <Warning>Eleven v3 API access is currently not publicly available, but will be soon.</Warning><br/>Converts a list of text and voice ID pairs into speech (dialogue) and returns audio.
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          request:
+            inputs:
+              [
+                { text: 'Knock knock', voice_id: 'JBFqnCBsd6RMkjVDRZzb' },
+                { text: 'Who is there?', voice_id: 'Aw4FAjKCGjjNkVhN1Xmq' },
+              ]
+  /v1/text-to-dialogue/stream:
+    post:
+      summary: Stream dialogue
+      description: <Warning>Eleven v3 API access is currently not publicly available, but will be soon.</Warning><br/>Converts a list of text and voice ID pairs into speech (dialogue) and returns an audio stream.
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          request:
+            inputs:
+              [
+                { text: 'Knock knock', voice_id: 'JBFqnCBsd6RMkjVDRZzb' },
+                { text: 'Who is there?', voice_id: 'Aw4FAjKCGjjNkVhN1Xmq' },
+              ]
+  /v1/sound-generation:
+    post:
+      summary: Create sound effect
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          request:
+            text: 'Spacious braam suitable for high-impact movie trailer moments'
+  /v1/history:
+    get:
+      summary: Get generated items
+      parameters:
+        - {} # page_size
+        - {} # start_after_history_item_id
+        - description: ID of the voice to be filtered for. You can use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+        - description: Search term used for filtering history items. If provided, source becomes required.
+  /v1/history/{history_item_id}:
+    get:
+      summary: Get history item
+      parameters:
+        - description: ID of the history item to be used. You can use the [Get generated items](/docs/api-reference/history/get-all) endpoint to retrieve a list of history items.
+    delete:
+      summary: Delete history item
+      parameters:
+        - description: ID of the history item to be used. You can use the [Get generated items](/docs/api-reference/history/get-all) endpoint to retrieve a list of history items.
+  /v1/history/{history_item_id}/audio:
+    get:
+      summary: Get audio from history item
+      parameters:
+        - description: ID of the history item to be used. You can use the [Get generated items](/docs/api-reference/history/get-all) endpoint to retrieve a list of history items.
+  /v1/history/download:
+    post:
+      summary: Download history items
+      properties:
+        - description: IDs of the history items to be downloaded. You can use the [Get generated items](/docs/api-reference/history/get-all) endpoint to retrieve a list of history items.
+  /v1/voices/{voice_id}/samples/{sample_id}:
+    delete:
+      summary: Delete voice sample
+      parameters:
+        - description: ID of the voice to be used. You can use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+        - description: ID of the sample to be used. You can use the [Get voices](/docs/api-reference/voices/get) endpoint list all the available samples for a voice.
+  /v1/voices/{voice_id}/samples/{sample_id}/audio:
+    get:
+      summary: Get audio from sample
+      parameters:
+        - description: ID of the voice to be used. You can use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+        - description: ID of the sample to be used. You can use the [Get voices](/docs/api-reference/voices/get) endpoint list all the available samples for a voice.
+  /v1/voices/settings/default:
+    get:
+      summary: Get default voice settings
+  /v1/voices/{voice_id}/settings:
+    get:
+      summary: Get voice settings
+  /v1/voices/{voice_id}:
+    get:
+      summary: Get voice
+      parameters:
+        - description: ID of the voice to be used. You can use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+    delete:
+      summary: Delete voice
+      parameters:
+        - description: ID of the voice to be used. You can use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+  /v1/voices/{voice_id}/settings/edit:
+    post:
+      summary: Edit voice settings
+      parameters:
+        - description: ID of the voice to be used. You can use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+  /v1/voices/add:
+    post:
+      description: Create a voice clone and add it to your Voices
+      summary: Create voice clone
+  /v1/voices/{voice_id}/edit:
+    post:
+      summary: Edit voice
+      parameters:
+        - description: ID of the voice to be used. You can use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+  /v1/voices/add/{public_user_id}/{voice_id}:
+    post:
+      description: Add a shared voice to your collection of Voices
+      summary: Add shared voice
+      parameters:
+        - {} # public_user_id
+        - description: ID of the voice to be used. You can use the [Get voices](/docs/api-reference/voices/search) endpoint list all the available voices.
+  /v2/voices:
+    get:
+      summary: List voices
+  /v1/voices:
+    get:
+      summary: List voices
+      deprecated: true
+  /v1/voice-generation/generate-voice/parameters:
+    get:
+      x-fern-ignore: true
+  /v1/voice-generation/generate-voice:
+    post:
+      x-fern-ignore: true
+  /v1/voice-generation/create-voice:
+    post:
+      x-fern-ignore: true
+  /v1/studio/projects/{project_id}:
+    get:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+    post:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+    delete:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+  /v1/studio/projects/{project_id}/content:
+    post:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+  /v1/studio/projects/{project_id}/convert:
+    post:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+  /v1/studio/projects/{project_id}/snapshots/{project_snapshot_id}/stream:
+    post:
+      responses:
+        '200':
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+  /v1/studio/projects/{project_id}/snapshots/{project_snapshot_id}/archive:
+    post:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+  /v1/studio/projects/{project_id}/chapters/{chapter_id}:
+    get:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+        - description: The ID of the chapter to be used. You can use the [List project chapters](/docs/api-reference/studio/get-chapters) endpoint to list all the available chapters.
+    post:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+        - description: The ID of the chapter to be used. You can use the [List project chapters](/docs/api-reference/studio/get-chapters) endpoint to list all the available chapters.
+    delete:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+        - description: The ID of the chapter to be used. You can use the [List project chapters](/docs/api-reference/studio/get-chapters) endpoint to list all the available chapters.
+  /v1/studio/projects/{project_id}/chapters/{chapter_id}/convert:
+    post:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+        - description: The ID of the chapter to be used. You can use the [List project chapters](/docs/api-reference/studio/get-chapters) endpoint to list all the available chapters.
+  /v1/studio/projects/{project_id}/chapters/{chapter_id}/snapshots:
+    get:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+        - description: The ID of the chapter to be used. You can use the [List project chapters](/docs/api-reference/studio/get-chapters) endpoint to list all the available chapters.
+  /v1/studio/projects/{project_id}/chapters/{chapter_id}/snapshots/{chapter_snapshot_id}/stream:
+    post:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+        - description: The ID of the chapter to be used. You can use the [List project chapters](/docs/api-reference/studio/get-chapters) endpoint to list all the available chapters.
+        - description: The ID of the chapter snapshot to be used. You can use the [List project chapter snapshots](/docs/api-reference/studio/get-snapshots) endpoint to list all the available snapshots.
+  /v1/studio/projects/{project_id}/pronunciation-dictionaries:
+    post:
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+  /v1/models:
+    get:
+      summary: List models
+  /v1/user/subscription:
+    get:
+      summary: Get user subscription
+  /v1/user:
+    get:
+      summary: Get user
+  /v1/service-accounts:
+    get:
+      summary: Get service accounts
+  /v1/service-accounts/{service_account_user_id}/api-keys:
+    get:
+      summary: Get API keys
+    post:
+      summary: Create API key
+  /v1/service-accounts/{service_account_user_id}/api-keys/{api_key_id}:
+    delete:
+      summary: Delete API key
+    patch:
+      summary: Update API key
+  /v1/shared-voices:
+    get:
+      summary: Get shared voices
+  /v1/pronunciation-dictionaries:
+    get:
+      summary: List pronunciation dictionaries
+  /v1/pronunciation-dictionaries/{pronunciation_dictionary_id}:
+    get:
+      summary: Get pronunciation dictionary
+  /v1/pronunciation-dictionaries/{dictionary_id}/{version_id}/download:
+    get:
+      summary: Get pronunciation dictionary by version
+  /v1/pronunciation-dictionaries/add-from-file:
+    post:
+      summary: Create a pronunciation dictionary from a file
+  /v1/pronunciation-dictionaries/add-from-rules:
+    post:
+      summary: Create a pronunciation dictionary from rules
+  /v1/pronunciation-dictionaries/{pronunciation_dictionary_id}/add-rules:
+    post:
+      summary: Add pronunciation dictionary rules
+  /v1/pronunciation-dictionaries/{pronunciation_dictionary_id}/remove-rules:
+    post:
+      summary: Remove pronunciation dictionary rules
+  /v1/convai/agents/{agent_id}/simulate-conversation:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/{agent_id}/simulate-conversation/stream:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/conversation/get-signed-url:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/conversation/get_signed_url:
+    get:
+      x-fern-ignore: true
+      x-fern-audiences:
+        - convai
+  /v1/convai/conversation/token:
+    get:
+      summary: Get a webrtc token to start a conversation with an agent that requires authorization
+      x-fern-audiences:
+        - convai
+  /v1/convai/secrets:
+    get:
+      x-fern-audiences:
+        - convai
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/create:
+    post:
+      summary: Create agent
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/{agent_id}:
+    get:
+      summary: Get agent
+      x-fern-audiences:
+        - convai
+    delete:
+      summary: Delete agent
+      x-fern-audiences:
+        - convai
+    patch:
+      summary: Update agent
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/{agent_id}/duplicate:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/{agent_id}/widget:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/{agent_id}/link:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/{agent_id}/avatar:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/{agent_id}/knowledge-base/{documentation_id}:
+    get:
+      x-fern-ignore: true
+  /v1/convai/agents/{agent_id}/add-secret:
+    post:
+      x-fern-ignore: true
+      x-fern-audiences:
+        - convai
+  /v1/convai/agents/{agent_id}/add-to-knowledge-base:
+    post:
+      x-fern-ignore: true
+  /v1/convai/agents:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/conversations:
+    get:
+      summary: List conversations
+      x-fern-audiences:
+        - convai
+  /v1/convai/conversations/{conversation_id}:
+    get:
+      x-fern-audiences:
+        - convai
+      x-fern-examples:
+        - headers:
+            xi-api-key: xi-api-key
+          path-parameters:
+            conversation_id: '123'
+          response:
+            body:
+              agent_id: '123'
+              conversation_id: '123'
+              status: 'processing'
+              transcript: [{ role: 'user', message: 'Hello, how are you?', time_in_call_secs: 10 }]
+              metadata: { 'start_time_unix_secs': 1714423232, 'call_duration_secs': 10 }
+              has_audio: true
+              has_user_audio: true
+              has_response_audio: true
+    delete:
+      x-fern-audiences:
+        - convai
+  /v1/convai/conversations/{conversation_id}/audio:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/conversations/{conversation_id}/feedback:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/phone-numbers/{phone_number_id}:
+    get:
+      x-fern-audiences:
+        - convai
+    delete:
+      x-fern-audiences:
+        - convai
+    patch:
+      x-fern-audiences:
+        - convai
+  /v1/convai/phone-numbers:
+    get:
+      x-fern-audiences:
+        - convai
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/twilio/outbound-call:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base:
+    get:
+      x-fern-audiences:
+        - convai
+    post:
+      description: Upload a file or webpage URL to create a knowledge base document. <br> <Note> After creating the document, update the agent's knowledge base by calling [Update agent](/docs/conversational-ai/api-reference/agents/update-agent). </Note>
+      deprecated: true
+  /v1/convai/batch-calling/{batch_id}:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base/text:
+    post:
+      x-fern-audiences:
+        - convai
+    section: Legacy
+  /v1/convai/knowledge-base/file:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base/url:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base/{documentation_id}:
+    delete:
+      x-fern-audiences:
+        - convai
+    get:
+      x-fern-audiences:
+        - convai
+    patch:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base/{documentation_id}/dependent-agents:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/add-to-knowledge-base:
+    post:
+      x-fern-ignore: true
+  /v1/convai/knowledge-base/{documentation_id}/content:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base/{documentation_id}/chunk/{chunk_id}:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base/{documentation_id}/rag-index/{rag_index_id}:
+    delete:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base/rag-index:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/settings:
+    get:
+      x-fern-audiences:
+        - convai
+    patch:
+      x-fern-audiences:
+        - convai
+  /v1/convai/settings/dashboard:
+    get:
+      x-fern-audiences:
+        - convai
+    patch:
+      x-fern-audiences:
+        - convai
+  /v1/convai/secrets/{secret_id}:
+    delete:
+      x-fern-audiences:
+        - convai
+    patch:
+      x-fern-audiences:
+        - convai
+  /v1/convai/knowledge-base/{documentation_id}/rag-index:
+    post:
+      x-fern-audiences:
+        - convai
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/sip-trunk/outbound-call:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/batch-calling/submit:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/batch-calling/workspace:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/batch-calling/{batch_id}/cancel:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/batch-calling/{batch_id}/retry:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/agent/{agent_id}/llm-usage/calculate:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/llm-usage/calculate:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/agent/{agent_id}/knowledge-base/size:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/mcp-servers:
+    post:
+      x-fern-audiences:
+        - convai
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/mcp-servers/{mcp_server_id}:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/mcp-servers/{mcp_server_id}/tools:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/convai/mcp-servers/{mcp_server_id}/approval-policy:
+    patch:
+      x-fern-audiences:
+        - convai
+  /v1/convai/mcp-servers/{mcp_server_id}/tool-approvals:
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/mcp-servers/{mcp_server_id}/tool-approvals/{tool_name}:
+    delete:
+      x-fern-audiences:
+        - convai
+  /v1/convai/tools:
+    get:
+      x-fern-audiences:
+        - convai
+    post:
+      x-fern-audiences:
+        - convai
+  /v1/convai/tools/{tool_id}:
+    get:
+      x-fern-audiences:
+        - convai
+    patch:
+      x-fern-audiences:
+        - convai
+    delete:
+      x-fern-audiences:
+        - convai
+  /v1/convai/tools/{tool_id}/dependent-agents:
+    get:
+      x-fern-audiences:
+        - convai
+  /v1/audio-native:
+    post:
+      summary: Create audio native project
+  /v1/audio-native/{project_id}/content:
+    post:
+      summary: Update audio native project
+      parameters:
+        - description: The ID of the project to be used. You can use the [List projects](/docs/api-reference/studio/get-projects) endpoint to list all the available projects.
+  /v1/audio-native/get-embed-code:
+    get:
+      x-fern-ignore: true
+  /v1/audio-native/{project_id}/get-embed-code:
+    get:
+      x-fern-ignore: true
+  /v1/workspace/invites:
+    delete:
+      summary: Delete invite
+  /v1/workspace/invites/add:
+    post:
+      summary: Invite user
+  /v1/workspace/members:
+    post:
+      summary: Update member
+  /v1/workspace/groups/search:
+    get:
+      summary: Search user group
+  /v1/workspace/groups/{group_id}/members:
+    post:
+      summary: Add member to user group
+  /v1/workspace/groups/{group_id}/members/remove:
+    post:
+      summary: Remove member from user group
+  /v1/audio-isolation:
+    post:
+      description: Removes background noise from audio.
+      summary: Audio isolation
+  /v1/audio-isolation/stream:
+    post:
+      description: Removes background noise from audio.
+      summary: Audio isolation stream
+  # ==========================
+  # Projects, remove this when it's removed upstream
+  # ==========================
+  /v1/projects/podcast/create:
+    post:
+      x-fern-ignore: true
+  /v1/projects:
+    get:
+      x-fern-ignore: true
+  /v1/projects/add:
+    post:
+      x-fern-ignore: true
+  /v1/projects/{project_id}:
+    get:
+      x-fern-ignore: true
+    post:
+      x-fern-ignore: true
+    delete:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/content:
+    post:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/convert:
+    post:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/snapshots:
+    get:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/snapshots/{project_snapshot_id}/stream:
+    post:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/snapshots/{project_snapshot_id}/archive:
+    post:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/chapters:
+    get:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/chapters/{chapter_id}:
+    get:
+      x-fern-ignore: true
+    patch:
+      x-fern-ignore: true
+    delete:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/chapters/add:
+    post:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/chapters/{chapter_id}/convert:
+    post:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/chapters/{chapter_id}/snapshots:
+    get:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/chapters/{chapter_id}/snapshots/{chapter_snapshot_id}/stream:
+    post:
+      x-fern-ignore: true
+  /v1/projects/{project_id}/update-pronunciation-dictionaries:
+    post:
+      x-fern-ignore: true
+  # ==========================
+  # Voice Design (Text to voice)
+  # ==========================
+  /v1/text-to-voice/create-previews:
+    post:
+      summary: Voice design
+      description: Create a voice from a text prompt.
+      parameters:
+        - description: The output format of the generated audio.
+  /v1/text-to-voice/create-voice-from-preview:
+    post:
+      summary: Save a voice preview
+      description: Add a generated voice to the voice library.
+  /v1/usage/character-stats:
+    get:
+      summary: Get character usage metrics
+  # ==========================
+  # PVC
+  # ==========================
+  /v1/voices/pvc:
+    post:
+      summary: Create PVC voice
+  /v1/shared-sound-generations:
+    get:
+      x-fern-ignore: true
+  /v1/shared-sound-generations/{sound_effect_generation_id}/purchase:
+    post:
+      x-fern-ignore: true
+
+components:
+  schemas:
+    LLM:
+      enum:
+        x-fern-enum:
+          qwen3-4b:
+            x-fern-ignore: true
+          watt-tool-8b:
+            x-fern-ignore: true
+    PromptAgentDBModel:
+      properties:
+        tools:
+          x-fern-type: unknown
+    Body_Patches_an_Agent_settings_v1_convai_agents__agent_id__patch:
+      type: object
+      title: Body_Patches_an_Agent_settings_v1_convai_agents__agent_id__patch
+      x-fern-type-name: UpdateAgentRequest
+      properties:
+        conversation_config:
+          $ref: '#/components/schemas/ConversationalConfigAPIModel-Input'
+        platform_settings:
+          $ref: '#/components/schemas/AgentPlatformSettingsRequestModel'
+    ASRProvider:
+      type: string
+      enum:
+        - elevenlabs
+    OutputFormat:
+      type: string
+      enum:
+        - mp3_22050_32
+        - mp3_44100_32
+        - mp3_44100_64
+        - mp3_44100_96
+        - mp3_44100_128
+        - mp3_44100_192
+        - pcm_16000
+        - pcm_22050
+        - pcm_24000
+        - pcm_44100
+        - ulaw_8000
+      x-fern-enum:
+        mp3_22050_32:
+          description: Output format, mp3 with 22.05kHz sample rate at 32kbps
+        mp3_44100_32:
+          description: Output format, mp3 with 44.1kHz sample rate at 32kbps
+        mp3_44100_64:
+          description: Output format, mp3 with 44.1kHz sample rate at 64kbps
+        mp3_44100_96:
+          description: Output format, mp3 with 44.1kHz sample rate at 96kbps
+        mp3_44100_128:
+          description: Default output format, mp3 with 44.1kHz sample rate at 128kbps
+        mp3_44100_192:
+          description: |
+            Output format, mp3 with 44.1kHz sample rate at 192kbps.
+        pcm_16000:
+          description: |
+            PCM format (S16LE) with 16kHz sample rate.
+        pcm_22050:
+          description: |
+            PCM format (S16LE) with 22.05kHz sample rate.
+        pcm_24000:
+          description: |
+            PCM format (S16LE) with 24kHz sample rate.
+        pcm_44100:
+          description: |
+            PCM format (S16LE) with 44.1kHz sample rate. Requires you to be subscribed to Independent Publisher tier or above.
+        ulaw_8000:
+          description: |
+            μ-law format (sometimes written mu-law, often approximated as u-law) with 8kHz sample rate. Note that this format is commonly used for Twilio audio inputs.
+    ExtendedSubscriptionResponseModel:
+      x-fern-type-name: Subscription
+    FeedbackResponseModel:
+      x-fern-type-name: FeedbackItem
+    FineTuningResponseModel:
+      x-fern-type-name: FineTuningResponse
+      properties:
+        finetuning_state:
+          x-fern-type-name: FinetuningState
+      required: []
+    HistoryItemResponseModel:
+      x-fern-type-name: HistoryItemResponse
+      properties:
+        state:
+          x-fern-type-name: HistoryItemState
+        voice_category:
+          x-fern-type-name: VoiceCategory
+    ModelResponseModel:
+      x-fern-type-name: Model
+      required: [model_id]
+    SubscriptionResponseModel:
+      x-fern-type-name: SubscriptionResponse
+      properties:
+        status:
+          x-fern-type-name: SubscriptionStatus
+    UserResponseModel:
+      x-fern-type-name: User
+    VoiceResponseModel:
+      x-fern-type-name: Voice
+      required:
+        - voice_id
+    VoiceSettingsResponseModel:
+      x-fern-type-name: VoiceSettings
+      required: []
+    VoiceSharingResponseModel:
+      x-fern-type-name: VoiceSharingResponse
+      required: []
+      properties:
+        status:
+          x-fern-type-name: voice_sharing_state
+        review_status:
+          x-fern-type-name: review_status
+    Age:
+      x-fern-type-name: Age
+    Gender:
+      x-fern-type-name: Gender
+    SampleResponseModel:
+      x-fern-type-name: VoiceSample
+      required: []
+    AddProjectResponseModel:
+      x-fern-type-name: AddProjectResponseModel
+    AddPronunciationDictionaryResponseModel:
+      x-fern-type-name: AddPronunciationDictionaryResponseModel
+    AddVoiceResponseModel:
+      x-fern-type-name: AddVoiceResponseModel
+    AudioNativeCreateProjectResponseModel:
+      x-fern-type-name: AudioNativeCreateProjectResponseModel
+    Body_Add_a_pronunciation_dictionary_v1_pronunciation_dictionaries_add_from_file_post:
+      x-fern-type-name: AddPronunciationDictionaryRequest
+    Body_Add_project_v1_projects_add_post:
+      x-fern-type-name: AddProjectRequest
+    Body_Add_sharing_voice_v1_voices_add__public_user_id___voice_id__post:
+      x-fern-type-name: AddSharingVoiceRequest
+    Body_Add_voice_v1_voices_add_post:
+      x-fern-type-name: AddVoiceRequest
+    Body_Create_a_previously_generated_voice_v1_voice_generation_create_voice_post:
+      x-fern-type-name: CreatePreviouslyGeneratedVoiceRequest
+    Body_Creates_AudioNative_enabled_project__v1_audio_native_post:
+      x-fern-type-name: CreateAudioNativeProjectRequest
+    Body_Download_history_items_v1_history_download_post:
+      x-fern-type-name: DownloadHistoryRequest
+    Body_Dub_a_video_or_an_audio_file_v1_dubbing_post:
+      x-fern-type-name: DubRequest
+      required: [target_lang]
+    Body_Edit_voice_v1_voices__voice_id__edit_post:
+      x-fern-type-name: EditVoiceRequest
+    Body_Generate_a_random_voice_v1_voice_generation_generate_voice_post:
+      x-fern-type-name: GenerateVoiceRequest
+    Body_Speech_to_Speech_Streaming_v1_speech_to_speech__voice_id__stream_post:
+      x-fern-type-name: SpeechToSpeechStreamRequest
+    Body_Speech_to_Speech_v1_speech_to_speech__voice_id__post:
+      x-fern-type-name: SpeechToSpeechRequest
+    Body_Text_to_speech_v1_text_to_speech__voice_id__post:
+      x-fern-type-name: TextToSpeechRequest
+    Body_Text_to_speech_v1_text_to_speech__voice_id__stream_post:
+      x-fern-type-name: TextToSpeechStreamRequest
+    Body_Update_Pronunciation_Dictionaries_v1_projects__project_id__update_pronunciation_dictionaries_post:
+      x-fern-type-name: UpdatePronunciationDictionariesRequest
+    ChapterSnapshotResponseModel:
+      x-fern-type-name: ChapterSnapshotResponse
+    ChapterSnapshotsResponseModel:
+      x-fern-type-name: ChapterSnapshotsResponse
+    ChapterStatisticsResponseModel:
+      x-fern-type-name: ChapterStatisticsResponse
+    DoDubbingResponseModel:
+      x-fern-type-name: DoDubbingResponse
+    GetChaptersResponseModel:
+      x-fern-type-name: GetChaptersResponse
+    GetLibraryVoicesResponseModel:
+      x-fern-type-name: GetLibraryVoicesResponse
+    GetProjectsResponseModel:
+      x-fern-type-name: GetProjectsResponse
+    GetPronunciationDictionaryMetadataResponseModel:
+      x-fern-type-name: GetPronunciationDictionaryMetadataResponse
+    GetPhoneNumberResponseModel:
+      x-fern-type-name: GetPhoneNumberResponse
+    GetSpeechHistoryResponseModel:
+      x-fern-type-name: GetSpeechHistoryResponse
+    GetVoicesResponseModel:
+      x-fern-type-name: GetVoicesResponse
+    HTTPValidationError:
+      x-fern-type-name: HTTPValidationError
+    InvoiceResponseModel:
+      x-fern-type-name: InvoiceResponse
+    LanguageResponseModel:
+      x-fern-type-name: LanguageResponse
+    LibraryVoiceResponseModel:
+      x-fern-type-name: LibraryVoiceResponse
+    ManualVerificationFileResponseModel:
+      x-fern-type-name: ManualVerificationFileResponse
+    ManualVerificationResponseModel:
+      x-fern-type-name: ManualVerificationResponse
+    ProjectExtendedResponseModel:
+      x-fern-type-name: ProjectExtendedResponse
+      properties:
+        state:
+          x-fern-type-name: ProjectState
+    ProjectResponseModel:
+      x-fern-type-name: ProjectResponse
+      properties:
+        state:
+          x-fern-type-name: ProjectState
+    ProjectSnapshotResponseModel:
+      x-fern-type-name: ProjectSnapshotResponse
+    ProjectSnapshotsResponseModel:
+      x-fern-type-name: ProjectSnapshotsResponse
+    PronunciationDictionaryVersionLocatorDBModel:
+      x-fern-type-name: PronunciationDictionaryVersionLocator
+    PronunciationDictionaryVersionLocatorRequestModel:
+      x-fern-type-name: PronunciationDictionaryVersionLocator
+    RecordingResponseModel:
+      x-fern-type-name: RecordingResponse
+    SpeechHistoryItemResponseModel:
+      x-fern-type-name: SpeechHistoryItemResponse
+      properties:
+        state:
+          - x-fern-type-name: SpeechHistoryState
+    ValidationError:
+      x-fern-type-name: ValidationError
+    VerificationAttemptResponseModel:
+      x-fern-type-name: VerificationAttemptResponse
+    VoiceGenerationParameterOptionResponseModel:
+      x-fern-type-name: VoiceGenerationParameterOptionResponse
+    VoiceGenerationParameterResponseModel:
+      x-fern-type-name: VoiceGenerationParameterResponse
+    ChapterResponseModel:
+      x-fern-type-name: ChapterResponse
+      properties:
+        state:
+          x-fern-type-name: ChapterState
+    VoiceVerificationResponseModel:
+      x-fern-type-name: VoiceVerificationResponse
+    Body_Get_similar_library_voices_v1_similar_voices_post:
+      x-fern-type-name: ListSimilarVoicesRequest
+    Body_Add_rules_to_the_pronunciation_dictionary_v1_pronunciation_dictionaries__pronunciation_dictionary_id__add_rules_post:
+      x-fern-type-name: PronunciationDictionary
+      properties:
+        rules:
+          items:
+            x-fern-type-name: PronunciationDictionaryRule
+    Body_Remove_rules_from_the_pronunciation_dictionary_v1_pronunciation_dictionaries__pronunciation_dictionary_id__remove_rules_post:
+      x-fern-type-name: RemovePronunciationDictionaryRulesRequest
+    Body_Sound_Generation_v1_sound_generation_post:
+      x-fern-type-name: CreateSoundEffectRequest
+    Body_Audio_Isolation_v1_audio_isolation_post:
+      x-fern-type-name: AudioIsolationRequest
+    Body_Audio_Isolation_Stream_v1_audio_isolation_stream_post:
+      x-fern-type-name: AudioIsolationStreamRequest
+    Body_Text_to_speech_with_timestamps_v1_text_to_speech__voice_id__with_timestamps_post:
+      x-fern-type-name: TextToSpeechWithTimestampsRequest
+    Body_Text_to_speech_streaming_with_timestamps_v1_text_to_speech__voice_id__stream_with_timestamps_post:
+      x-fern-type-name: TextToSpeechStreamWithTimestampsRequest
+    Body_Create_a_new_voice_from_voice_preview_v1_text_to_voice_create_voice_from_preview_post:
+      x-fern-type-name: SaveVoicePreviewRequest
+    Body_Edit_voice_settings_v1_voices__voice_id__settings_edit_post:
+      x-fern-type-name: EditVoiceSettingsRequest
+    Body_Get_Chapters_v1_studio_projects__project_id__chapters_get:
+      x-fern-type-name: GetChaptersRequest
+    Body_Get_Chapter_v1_studio_projects__project_id__chapters__chapter_id__get:
+      x-fern-type-name: GetChapterRequest
+    Body_Delete_Chapter_v1_studio_projects__project_id__chapters__chapter_id__delete:
+      x-fern-type-name: DeleteChapterRequest
+    Body_Get_Project_Chapters_Snapshots_v1_studio_projects__project_id__chapters__chapter_id__snapshots_get:
+      x-fern-type-name: GetChapterSnapshotsRequest
+    Body_Get_Projects_v1_studio_projects_get:
+      x-fern-type-name: GetProjectsRequest
+    Body_Get_Project_v1_studio_projects__project_id__get:
+      x-fern-type-name: GetProjectRequest
+    Body_Delete_Project_v1_studio_projects__project_id__delete:
+      x-fern-type-name: DeleteProjectRequest
+    Body_Create_transcript_v1_speech_to_text_post:
+      x-fern-type-name: CreateTranscriptRequest
+    Body_Invite_user_v1_workspace_invites_add_post:
+      x-fern-type-name: InviteUserRequest
+    Body_Update_member_v1_workspace_members_post:
+      x-fern-type-name: UpdateMemberRequest
+    Body_Add_member_to_user_group_v1_workspace_groups__group_id__members_post:
+      x-fern-type-name: AddMemberToGroupRequest
+    Body_Remove_member_from_user_group_v1_workspace_groups__group_id__members_remove_post:
+      x-fern-type-name: RemoveMemberFromGroupRequest
+    Body_Create_PVC_voice_v1_voices_pvc_post:
+      x-fern-type-name: CreatePvcVoiceRequest
+    Body_Update_audio_native_project_v1_audio_native__project_id__content_post:
+      x-fern-type-name: UpdateAudioNativeProjectRequest
+    Body_Update_Project_v1_studio_projects__project_id__post:
+      x-fern-type-name: UpdateProjectRequest
+    Body_Update_Chapter_v1_studio_projects__project_id__chapters__chapter_id__post:
+      x-fern-type-name: UpdateChapterRequest
+    AudioWithTimestampsResponseModel:
+      x-fern-type-name: AudioWithTimestampsResponse
+    StreamingAudioChunkWithTimestampsResponseModel:
+      x-fern-type-name: StreamingAudioChunkWithTimestampsResponse
+    VoicePreviewsRequestModel:
+      x-fern-type-name: VoiceDesignRequest
+    VoicePreviewsResponseModel:
+      x-fern-type-name: VoiceDesignPreviewResponse
+    GetVoicesV2ResponseModel:
+      x-fern-type-name: GetVoicesV2Response
+    DeleteSampleResponseModel:
+      x-fern-type-name: DeleteSampleResponse
+    DeleteHistoryItemResponse:
+      x-fern-type-name: DeleteHistoryItemResponse
+    CharacterUsageResponse:
+      x-fern-type-name: CharacterUsageResponse
+    GetPronunciationDictionariesResponseModel:
+      x-fern-type-name: GetPronunciationDictionariesResponse
+    GetPronunciationDictionaryResponseModel:
+      x-fern-type-name: GetPronunciationDictionaryResponse
+    AgentConfigAPIModel-Input:
+      x-fern-type-name: AgentConfig
+      type: object
+      properties:
+        first_message:
+          type: string
+          description: If non-empty, the first message the agent will say. If empty, the agent waits for the user to start the discussion.
+        language:
+          type: string
+          description: Language of the agent - used for ASR and TTS
+        dynamic_variables:
+          $ref: '#/components/schemas/DynamicVariablesConfig'
+        prompt:
+          $ref: '#/components/schemas/PromptAgentAPIModel-Input'
+    AgentConfigAPIModel-Output:
+      x-fern-type-name: AgentConfig
+      type: object
+      properties:
+        first_message:
+          type: string
+          description: If non-empty, the first message the agent will say. If empty, the agent waits for the user to start the discussion.
+        language:
+          type: string
+          description: Language of the agent - used for ASR and TTS
+        dynamic_variables:
+          $ref: '#/components/schemas/DynamicVariablesConfig'
+        prompt:
+          $ref: '#/components/schemas/PromptAgentAPIModel-Output'
+    CreateSIPTrunkPhoneNumberRequestV2:
+      x-fern-type-name: CreateSIPTrunkPhoneNumberRequest
+    ConversationalConfigAPIModel-Input:
+      x-fern-type-name: ConversationalConfig
+    ConversationalConfigAPIModel-Output:
+      x-fern-type-name: ConversationalConfig
+    PromptAgent-Input:
+      x-fern-type-name: PromptAgent
+    PromptAgent-Output:
+      x-fern-type-name: PromptAgent
+    PromptAgentApiModel-Input:
+      x-fern-type-name: PromptAgent
+    PromptAgentApiModel-Output:
+      x-fern-type-name: PromptAgent
+    WidgetConfig-Input:
+      x-fern-type-name: WidgetConfig
+    WidgetConfig-Output:
+      x-fern-type-name: WidgetConfig
+    WidgetConfigResponseModel:
+      x-fern-type-name: WidgetConfigResponse

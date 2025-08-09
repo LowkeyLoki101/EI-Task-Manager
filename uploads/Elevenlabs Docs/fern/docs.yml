@@ -1,0 +1,1719 @@
+instances:
+  - url: https://elevenlabs.docs.buildwithfern.com/docs
+    custom-domain: https://elevenlabs.io/docs
+    edit-this-page:
+      github:
+        owner: elevenlabs
+        repo: elevenlabs-docs
+        branch: main
+
+title: ElevenLabs Documentation
+
+metadata:
+  og:image: https://elevenlabs.io/cover.png
+  twitter:image: https://elevenlabs.io/cover.png
+
+announcement:
+  message: 'Conversational AI Tools are being migrated, <a href="/docs/conversational-ai/customization/tools/agent-tools-deprecation" target="_blank" style="color: #666;">learn more</a>'
+
+layout:
+  searchbar-placement: header
+  tabs-placement: header
+  page-width: full
+  content-width: 50rem
+  sidebar-width: 240px
+  header-height: 50px
+
+tabs:
+  docs:
+    display-name: Docs
+    skip-slug: true
+  conversational-ai:
+    display-name: Conversational AI
+    skip-slug: false
+  api-reference:
+    display-name: API reference
+    skip-slug: true
+
+navigation:
+  - tab: docs
+    layout:
+      - section: GET STARTED
+        skip-slug: true
+        contents:
+          - page: Overview
+            icon: duotone house
+            path: docs/pages/overview.mdx
+          - page: Quickstart
+            icon: duotone book-sparkles
+            path: docs/pages/quickstart.mdx
+          - page: Models
+            icon: duotone waveform-lines
+            path: docs/pages/models.mdx
+          - changelog: docs/pages/changelog
+            title: Changelog
+            icon: duotone rectangle-history
+      - section: CAPABILITIES
+        contents:
+          - page: Text to Speech
+            path: docs/pages/capabilities/text-to-speech.mdx
+          - page: Speech to Text
+            path: docs/pages/capabilities/speech-to-text.mdx
+          - page: Text to Dialogue
+            path: docs/pages/capabilities/text-to-dialogue.mdx
+          - page: Voice Changer
+            path: docs/pages/capabilities/voice-changer.mdx
+          - page: Voice Isolator
+            path: docs/pages/capabilities/voice-isolator.mdx
+          - page: Dubbing
+            path: docs/pages/capabilities/dubbing.mdx
+          - page: Sound Effects
+            path: docs/pages/capabilities/sound-effects.mdx
+          - page: Voices
+            path: docs/pages/capabilities/voices.mdx
+          - page: Forced Alignment
+            path: docs/pages/capabilities/forced-alignment.mdx
+          - page: Music
+            path: docs/pages/capabilities/music.mdx
+          - link: Conversational AI
+            href: /docs/conversational-ai/overview
+      - section: DEVELOPER GUIDES
+        skip-slug: true
+        contents:
+          - section: Tutorials
+            slug: cookbooks
+            icon: duotone code
+            contents:
+              - section: Text to Speech
+                icon: duotone microphone
+                contents:
+                  - page: Quickstart
+                    path: docs/pages/quickstart.mdx
+                  - page: Streaming
+                    path: docs/pages/developer-guides/cookbooks/text-to-speech/streaming.mdx
+                  - page: Request stitching
+                    path: docs/pages/developer-guides/cookbooks/text-to-speech/request-stitching.mdx
+                  - page: Pronunciation dictionaries
+                    path: docs/pages/developer-guides/cookbooks/text-to-speech/pronunciation-dictionaries.mdx
+                  - page: Streaming and caching with Supabase
+                    path: docs/pages/developer-guides/cookbooks/text-to-speech/supabase-streaming.mdx
+                  - page: Twilio
+                    path: docs/pages/developer-guides/cookbooks/text-to-speech/twilio.mdx
+              - page: Text to Dialogue
+                icon: duotone people-arrows
+                path: docs/pages/developer-guides/cookbooks/text-to-dialogue/quickstart.mdx
+              - section: Speech to Text
+                icon: duotone pen-clip
+                contents:
+                  - page: Quickstart
+                    path: docs/pages/developer-guides/cookbooks/speech-to-text/quickstart.mdx
+                  - page: Multichannel transcription
+                    path: docs/pages/developer-guides/cookbooks/speech-to-text/multichannel.mdx
+                  # - page: Streaming
+                  #   path: docs/pages/developer-guides/cookbooks/speech-to-text/streaming.mdx
+                  - page: Telegram bot
+                    path: docs/pages/developer-guides/cookbooks/speech-to-text/telegram-bot.mdx
+                  - page: Webhooks
+                    path: docs/pages/developer-guides/cookbooks/speech-to-text/webhooks.mdx
+                  - page: Vercel AI SDK
+                    path: docs/pages/developer-guides/cookbooks/speech-to-text/vercel-ai-sdk.mdx
+              - page: Voice Changer
+                icon: duotone message-pen
+                path: docs/pages/developer-guides/cookbooks/voice-changer/quickstart.mdx
+              - page: Voice Isolator
+                icon: duotone ear
+                path: docs/pages/developer-guides/cookbooks/voice-isolator/quickstart.mdx
+              - page: Dubbing
+                icon: duotone language
+                path: docs/pages/developer-guides/cookbooks/dubbing/quickstart.mdx
+              - page: Sound effects
+                icon: duotone explosion
+                path: docs/pages/developer-guides/cookbooks/sound-effects/quickstart.mdx
+              - section: Voices
+                icon: duotone album-collection
+                contents:
+                  - page: Instant voice cloning
+                    path: docs/pages/developer-guides/cookbooks/voices/instant-voice-cloning.mdx
+                  - page: Professional voice cloning
+                    path: docs/pages/developer-guides/cookbooks/voices/professional-voice-cloning.mdx
+                  - page: Voice design
+                    path: docs/pages/developer-guides/cookbooks/voices/voice-design.mdx
+                  # - page: Remix a voice
+                  #   path: docs/pages/developer-guides/cookbooks/voices/remix-voice.mdx
+              - page: Forced Alignment
+                icon: duotone objects-align-left
+                path: docs/pages/developer-guides/cookbooks/forced-alignment/quickstart.mdx
+              - section: Conversational AI
+                icon: duotone comments
+                contents:
+                  - page: Quickstart
+                    path: conversational-ai/pages/quickstart.mdx
+                  - page: Expo React Native
+                    path: docs/pages/developer-guides/cookbooks/conversational-ai/expo-react-native.mdx
+                  - page: Post-call webhooks
+                    path: docs/pages/developer-guides/cookbooks/conversational-ai/nextjs-post-call-webhooks.mdx
+                  - page: Raspberry Pi Voice Assistant
+                    path: docs/pages/developer-guides/cookbooks/conversational-ai/raspberry-pi-voice-assistant.mdx
+              - page: Multi-context WebSocket
+                icon: duotone link-horizontal
+                path: docs/pages/best-practices/conversational-agents.mdx
+          - page: Libraries & SDKs
+            slug: libraries
+            icon: duotone books
+            path: docs/pages/developer-guides/libraries.mdx
+          - page: WebSockets
+            slug: websockets
+            icon: duotone spider-web
+            path: docs/pages/developer-guides/websockets.mdx
+          - page: Error messages
+            icon: duotone exclamation-triangle
+            path: docs/pages/developer-guides/error-messages.mdx
+          - section: Migrations
+            slug: migrations
+            icon: duotone recycle
+            contents:
+              - page: Migrate from PlayHT
+                path: docs/pages/developer-guides/migrations/playht.mdx
+          - link: Example projects
+            icon: brands github
+            href: https://github.com/elevenlabs/elevenlabs-examples
+          - link: Next.js template
+            icon: brands react
+            href: https://git.new/elevenlabs-nextjs
+      - section: BEST PRACTICES
+        skip-slug: false
+        contents:
+          - section: Prompting
+            contents:
+              - page: Eleven v3
+                icon: duotone microphone-stand
+                path: docs/pages/best-practices/prompting/eleven-v3.mdx
+                slug: eleven-v3
+              - page: Eleven Music
+                icon: duotone music
+                path: docs/pages/best-practices/prompting/eleven-music.mdx
+                slug: eleven-music
+              - page: Controls
+                icon: duotone screwdriver-wrench
+                path: docs/pages/best-practices/prompting/controls.mdx
+              - page: Normalization
+                icon: duotone text-slash
+                path: docs/pages/best-practices/prompting/normalization.mdx
+          - page: Latency optimization
+            path: docs/pages/best-practices/latency-optimization.mdx
+          - page: Security
+            path: docs/pages/best-practices/security-best-practices.mdx
+      - section: PRODUCT GUIDES
+        skip-slug: false
+        contents:
+          - page: Overview
+            icon: duotone book-user
+            path: docs/pages/product-guides/overview.mdx
+          - section: Playground
+            contents:
+              - page: Text to Speech
+                icon: duotone comment-dots
+                path: docs/pages/product-guides/playground/text-to-speech.mdx
+              - page: Voice Changer
+                icon: duotone message-pen
+                path: docs/pages/product-guides/playground/voice-changer.mdx
+              - page: Sound Effects
+                icon: duotone explosion
+                path: docs/pages/product-guides/playground/sound-effects.mdx
+              - page: Speech to Text
+                icon: duotone pen-clip
+                path: docs/pages/product-guides/playground/speech-to-text.mdx
+          - section: Products
+            contents:
+              - page: Studio
+                icon: duotone rectangle-vertical-history
+                path: docs/pages/product-guides/products/studio.mdx
+              - page: Music
+                icon: duotone music
+                path: docs/pages/product-guides/products/music.mdx
+              - section: Dubbing
+                icon: duotone language
+                path: docs/pages/product-guides/products/dubbing/overview.mdx
+                contents:
+                  - page: Dubbing Studio
+                    icon: duotone rectangle-vertical-history
+                    path: docs/pages/product-guides/products/dubbing/dubbing-studio.mdx
+              - page: Transcripts
+                icon: duotone pen-clip
+                path: docs/pages/product-guides/products/transcripts.mdx
+              - page: Subtitles
+                icon: duotone closed-captioning
+                path: docs/pages/product-guides/products/subtitles.mdx
+          - section: Voices
+            contents:
+              - page: Voice library
+                icon: duotone album-collection
+                path: docs/pages/product-guides/voices/voice-library.mdx
+              - section: Voice cloning
+                icon: duotone microphone
+                path: docs/pages/product-guides/voices/voice-cloning/overview.mdx
+                contents:
+                  - page: Instant Voice Cloning
+                    icon: duotone microphone
+                    path: docs/pages/product-guides/voices/voice-cloning/instant-voice-cloning.mdx
+                  - page: Professional Voice Cloning
+                    icon: duotone microphone
+                    path: docs/pages/product-guides/voices/voice-cloning/professional-voice-cloning.mdx
+              - page: Voice Design
+                icon: duotone paint-brush
+                path: docs/pages/product-guides/voices/voice-design.mdx
+              - page: Payouts
+                icon: duotone money-bill-wave
+                path: docs/pages/product-guides/voices/payouts.mdx
+          - section: Audio tools
+            contents:
+              - section: Audio Native
+                icon: duotone file-audio
+                path: docs/pages/product-guides/audio-tools/audio-native/overview.mdx
+                contents:
+                  - page: React
+                    icon: brands react
+                    path: docs/pages/product-guides/audio-tools/audio-native/react.mdx
+                  - page: Ghost
+                    icon: duotone ghost
+                    path: docs/pages/product-guides/audio-tools/audio-native/ghost.mdx
+                  - page: Squarespace
+                    icon: brands squarespace
+                    path: docs/pages/product-guides/audio-tools/audio-native/squarespace.mdx
+                  - page: Framer
+                    icon: duotone browser
+                    path: docs/pages/product-guides/audio-tools/audio-native/framer.mdx
+                  - page: Webflow
+                    icon: brands webflow
+                    path: docs/pages/product-guides/audio-tools/audio-native/webflow.mdx
+                  - page: WordPress
+                    icon: brands wordpress
+                    path: docs/pages/product-guides/audio-tools/audio-native/wordpress.mdx
+                  - page: Wix
+                    icon: brands wix
+                    path: docs/pages/product-guides/audio-tools/audio-native/wix.mdx
+              - page: Voiceover Studio
+                icon: duotone list-timeline
+                path: docs/pages/product-guides/audio-tools/voiceover-studio.mdx
+              - page: Voice Isolator
+                icon: duotone ear
+                path: docs/pages/product-guides/audio-tools/voice-isolator.mdx
+              - page: AI Speech Classifier
+                icon: duotone computer-classic
+                path: docs/pages/product-guides/audio-tools/ai-speech-classifier.mdx
+          - section: Administration
+            contents:
+              - page: Account
+                icon: duotone user-circle
+                path: docs/pages/product-guides/administration/account.mdx
+              - page: Billing
+                icon: duotone file-invoice-dollar
+                path: docs/pages/product-guides/administration/billing.mdx
+              - page: Consolidated billing
+                icon: duotone file-invoice-dollar
+                path: docs/pages/product-guides/administration/consolidated-billing.mdx
+              - page: Data Residency
+                icon: server
+                path: docs/pages/product-guides/administration/data-residency.mdx
+              - page: Usage analytics
+                icon: duotone list-timeline
+                path: docs/pages/product-guides/administration/analytics.mdx
+              - section: Workspaces
+                icon: duotone users
+                contents:
+                  - page: Overview
+                    icon: duotone book-user
+                    path: docs/pages/product-guides/administration/workspaces/overview.mdx
+                  - page: Service accounts
+                    icon: duotone user-gear
+                    path: docs/pages/product-guides/administration/workspaces/service-accounts.mdx
+                  - page: SSO
+                    icon: duotone key
+                    path: docs/pages/product-guides/administration/workspaces/sso.mdx
+                  - page: Sharing resources
+                    icon: duotone share-nodes
+                    path: docs/pages/product-guides/administration/workspaces/sharing.mdx
+                  - page: User groups
+                    icon: duotone user-group
+                    path: docs/pages/product-guides/administration/workspaces/user-groups.mdx
+              - page: Webhooks
+                icon: duotone webhook
+                path: docs/pages/product-guides/administration/webhooks.mdx
+      - section: SERVICES
+        skip-slug: false
+        contents:
+          - section: Productions
+            contents:
+              - page: Overview
+                icon: duotone clapperboard
+                path: docs/pages/services/productions/overview.mdx
+              - page: Transcripts
+                icon: duotone pen-clip
+                path: docs/pages/services/productions/transcripts.mdx
+      - section: RESOURCES
+        skip-slug: false
+        contents:
+          - page: Troubleshooting
+            icon: duotone tools
+            path: docs/pages/resources/troubleshooting.mdx
+          - page: Zero Retention Mode
+            icon: duotone lock
+            path: docs/pages/resources/zero-retention.mdx
+  - tab: conversational-ai
+    layout:
+      - section: GET STARTED
+        skip-slug: true
+        contents:
+          - page: Overview
+            icon: duotone house
+            path: conversational-ai/pages/overview.mdx
+          - page: Quickstart
+            icon: duotone rocket
+            path: conversational-ai/pages/quickstart.mdx
+          - page: Dashboard
+            icon: duotone chart-mixed-up-circle-dollar
+            path: conversational-ai/pages/convai-dashboard.mdx
+      - section: CUSTOMIZATION
+        skip-slug: false
+        contents:
+          - section: Tools
+            icon: duotone toolbox
+            path: conversational-ai/pages/customization/tools/overview.mdx
+            contents:
+              - page: Client tools
+                icon: duotone rectangle-code
+                path: conversational-ai/pages/customization/client-tools.mdx
+              - page: Server tools
+                icon: duotone server
+                path: conversational-ai/pages/customization/tools/server-tools.mdx
+              - page: Agent tools deprecation
+                icon: duotone triangle-exclamation
+                path: conversational-ai/pages/customization/tools/agent-tools-deprecation.mdx
+              - section: System tools
+                icon: duotone computer-classic
+                path: conversational-ai/pages/customization/tools/system-tools.mdx
+                contents:
+                  - page: End call
+                    icon: duotone square-phone-hangup
+                    path: conversational-ai/pages/customization/tools/end-call.mdx
+                  - page: Language detection
+                    icon: duotone earth-europe
+                    path: conversational-ai/pages/customization/tools/language-detection.mdx
+                  - page: Agent transfer
+                    icon: duotone arrows-turn-to-dots
+                    path: conversational-ai/pages/customization/tools/agent-transfer.mdx
+                  - page: Transfer to human
+                    icon: duotone user-headset
+                    path: conversational-ai/pages/customization/tools/human-transfer.mdx
+                  - page: Skip turn
+                    icon: duotone forward
+                    path: conversational-ai/pages/customization/tools/skip-turn.mdx
+                  - page: Play keypad touch tone
+                    icon: duotone phone-office
+                    path: conversational-ai/pages/customization/tools/keypad-touch-tone.mdx
+                  - page: Voicemail detection
+                    icon: duotone voicemail
+                    path: conversational-ai/pages/customization/tools/voicemail-detection.mdx
+          - section: Events
+            icon: duotone signal-stream
+            path: conversational-ai/pages/customization/events.mdx
+            contents:
+              - page: Client events
+                icon: duotone cloud-arrow-down
+                path: conversational-ai/pages/customization/client-events.mdx
+              - page: Client to server events
+                icon: duotone cloud-arrow-up
+                path: conversational-ai/pages/customization/client-to-server-events.mdx
+          - section: Knowledge base
+            icon: duotone file-magnifying-glass
+            path: conversational-ai/pages/customization/knowledge-base.mdx
+            contents:
+              - page: Dashboard
+                icon: duotone books
+                path: conversational-ai/pages/customization/knowledge-base/ui.mdx
+              - page: RAG
+                icon: duotone magnifying-glass-waveform
+                path: conversational-ai/pages/customization/rag.mdx
+          - section: Personalization
+            icon: duotone user-gear
+            path: conversational-ai/pages/customization/personalization.mdx
+            contents:
+              - page: Dynamic variables
+                icon: lambda
+                path: conversational-ai/pages/customization/dynamic-variables.mdx
+              - page: Overrides
+                icon: duotone sliders
+                path: conversational-ai/pages/customization/overrides.mdx
+              - page: Twilio personalization
+                icon: duotone phone-arrow-down-left
+                path: conversational-ai/pages/customization/dynamic-variables/twilio-inbound-integration.mdx
+          - section: Voice
+            icon: duotone waveform-lines
+            path: conversational-ai/pages/customization/voice.mdx
+            contents:
+              - page: Multi-voice support
+                icon: duotone masks-theater
+                path: conversational-ai/pages/customization/voice/multi-voice.mdx
+              - page: Pronunciation dictionary
+                icon: duotone microphone-stand
+                path: conversational-ai/pages/customization/voice/pronunciation-dictionary.mdx
+              - page: Speed control
+                icon: duotone waveform
+                path: conversational-ai/pages/customization/voice/speed.mdx
+          - section: Language
+            icon: duotone language
+            path: conversational-ai/pages/customization/language.mdx
+            contents:
+              - page: Language detection
+                icon: duotone earth-europe
+                path: conversational-ai/pages/customization/tools/language-detection.mdx
+          - section: LLM
+            icon: duotone brain
+            path: conversational-ai/pages/customization/llm.mdx
+            contents:
+              - page: Optimizing costs
+                icon: duotone piggy-bank
+                path: conversational-ai/pages/customization/llm/optimising-cost.mdx
+              - section: Custom LLM
+                icon: duotone brain-circuit
+                path: conversational-ai/pages/customization/custom-llm/overview.mdx
+                contents:
+                  - page: Cloudflare
+                    icon: brands cloudflare
+                    path: conversational-ai/pages/customization/custom-llm/cloudflare-workers-ai.mdx
+                  - page: Groq Cloud
+                    icon: duotone cloud
+                    path: conversational-ai/pages/customization/custom-llm/groq-cloud.mdx
+                  - page: SambaNova Cloud
+                    icon: duotone cloud
+                    path: conversational-ai/pages/customization/custom-llm/sambanova-cloud.mdx
+                  - page: Together AI
+                    icon: duotone users
+                    path: conversational-ai/pages/customization/custom-llm/together-ai.mdx
+              - page: LLM cascading
+                icon: duotone layer-group
+                path: conversational-ai/pages/guides/cascade.mdx
+          - page: Widget
+            icon: duotone frame
+            path: conversational-ai/pages/customization/widget.mdx
+          - page: Conversation flow
+            icon: duotone comments
+            path: conversational-ai/pages/customization/conversation-flow.mdx
+          - page: Authentication
+            icon: duotone fingerprint
+            path: conversational-ai/pages/customization/authentication.mdx
+          - section: Agent Analysis
+            icon: duotone chart-line-up
+            path: conversational-ai/pages/customization/agent-analysis.mdx
+            contents:
+              - page: Success Evaluation
+                icon: duotone chart-line
+                path: conversational-ai/pages/customization/agent-analysis/success-evaluation.mdx
+              - page: Data Collection
+                icon: duotone database
+                path: conversational-ai/pages/customization/agent-analysis/data-collection.mdx
+
+          - section: Privacy
+            icon: duotone shield-halved
+            path: conversational-ai/pages/customization/privacy.mdx
+            contents:
+              - page: Retention
+                icon: duotone database
+                path: conversational-ai/pages/customization/retention.mdx
+              - page: Audio saving
+                icon: duotone microphone
+                path: conversational-ai/pages/customization/audio-saving.mdx
+              - page: Zero Retention Mode
+                icon: duotone shield-check
+                path: conversational-ai/pages/customization/privacy/zrm.mdx
+          - section: MCP
+            icon: duotone chart-network
+            path: conversational-ai/pages/customization/mcp/guide.mdx
+            contents:
+              - page: Security
+                icon: duotone hexagon-exclamation
+                path: conversational-ai/pages/customization/mcp/security.mdx
+
+      - section: PHONE NUMBERS
+        contents:
+          - page: SIP trunking
+            icon: duotone phone-office
+            path: conversational-ai/pages/guides/sip-trunking.mdx
+          - page: Batch calls
+            icon: duotone phone-arrow-up-right
+            path: conversational-ai/pages/guides/batch-calls.mdx
+          - section: Telephony
+            icon: duotone headset
+            contents:
+              - page: Vonage
+                icon: duotone v
+                path: conversational-ai/pages/guides/telephony/vonage.mdx
+              - page: Telnyx
+                icon: duotone tty-answer
+                path: conversational-ai/pages/guides/telephony/telnyx.mdx
+              - page: Plivo
+                icon: duotone phone-volume
+                path: conversational-ai/pages/guides/telephony/plivo.mdx
+          - section: CCaaS integrations
+            icon: duotone phone-intercom
+            contents:
+              - page: Genesys
+                icon: duotone headset
+                path: conversational-ai/pages/guides/ccaas/genesys.mdx
+          - section: Twilio integration
+            icon: duotone phone
+            contents:
+              - page: Native integration
+                icon: duotone browser
+                path: conversational-ai/pages/guides/twilio-dashboard.mdx
+              - page: Customising calls
+                icon: duotone user-gear
+                path: conversational-ai/pages/customization/dynamic-variables/twilio-inbound-integration.mdx
+
+      - section: WORKFLOWS
+        skip-slug: false
+        contents:
+          - page: Post-call webhooks
+            icon: duotone bell-ring
+            path: conversational-ai/pages/workflows/post-call-webhook.mdx
+          - section: Call transfers
+            icon: duotone phone-volume
+            contents:
+              - page: Transfer to human
+                icon: duotone user-headset
+                path: conversational-ai/pages/customization/tools/human-transfer.mdx
+              - page: Agent to agent transfer
+                icon: duotone arrows-turn-to-dots
+                path: conversational-ai/pages/customization/tools/agent-transfer.mdx
+
+      - section: BEST PRACTICES
+        contents:
+          - page: Prompting guide
+            icon: duotone comment-dots
+            path: conversational-ai/pages/best-practices/prompting-guide.mdx
+          - page: Conversational voice design
+            icon: duotone waveform-lines
+            path: conversational-ai/pages/best-practices/voice-design.mdx
+
+      - section: GUIDES
+        skip-slug: false
+        contents:
+          - page: Burst pricing
+            icon: duotone burst
+            path: conversational-ai/pages/guides/burst-pricing.mdx
+          - page: ElevenLabs' docs agent
+            icon: duotone message-bot
+            path: conversational-ai/pages/best-practices/our-docs-agent.mdx
+          - page: Simulate Conversations
+            icon: duotone comments
+            path: conversational-ai/pages/guides/simulate-conversation.mdx
+          - section: Quickstarts
+            icon: duotone code
+            contents:
+              - page: Next.JS
+                icon: brands react
+                path: conversational-ai/pages/guides/nextjs.mdx
+              - page: JavaScript
+                icon: brands js
+                path: conversational-ai/pages/guides/vite.mdx
+          - section: No-Code
+            icon: duotone browser
+            contents:
+              - page: Ghost
+                icon: duotone ghost
+                path: conversational-ai/pages/guides/ghost.mdx
+              - page: Framer
+                icon: duotone browser
+                path: conversational-ai/pages/guides/framer.mdx
+              - page: Squarespace
+                icon: brands squarespace
+                path: conversational-ai/pages/guides/squarespace.mdx
+              - page: Webflow
+                icon: brands webflow
+                path: conversational-ai/pages/guides/webflow.mdx
+              - page: Wix
+                icon: brands wix
+                path: conversational-ai/pages/guides/wix.mdx
+              - page: WordPress
+                icon: brands wordpress
+                path: conversational-ai/pages/guides/wordpress.mdx
+          - section: Integrations
+            icon: duotone link
+            contents:
+              - page: Expo React Native
+                path: docs/pages/developer-guides/cookbooks/conversational-ai/expo-react-native.mdx
+                icon: duotone mobile-screen-button
+              - page: Raspberry Pi Voice Assistant
+                path: docs/pages/developer-guides/cookbooks/conversational-ai/raspberry-pi-voice-assistant.mdx
+                icon: duotone computer-classic
+              - page: Cal.com
+                icon: duotone calendar
+                path: conversational-ai/pages/guides/cal.com.mdx
+              - page: Upstash Redis
+                icon: duotone database
+                path: docs/pages/developer-guides/cookbooks/conversational-ai/nextjs-post-call-webhooks.mdx
+              - page: Zendesk
+                icon: duotone z
+                path: conversational-ai/pages/guides/zendesk.mdx
+              - page: HubSpot
+                icon: duotone h
+                path: conversational-ai/pages/guides/hubspot.mdx
+              - page: Salesforce
+                icon: duotone s
+                path: conversational-ai/pages/guides/salesforce.mdx
+      - section: LEGAL
+        contents:
+          - page: HIPAA
+            icon: duotone hospital-user
+            path: conversational-ai/pages/legal/hipaa.mdx
+          - page: TCPA
+            icon: duotone phone-slash
+            path: conversational-ai/pages/legal/tcpa.mdx
+          - page: Disclosure Requirement
+            icon: duotone file-contract
+            path: conversational-ai/pages/legal/disclosure.mdx
+          - page: 11.ai integrations
+            icon: duotone link
+            path: conversational-ai/pages/legal/11-ai-integrations.mdx
+      - section: RESOURCES
+        skip-slug: true
+        contents:
+          - section: Libraries
+            icon: duotone books
+            contents:
+              - page: Python
+                icon: brands python
+                path: conversational-ai/pages/libraries/python.mdx
+              - page: React
+                icon: brands react
+                path: conversational-ai/pages/libraries/react.mdx
+              - page: React Native
+                icon: duotone mobile-screen-button
+                path: conversational-ai/pages/libraries/react-native.mdx
+              - page: JavaScript
+                icon: brands js
+                path: conversational-ai/pages/libraries/javascript.mdx
+              - page: Swift
+                icon: brands swift
+                path: conversational-ai/pages/libraries/swift.mdx
+              - page: WebSockets
+                icon: duotone arrow-right-arrow-left
+                path: conversational-ai/pages/api-reference/websocket.mdx
+              - page: Agents CLI
+                icon: duotone terminal
+                path: conversational-ai/pages/libraries/cli.mdx
+
+      - section: API REFERENCE
+        contents:
+          - api: Conversational AI
+            api-name: convai
+            flattened: true
+            paginated: true
+            layout:
+              - endpoint: GET /v1/convai/conversation
+                title: Agent WebSockets
+                slug: websocket
+            snippets:
+              typescript: '@elevenlabs/elevenlabs-js'
+              python: elevenlabs
+          - api: API Reference
+            api-name: api
+            skip-slug: true
+            flattened: true
+            paginated: true
+            snippets:
+              typescript: '@elevenlabs/elevenlabs-js'
+              python: elevenlabs
+            audiences:
+              - convai
+            layout: &convai-endpoints
+              - section: Agents
+                contents:
+                  - endpoint: POST /v1/convai/agents/create
+                    title: Create agent
+                  - endpoint: GET /v1/convai/agents/{agent_id}
+                    title: Get agent
+                  - endpoint: GET /v1/convai/agents
+                    title: List agents
+                  - endpoint: PATCH /v1/convai/agents/{agent_id}
+                    title: Update agent
+                  - endpoint: DELETE /v1/convai/agents/{agent_id}
+                    title: Delete agent
+                  - endpoint: POST /v1/convai/agents/{agent_id}/duplicate
+                    title: Duplicate agent
+                  - endpoint: GET /v1/convai/agents/{agent_id}/link
+                    title: Get link
+                    slug: /get-link
+                  - endpoint: POST /v1/convai/agents/{agent_id}/simulate-conversation
+                    title: Simulate conversation
+                  - endpoint: POST /v1/convai/agents/{agent_id}/simulate-conversation/stream
+                    title: Stream simulate conversation
+                  - endpoint: POST /v1/convai/agent/{agent_id}/llm-usage/calculate
+                    title: Calculate expected LLM usage
+              - section: Conversations
+                contents:
+                  - endpoint: GET /v1/convai/conversations
+                    title: List conversations
+                  - endpoint: GET /v1/convai/conversations/{conversation_id}
+                    title: Get conversation details
+                  - endpoint: DELETE /v1/convai/conversations/{conversation_id}
+                    title: Delete conversation
+                  - endpoint: GET /v1/convai/conversations/{conversation_id}/audio
+                    slug: /get-audio
+                    title: Get conversation audio
+                  - endpoint: GET /v1/convai/conversation/get-signed-url
+                    title: Get signed URL
+                  - endpoint: GET /v1/convai/conversation/token
+                    title: Get conversation token
+                  - endpoint: POST /v1/convai/conversations/{conversation_id}/feedback
+                    title: Send conversation feedback
+              - section: Tools
+                contents:
+                  - endpoint: GET /v1/convai/tools
+                    title: List tools
+                  - endpoint: GET /v1/convai/tools/{tool_id}
+                    title: Get tool
+                  - endpoint: POST /v1/convai/tools
+                    title: Create tool
+                  - endpoint: PATCH /v1/convai/tools/{tool_id}
+                    title: Update tool
+                  - endpoint: DELETE /v1/convai/tools/{tool_id}
+                    title: Delete tool
+                  - endpoint: GET /v1/convai/tools/{tool_id}/dependent-agents
+                    title: Get dependent agents
+              - section: Knowledge Base
+                contents:
+                  - endpoint: GET /v1/convai/knowledge-base
+                    title: List knowledge base documents
+                  - endpoint: DELETE /v1/convai/knowledge-base/{documentation_id}
+                    title: Delete knowledge base document
+                  - endpoint: GET /v1/convai/knowledge-base/{documentation_id}
+                    slug: /get-document
+                    title: Get knowledge base document
+                  - endpoint: PATCH /v1/convai/knowledge-base/{documentation_id}
+                    title: Update knowledge base document
+                  - endpoint: POST /v1/convai/knowledge-base/url
+                    title: Create knowledge base document from URL
+                  - endpoint: POST /v1/convai/knowledge-base/text
+                    title: Create knowledge base document from text
+                  - endpoint: POST /v1/convai/knowledge-base/file
+                    title: Create knowledge base document from file
+                  - endpoint: POST /v1/convai/knowledge-base/{documentation_id}/rag-index
+                    title: Compute RAG index
+                  - endpoint: GET /v1/convai/knowledge-base/{documentation_id}/rag-index
+                    title: Get RAG index
+                  - endpoint: GET /v1/convai/knowledge-base/rag-index
+                    title: Get RAG index overview
+                  - endpoint: DELETE /v1/convai/knowledge-base/{documentation_id}/rag-index/{rag_index_id}
+                    title: Delete RAG index
+                  - endpoint: GET /v1/convai/knowledge-base/{documentation_id}/dependent-agents
+                    title: Get dependent agents
+                  - endpoint: GET /v1/convai/knowledge-base/{documentation_id}/content
+                    title: Get document content
+                  - endpoint: GET /v1/convai/knowledge-base/{documentation_id}/chunk/{chunk_id}
+                    slug: /get-chunk
+                    title: Get document chunk
+                  - endpoint: GET /v1/convai/agent/{agent_id}/knowledge-base/size
+                    title: Get knowledge base size
+              - section: Phone Numbers
+                contents:
+                  - endpoint: POST /v1/convai/phone-numbers
+                    title: Import phone number
+                  - endpoint: GET /v1/convai/phone-numbers
+                    title: List phone numbers
+                  - endpoint: GET /v1/convai/phone-numbers/{phone_number_id}
+                    title: Get phone number
+                  - endpoint: PATCH /v1/convai/phone-numbers/{phone_number_id}
+                    title: Update phone number
+                  - endpoint: DELETE /v1/convai/phone-numbers/{phone_number_id}
+                    title: Delete phone number
+              - section: Widget
+                contents:
+                  - endpoint: GET /v1/convai/agents/{agent_id}/widget
+                    title: Get widget
+                  - endpoint: POST /v1/convai/agents/{agent_id}/avatar
+                    title: Create widget avatar
+              - section: Workspace
+                contents:
+                  - section: Settings
+                    skip-slug: true
+                    contents:
+                      - endpoint: GET /v1/convai/settings
+                        title: Get settings
+                      - endpoint: PATCH /v1/convai/settings
+                        title: Update settings
+                  - section: Secrets
+                    contents:
+                      - endpoint: GET /v1/convai/secrets
+                        title: Get secrets
+                      - endpoint: POST /v1/convai/secrets
+                        title: Create secret
+                      - endpoint: PATCH /v1/convai/secrets/{secret_id}
+                        title: Update secret
+                      - endpoint: DELETE /v1/convai/secrets/{secret_id}
+                        title: Delete secret
+                  - section: Dashboard
+                    contents:
+                      - endpoint: GET /v1/convai/settings/dashboard
+                        title: Get dashboard settings
+                      - endpoint: PATCH /v1/convai/settings/dashboard
+              - section: SIP Trunk
+                contents:
+                  - endpoint: POST /v1/convai/sip-trunk/outbound-call
+                    title: Outbound call via SIP trunk
+              - section: Twilio
+                contents:
+                  - endpoint: POST /v1/convai/twilio/outbound-call
+                    title: Outbound call via twilio
+              - section: Batch Calling
+                contents:
+                  - endpoint: POST /v1/convai/batch-calling/submit
+                    title: Submit batch calling job
+                  - endpoint: GET /v1/convai/batch-calling/workspace
+                    title: List workspace batch calling jobs
+                  - endpoint: GET /v1/convai/batch-calling/{batch_id}
+                    title: Get batch call information
+                  - endpoint: POST /v1/convai/batch-calling/{batch_id}/cancel
+                    title: Cancel batch calling job
+                  - endpoint: POST /v1/convai/batch-calling/{batch_id}/retry
+                    title: Retry batch calling job
+              - section: LLM Usage
+                contents:
+                  - endpoint: POST /v1/convai/llm-usage/calculate
+                    title: Calculate expected LLM usage
+              - section: MCP
+                contents:
+                  - endpoint: POST /v1/convai/mcp-servers
+                    title: Create MCP server
+                  - endpoint: GET /v1/convai/mcp-servers
+                    title: List MCP servers
+                  - endpoint: GET /v1/convai/mcp-servers/{mcp_server_id}
+                    title: Get MCP server
+                  - endpoint: GET /v1/convai/mcp-servers/{mcp_server_id}/tools
+                    title: List MCP server tools
+                  - section: Approval Policies
+                    contents:
+                      - endpoint: PATCH /v1/convai/mcp-servers/{mcp_server_id}/approval-policy
+                        title: Update MCP server approval policy
+                      - endpoint: POST /v1/convai/mcp-servers/{mcp_server_id}/tool-approvals
+                        title: Create MCP server tool approval
+                      - endpoint: DELETE /v1/convai/mcp-servers/{mcp_server_id}/tool-approvals/{tool_name}
+                        title: Delete MCP server tool approval
+  - tab: api-reference
+    layout:
+      - api: API REFERENCE
+        paginated: false
+        api-name: api
+        audiences:
+          - no-audience
+        snippets:
+          python: elevenlabs
+          typescript: '@elevenlabs/elevenlabs-js'
+        layout:
+          - page: Introduction
+            path: api-reference/pages/introduction.mdx
+          - page: Authentication
+            path: api-reference/pages/authentication.mdx
+          - page: Streaming
+            path: api-reference/pages/streaming.mdx
+      - api: API REFERENCE
+        paginated: true
+        flattened: true
+        api-name: api
+        alphabetized: false
+        snippets:
+          python: elevenlabs
+          typescript: '@elevenlabs/elevenlabs-js'
+        layout:
+          - section: ENDPOINTS
+            skip-slug: true
+            contents:
+              - textToSpeech:
+                  title: Text to Speech
+                  contents:
+                    - endpoint: GET /v1/text-to-speech/{voice_id}/stream-input
+                      title: WebSocket
+                    - endpoint: GET /v1/text-to-speech/{voice_id}/multi-stream-input
+                      title: Multi-Context WebSocket
+              - speechToText:
+                  title: Speech to Text
+              - textToDialogue:
+                  title: Text to Dialogue
+              - speechToSpeech:
+                  title: Voice Changer
+              - textToSoundEffects:
+                  title: Sound Effects
+              - audioIsolation
+              - textToVoice:
+                  title: Text to Voice
+                  contents:
+                    - endpoint: POST /v1/text-to-voice/design
+                      title: Design a voice
+                    - endpoint: POST /v1/text-to-voice
+                      title: Create a voice
+                    - endpoint: GET /v1/text-to-voice/{generated_voice_id}/stream
+                      title: Stream voice preview
+              - dubbing:
+                  title: Dubbing
+                  contents:
+                    - section: Resources (Enterprise, Closed Beta)
+                      slug: /resources
+                      contents:
+                        - endpoint: GET /v1/dubbing/resource/{dubbing_id}
+                          title: Get dubbing resource
+                          slug: /get-resource
+                        - endpoint: POST /v1/dubbing/resource/{dubbing_id}/speaker/{speaker_id}/segment
+                          title: Create segment
+                          slug: /create-segment
+                        - endpoint: DELETE /v1/dubbing/resource/{dubbing_id}/segment/{segment_id}
+                          title: Delete a segment
+                          slug: /delete-segment
+                        - endpoint: PATCH /v1/dubbing/resource/{dubbing_id}/segment/{segment_id}/{language}
+                          title: Update a segment
+                          slug: /update-segment
+                        - endpoint: POST /v1/dubbing/resource/{dubbing_id}/transcribe
+                          title: Transcribe segment
+                          slug: /transcribe-segment
+                        - endpoint: POST /v1/dubbing/resource/{dubbing_id}/translate
+                          title: Translate segment
+                          slug: /translate-segment
+                        - endpoint: POST /v1/dubbing/resource/{dubbing_id}/dub
+                          title: Dub segment
+                          slug: /dub-segment
+                        - endpoint: POST /v1/dubbing/resource/{dubbing_id}/render/{language}
+                          title: Render segment
+                          slug: /render-segment
+                        - endpoint: POST /v1/dubbing/resource/{dubbing_id}/language
+                          title: Add language to resource
+                          slug: /add-language
+                        - endpoint: PATCH /v1/dubbing/resource/{dubbing_id}/speaker/{speaker_id}
+                          title: Update speaker
+                          slug: /update-speaker
+                        - endpoint: GET /v1/dubbing/resource/{dubbing_id}/speaker/{speaker_id}/similar-voices
+                          title: Get similar voices
+                          slug: /get-similar-voices
+
+              - audioNative
+              - voices:
+                  title: Voices
+                  contents:
+                    - section: PVC
+                      contents:
+                        - endpoint: POST /v1/voices/pvc
+                          title: Create PVC voice
+                          slug: /create
+                        - endpoint: POST /v1/voices/pvc/{voice_id}
+                          title: Update PVC voice
+                          slug: /update
+                        - endpoint: POST /v1/voices/pvc/{voice_id}/train
+                          title: Train PVC voice
+                          slug: /train
+                        - endpoint: POST /v1/voices/pvc/{voice_id}/samples
+                          title: Add samples to PVC voice
+                          slug: /samples/create
+                        - endpoint: POST /v1/voices/pvc/{voice_id}/samples/{sample_id}
+                          title: Update PVC voice sample
+                          slug: /samples/update
+                        - endpoint: DELETE /v1/voices/pvc/{voice_id}/samples/{sample_id}
+                          title: Delete PVC voice sample
+                          slug: /samples/delete
+                        - endpoint: GET /v1/voices/pvc/{voice_id}/samples/{sample_id}/audio
+                          title: Get PVC voice sample audio
+                          slug: /samples/get-audio
+                        - endpoint: GET /v1/voices/pvc/{voice_id}/samples/{sample_id}/waveform
+                          title: Get PVC voice sample waveform
+                          slug: /samples/get-waveform
+                        - endpoint: GET /v1/voices/pvc/{voice_id}/samples/{sample_id}/speakers
+                          title: Get PVC speaker separation status
+                          slug: /samples/get-speaker-separation-status
+                        - endpoint: POST /v1/voices/pvc/{voice_id}/samples/{sample_id}/separate-speakers
+                          title: Start speaker separation
+                          slug: /samples/separate-speakers
+                        - endpoint: GET /v1/voices/pvc/{voice_id}/samples/{sample_id}/speakers/{speaker_id}/audio
+                          title: Get separated speaker audio
+                          slug: /samples/get-separated-speaker-audio
+                        - endpoint: POST /v1/voices/pvc/{voice_id}/verification
+                          title: Request PVC manual verification
+                          slug: /verification/request
+                        - endpoint: GET /v1/voices/pvc/{voice_id}/captcha
+                          title: Get PVC verification captcha
+                          slug: /verification/captcha
+                        - endpoint: POST /v1/voices/pvc/{voice_id}/captcha
+                          title: Verify PVC verification captcha
+                          slug: /verification/captcha/verify
+                    - section: IVC
+                      contents:
+                        - endpoint: POST /v1/voices/add
+                          title: Create IVC voice
+              - forcedAlignment
+          - section: ADMINISTRATION
+            skip-slug: true
+            contents:
+              - history
+              - models
+              - section: Studio
+                skip-slug: true
+                contents:
+                  - page: Studio API information
+                    icon: duotone exclamation-triangle
+                    path: api-reference/pages/studio-info.mdx
+                  - endpoint: GET /v1/studio/projects
+                    slug: /studio/get-projects
+                  - endpoint: POST /v1/studio/projects/{project_id}
+                    slug: /studio/edit-project
+                  - endpoint: GET /v1/studio/projects/{project_id}
+                    slug: /studio/get-project
+                  - endpoint: POST /v1/studio/projects
+                    slug: /studio/add-project
+                  - endpoint: DELETE /v1/studio/projects/{project_id}
+                    slug: /studio/delete-project
+                  - endpoint: POST /v1/studio/projects/{project_id}/convert
+                    slug: /studio/convert-project
+                  - endpoint: POST /v1/studio/projects/{project_id}/content
+                    slug: /studio/update-content
+                  - endpoint: GET /v1/studio/projects/{project_id}/snapshots
+                    slug: /studio/get-snapshots
+                  - endpoint: POST /v1/studio/projects/{project_id}/snapshots/{project_snapshot_id}/stream
+                    slug: /studio/stream-snapshot
+                  - endpoint: POST /v1/studio/projects/{project_id}/snapshots/{project_snapshot_id}/archive
+                    slug: /studio/archive-snapshot
+                  - endpoint: GET /v1/studio/projects/{project_id}/chapters
+                    slug: /studio/get-chapters
+                  - endpoint: GET /v1/studio/projects/{project_id}/chapters/{chapter_id}
+                    slug: /studio/get-chapter
+                  - endpoint: POST /v1/studio/projects/{project_id}/chapters
+                    slug: /studio/add-chapter
+                  - endpoint: POST /v1/studio/projects/{project_id}/chapters/{chapter_id}
+                    slug: /studio/update-chapter
+                  - endpoint: DELETE /v1/studio/projects/{project_id}/chapters/{chapter_id}
+                    slug: /studio/delete-chapter
+                  - endpoint: POST /v1/studio/projects/{project_id}/chapters/{chapter_id}/convert
+                    slug: /studio/convert-chapter
+                  - endpoint: GET /v1/studio/projects/{project_id}/chapters/{chapter_id}/snapshots
+                    slug: /studio/get-chapter-snapshots
+                  - endpoint: POST /v1/studio/projects/{project_id}/chapters/{chapter_id}/snapshots/{chapter_snapshot_id}/stream
+                    slug: /studio/stream-chapter-snapshot
+                  - endpoint: POST /v1/studio/projects/{project_id}/pronunciation-dictionaries
+                    slug: /studio/create-pronunciation-dictionaries
+                  - endpoint: POST /v1/studio/podcasts
+                    slug: /studio/create-podcast
+                  - endpoint: GET /v1/studio/projects/{project_id}/chapters/{chapter_id}/snapshots/{chapter_snapshot_id}
+                    slug: /studio/get-chapter-snapshot
+                  - endpoint: GET /v1/studio/projects/{project_id}/snapshots/{project_snapshot_id}
+                    slug: /studio/get-project-snapshot
+              - pronunciationDictionaries
+              - samples
+              - usage
+              - user
+              - section: Voice Library
+                contents:
+                  - GET /v1/shared-voices
+                  - POST /v1/voices/add/{public_user_id}/{voice_id}
+              - service-accounts
+              - workspace
+              - webhooks
+          - section: CONVERSATIONAL AI
+            skip-slug: true
+            contents: *convai-endpoints
+          - section: LEGACY
+            contents:
+              - section: Voices
+                contents:
+                  - GET /v1/voices
+                  - POST /v1/text-to-voice/create-previews
+                  - POST /v1/text-to-voice/create-voice-from-preview
+              - section: Knowledge Base
+                contents:
+                  - POST /v1/convai/knowledge-base
+
+navbar-links:
+  - type: minimal
+    text: Community
+    href: https://discord.gg/elevenlabs
+  - type: minimal
+    text: Blog
+    href: https://elevenlabs.io/blog
+  - type: minimal
+    text: Help Center
+    href: https://help.elevenlabs.io/
+  - type: minimal
+    text: API Pricing
+    href: https://elevenlabs.io/pricing/api
+  - type: filled
+    text: Sign up
+    href: https://elevenlabs.io/sign-up
+    rounded: false
+
+colors:
+  accentPrimary:
+    dark: '#E0E0E0'
+    light: '#404040'
+  background:
+    light: 'white'
+    dark: '#1E1E1E'
+  header-background:
+    light: '#FFFFFF'
+    dark: '#08090A'
+  sidebar-background:
+    light: '#FFFFFF'
+    dark: '#08090A'
+
+logo:
+  dark: assets/logo-dark.svg
+  light: assets/logo-light.svg
+  height: 30
+  href: /docs
+
+favicon: assets/favicon.svg
+
+css:
+  - assets/styles/globals.css
+
+js:
+  - path: assets/scripts/widget.js
+    strategy: lazyOnload
+  - path: assets/scripts/audio-player.js
+    strategy: lazyOnload
+  - url: https://elevenlabs.io/player/audioNativeHelper.js
+    strategy: lazyOnload
+
+analytics:
+  posthog:
+    api-key: phc_KQDh5IkRcTsPOoUtwmVxoATdOqNYCo0vTdwE77aNOQv
+    endpoint: https://eu.i.posthog.com
+  ga4:
+    measurement-id: G-82RG1PXYVW
+
+redirects:
+  - source: /docs/api-reference/websockets
+    destination: /docs/api-reference/text-to-speech/v-1-text-to-speech-voice-id-stream-input
+  - source: /docs/conversational-ai/customization/personalization/post-call-webhooks
+    destination: /docs/conversational-ai/workflows/post-call-webhooks
+  - source: /docs/voices/voice-lab/professional-voice-cloning
+    destination: /docs/product-guides/voices/voice-cloning/professional-voice-cloning
+  - source: /docs/welcome/introduction
+    destination: /docs/overview
+  - source: /docs/introduction
+    destination: /docs/overview
+  - source: /docs/libraries/conversational-ai-sdk-python
+    destination: /docs/conversational-ai/libraries/python
+  - source: /docs/speech-synthesis/models
+    destination: /docs/models
+  - source: /docs/voices/voice-lab/instant-voice-cloning
+    destination: /docs/product-guides/voices/voice-cloning/instant-voice-cloning
+  - source: /docs/api-reference/overview
+    destination: /docs/api-reference/introduction
+  - source: /docs/api-reference/add-chapter
+    destination: /docs/api-reference/chapters/add-chapter
+  - source: /docs/api-reference/add-shared-voice
+    destination: /docs/api-reference/voice-library/share
+  - source: /docs/api-reference/add-voice
+    destination: /docs/api-reference/voices/ivc/create
+  - source: /docs/api-reference/audio-isolation
+    destination: /docs/api-reference/audio-isolation/create
+  - source: /docs/api-reference/audio-isolation-stream
+    destination: /docs/api-reference/audio-isolation/stream
+  - source: /docs/api-reference/convert-chapter
+    destination: /docs/api-reference/chapters/convert-chapter
+  - source: /docs/api-reference/create-dub
+    destination: /docs/api-reference/dubbing/dub-a-video-or-an-audio-file
+  - source: /docs/api-reference/creates-audionative-enabled-project
+    destination: /docs/api-reference/audio-native/create
+  - source: /docs/api-reference/delete-chapter
+    destination: /docs/api-reference/chapters/delete-chapter
+  - source: /docs/api-reference/delete-dub
+    destination: /docs/api-reference/dubbing/delete-dubbing-project
+  - source: /docs/api-reference/delete-history-item
+    destination: /docs/api-reference/history/delete
+  - source: /docs/api-reference/delete-sample
+    destination: /docs/api-reference/samples/delete
+  - source: /docs/api-reference/delete-voice
+    destination: /docs/api-reference/voices/delete
+  - source: /docs/api-reference/download-history-items
+    destination: /docs/api-reference/history/download
+  - source: /docs/api-reference/edit-voice
+    destination: /docs/api-reference/voices/edit
+  - source: /docs/api-reference/edit-voice-settings
+    destination: /docs/api-reference/voices/settings/update
+  - source: /docs/api-reference/get-audio-from-history-item
+    destination: /docs/api-reference/history/get-audio
+  - source: /docs/api-reference/get-audio-from-sample
+    destination: /docs/api-reference/samples/get-audio
+  - source: /docs/api-reference/get-chapter-by-id
+    destination: /docs/api-reference/chapters/get-chapter
+  - source: /docs/api-reference/get-chapter-snapshots
+    destination: /docs/api-reference/chapters/get-snapshots
+  - source: /docs/api-reference/get-chapters
+    destination: /docs/api-reference/chapters/get-chapters
+  - source: /docs/api-reference/get-default-voice-settings
+    destination: /docs/api-reference/voices/settings/get-default
+  - source: /docs/api-reference/get-dubbed-file
+    destination: /docs/api-reference/dubbing/get-dubbed-file
+  - source: /docs/api-reference/get-dubbing-metadata
+    destination: /docs/api-reference/dubbing/get-dubbing-project-metadata
+  - source: /docs/api-reference/get-dubbing-transcript
+    destination: /docs/api-reference/dubbing/get-transcript-for-dub
+  - source: /docs/api-reference/get-generated-items
+    destination: /docs/api-reference/history/get-all
+  - source: /docs/api-reference/get-history-item-by-id
+    destination: /docs/api-reference/history/get
+  - source: /docs/api-reference/get-models
+    destination: /docs/api-reference/models/get-all
+  - source: /docs/api-reference/get-user-info
+    destination: /docs/api-reference/user/get
+  - source: /docs/api-reference/get-user-subscription-info
+    destination: /docs/api-reference/user/subscription/get
+  - source: /docs/api-reference/get-voice
+    destination: /docs/api-reference/voices/get
+  - source: /docs/api-reference/get-voice-settings
+    destination: /docs/api-reference/voices/settings/get
+  - source: /docs/api-reference/get-voices
+    destination: /docs/api-reference/voices/search
+  - source: /docs/api-reference/pronunciation-dictionaries-add-from-file
+    destination: /docs/api-reference/pronunciation-dictionaries/add-from-file
+  - source: /docs/api-reference/pronunciation-dictionaries-id
+    destination: /docs/api-reference/pronunciation-dictionaries/get
+  - source: /docs/api-reference/pronunciation-dictionaries-id-add-rules
+    destination: /docs/api-reference/pronunciation-dictionaries/add-rules
+  - source: /docs/api-reference/pronunciation-dictionaries-id-remove-rules
+    destination: /docs/api-reference/pronunciation-dictionaries/remove-rules
+  - source: /docs/api-reference/pronunciation-dictionaries-id-version_id-download
+    destination: /docs/api-reference/pronunciation-dictionaries/download
+  - source: /docs/api-reference/pronunciation-dictionaries-list
+    destination: /docs/api-reference/pronunciation-dictionaries/get-all
+  - source: /docs/api-reference/query-library
+    destination: /docs/api-reference/voice-library/get-shared
+  - source: /docs/api-reference/sound-generation
+    destination: /docs/api-reference/text-to-sound-effects/convert
+  - source: /docs/api-reference/speech-to-speech
+    destination: /docs/api-reference/speech-to-speech/convert
+  - source: /docs/api-reference/speech-to-speech-streaming
+    destination: /docs/api-reference/speech-to-speech/convert-as-stream
+  - source: /docs/api-reference/stream-chapter-audio
+    destination: /docs/api-reference/chapters/stream-snapshot
+  - source: /docs/api-reference/streaming-with-timestamps
+    destination: /docs/api-reference/text-to-speech/stream-with-timestamps
+  - source: /docs/api-reference/text-to-speech
+    destination: /docs/api-reference/text-to-speech/convert
+  - source: /docs/api-reference/text-to-speech-with-timestamps
+    destination: /docs/api-reference/text-to-speech/convert-with-timestamps
+  - source: /docs/api-reference/ttv-create-previews
+    destination: /docs/api-reference/legacy/voices/create-previews
+  - source: /docs/api-reference/ttv-create-voice-from-preview
+    destination: /docs/api-reference/text-to-voice/create
+  - source: /docs/api-reference/usage-get-character-stats
+    destination: /docs/api-reference/usage/get-characters-usage-metrics
+  - source: /docs/api-reference/websockets
+    destination: /docs/api-reference/websockets/overview
+  - source: /docs/api-reference/workspace-delete-invite
+    destination: /docs/api-reference/workspace/delete-invite
+  - source: /docs/api-reference/workspace-invite-user
+    destination: /docs/api-reference/workspace/add-invite
+  - source: /docs/api-reference/workspace-update-member
+    destination: /docs/api-reference/workspace/update-member
+  - source: /docs/changelog/product-updates
+    destination: /docs/changelog
+  - source: /docs/api-reference/how-to-use-tts-with-streaming-in-python
+    destination: /docs/developer-guides/cookbooks/text-to-speech/streaming
+  - source: /docs/api-reference/reducing-latency
+    destination: /docs/best-practices/latency-optimization
+  - source: /docs/conversational-ai/legal/gdpr
+    destination: /docs/product-guides/administration/data-residency
+  - source: /docs/projects/:slug*
+    destination: /docs/product-guides/products/studio
+  - source: /docs/sound-effects/:slug*
+    destination: /docs/capabilities/sound-effects
+  - source: /docs/speech-synthesis/:slug*
+    destination: /docs/capabilities/text-to-speech
+  - source: /docs/troubleshooting/:slug*
+    destination: /docs/resources/troubleshooting
+  - source: /docs/voiceover-studio/:slug*
+    destination: /docs/product-guides/audio-tools/voiceover-studio
+  - source: /docs/voices/:slug*
+    destination: /docs/product-guides/voices
+  - source: /docs/workspace/:slug*
+    destination: /docs/product-guides/administration/workspaces
+  - source: /docs/audio-native/:slug*
+    destination: /docs/product-guides/audio-tools/audio-native
+  - source: /docs/dubbing/:slug*
+    destination: /docs/product-guides/products/dubbing
+  - source: /docs/guides/:slug*
+    destination: /docs/product-guides/overview
+  - source: /docs/api-reference/how-to-dub-a-video
+    destination: /docs/developer-guides/cookbooks/dubbing/python-node-js-guide
+  - source: /docs/api-reference/how-to-use-pronounciation-dictionaries
+    destination: /docs/developer-guides/cookbooks/text-to-speech/pronunciation-dictionaries
+  - source: /docs/api-reference/how-to-use-request-stitching
+    destination: /docs/developer-guides/cookbooks/text-to-speech/request-stitching
+  - source: /docs/api-reference/how-to-use-text-to-sound-effects
+    destination: /docs/developer-guides/cookbooks/sound-effects/python-guide
+  - source: /docs/api-reference/how-to-use-tts-with-streaming
+    destination: /docs/developer-guides/cookbooks/text-to-speech/streaming
+  - source: /docs/api-reference/how-to-use-websocket
+    destination: /docs/developer-guides/websockets
+  - source: /docs/api-reference/integrating-with-twilio
+    destination: /docs/developer-guides/cookbooks/text-to-speech/twilio
+  - source: /docs/api-reference/specifying-server-location
+    destination: /docs/best-practices/latency-optimization
+  - source: /docs/conversational-ai
+    destination: /docs/conversational-ai/overview
+  - source: /docs/product/conversational-ai/overview
+    destination: /docs/conversational-ai/overview
+  - source: /docs/libraries/conversational-ai-sdk-python
+    destination: /docs/conversational-ai/libraries/python
+  - source: /docs/libraries/conversational-ai-sdk-js
+    destination: /docs/conversational-ai/libraries/java-script
+  - source: /docs/libraries/conversational-ai-sdk-react
+    destination: /docs/conversational-ai/libraries/react
+  - source: /docs/libraries/conversational-ai-sdk-swift
+    destination: /docs/conversational-ai/libraries/swift
+  - source: /docs/developer-guides/conversational-ai-guide
+    destination: /docs/conversational-ai/overview
+  - source: /docs/product/conversational-ai/tools
+    destination: /docs/conversational-ai/customization/tools
+  - source: /docs/conversational-ai/client-sdk
+    destination: /docs/conversational-ai/libraries/python
+  # New docs redirect
+  - source: /docs/product/introduction
+    destination: /docs/overview
+  - source: /docs/product/speech-synthesis/overview
+    destination: /docs/capabilities/text-to-speech
+  - source: /docs/product/speech-synthesis/voice-selection
+    destination: /docs/capabilities/voices
+  - source: /docs/product/speech-synthesis/voice-settings
+    destination: /docs/capabilities/voices
+  - source: /docs/product/speech-synthesis/models
+    destination: /docs/models
+  - source: /docs/product/speech-synthesis/prompting
+    destination: /docs/best-practices/prompting/controls
+  - source: /docs/product/speech-synthesis/speech-to-speech
+    destination: /docs/capabilities/voice-changer
+  - source: /docs/product/sound-effects/overview
+    destination: /docs/capabilities/sound-effects
+  - source: /docs/product/voices/overview
+    destination: /docs/capabilities/voices
+  - source: /docs/product/voices/default-voices
+    destination: /docs/capabilities/voices
+  - source: /docs/product/voices/voice-lab/voice-design
+    destination: /docs/product-guides/voices/voice-cloning/voice-design
+  - source: /docs/product/voices/voice-lab/overview
+    destination: /docs/product-guides/voices/voice-cloning/overview
+  - source: /docs/product/voices/voice-lab/instant-voice-cloning
+    destination: /docs/product-guides/voices/voice-cloning/instant-voice-cloning
+  - source: /docs/product/voices/voice-lab/professional-voice-cloning
+    destination: /docs/product-guides/voices/voice-cloning/professional-voice-cloning
+  - source: /docs/product/voices/voice-lab/scripts/the-great-gatsby
+    destination: /docs/product-guides/voices/voice-cloning/scripts/the-great-gatsby
+  - source: /docs/product/voices/voice-lab/scripts/news-article
+    destination: /docs/product-guides/voices/voice-cloning/scripts/news-article
+  - source: /docs/product/voices/voice-lab/scripts/social-media
+    destination: /docs/product-guides/voices/voice-cloning/scripts/social-media
+  - source: /docs/product/voices/voice-lab/scripts/meditation
+    destination: /docs/product-guides/voices/voice-cloning/scripts/meditation
+  - source: /docs/product/voices/voice-lab/scripts/elearning
+    destination: /docs/product-guides/voices/voice-cloning/scripts/elearning
+  - source: /docs/product/voices/voice-library/overview
+    destination: /docs/product-guides/voices/voice-cloning/voice-library/overview
+  - source: /docs/product/voices/voice-library/sharing
+    destination: /docs/product-guides/voices/voice-cloning/voice-library/sharing
+  - source: /docs/product/voices/pvc-step-by-step-guide
+    destination: /docs/product-guides/voices/voice-cloning/professional-voice-cloning
+  - source: /docs/product/voices/voice-library/payouts
+    destination: /docs/product-guides/voices/payouts
+  - source: /docs/product/prompting/pronunciation
+    destination: /docs/best-practices/prompting/controls
+  - source: /docs/product/prompting/pauses
+    destination: /docs/best-practices/prompting/controls
+  - source: /docs/product/prompting/pacing-and-emotion
+    destination: /docs/best-practices/prompting/controls
+  - source: /docs/product/projects/overview
+    destination: /docs/product-guides/voices/voice-cloning/projects/overview
+  - source: /docs/product/dubbing/overview
+    destination: /docs/product-guides/voices/voice-cloning/dubbing/overview
+  - source: /docs/product/dubbing/studio
+    destination: /docs/product-guides/voices/voice-cloning/dubbing/studio
+  - source: /docs/product/voiceover-studio/overview
+    destination: /docs/product-guides/voices/voice-cloning/voiceover-studio/overview
+  - source: /docs/product/audio-native/overview
+    destination: /docs/product-guides/audio-tools/audio-native/overview
+  - source: /docs/product/audio-native/audio-native-react
+    destination: /docs/product-guides/audio-tools/audio-native/audio-native-react
+  - source: /docs/product/audio-native/ghost
+    destination: /docs/product-guides/audio-tools/audio-native/ghost
+  - source: /docs/product/audio-native/squarespace
+    destination: /docs/product-guides/audio-tools/audio-native/squarespace
+  - source: /docs/product/audio-native/framer
+    destination: /docs/product-guides/audio-tools/audio-native/framer
+  - source: /docs/product/audio-native/webflow
+    destination: /docs/product-guides/audio-tools/audio-native/webflow
+  - source: /docs/product/audio-native/wordpress
+    destination: /docs/product-guides/audio-tools/audio-native/word-press
+  - source: /docs/product/audio-native/wix
+    destination: /docs/product-guides/audio-tools/audio-native/wix
+  - source: /docs/product/audio-native/substack
+    destination: /docs/product-guides/audio-tools/audio-native/substack
+  - source: /docs/product/workspace/overview
+    destination: /docs/product-guides/administration/workspaces/overview
+  - source: /docs/product/workspace/sso_setup
+    destination: /docs/product-guides/administration/workspaces/sso_setup
+  - source: /docs/product/troubleshooting/overview
+    destination: /docs/product-guides/voices/voice-cloning/troubleshooting/overview
+  - source: /docs/product/troubleshooting/regenerations
+    destination: /docs/product-guides/voices/voice-cloning/troubleshooting/regenerations
+  - source: /docs/product/troubleshooting/error-messages
+    destination: /docs/product-guides/voices/voice-cloning/troubleshooting/error-messages
+  - source: /docs/product/guides/getting-started
+    destination: /docs/product-guides/voices/voice-cloning/getting-started
+  - source: /docs/product/guides/creating-the-account
+    destination: /docs/product-guides/voices/voice-cloning/creating-the-account
+  - source: /docs/product/guides/workspace
+    destination: /docs/product-guides/administration/workspaces/overview
+  - source: /docs/product/guides/landing-page
+    destination: /docs/product-guides/voices/voice-cloning/landing-page
+  - source: /docs/product/guides/voices
+    destination: /docs/product-guides/voices/voice-cloning/voices
+  - source: /docs/product/guides/speech-synthesis
+    destination: /docs/product-guides/voices/voice-cloning/speech-synthesis
+  - source: /docs/product/guides/sound-effects
+    destination: /docs/product-guides/voices/voice-cloning/sound-effects
+  - source: /docs/product/guides/projects
+    destination: /docs/product-guides/voices/voice-cloning/projects/overview
+  - source: /docs/product/guides/dubbing
+    destination: /docs/product-guides/voices/voice-cloning/dubbing/overview
+  - source: /docs/product/guides/voiceover-studio
+    destination: /docs/product-guides/voices/voice-cloning/voiceover-studio/overview
+  - source: /docs/developer-guides/quickstart
+    destination: /docs/quickstart
+  - source: /docs/developer-guides/specifying-server-location
+    destination: /docs/best-practices/latency-optimization
+  - source: /docs/developer-guides/reducing-latency
+    destination: /docs/best-practices/latency-optimization
+  - source: /docs/developer-guides/models
+    destination: /docs/models
+  - source: /docs/developer-guides/how-to-use-tts-with-streaming
+    destination: /docs/developer-guides/cookbooks/text-to-speech/streaming
+  - source: /docs/developer-guides/how-to-use-websocket
+    destination: /docs/developer-guides/websockets
+  - source: /docs/developer-guides/how-to-use-request-stitching
+    destination: /docs/developer-guides/cookbooks/text-to-speech/request-stitching
+  - source: /docs/developer-guides/how-to-use-pronunciation-dictionaries
+    destination: /docs/developer-guides/cookbooks/text-to-speech/pronunciation-dictionaries
+  - source: /docs/developer-guides/integrating-with-twilio
+    destination: /docs/developer-guides/cookbooks/text-to-speech/twilio
+  - source: /docs/developer-guides/how-to-use-text-to-sound-effects
+    destination: /docs/developer-guides/cookbooks/sound-effects/python-guide
+  - source: /docs/developer-guides/how-to-dub-a-video
+    destination: /docs/developer-guides/cookbooks/dubbing/python-node-js-guide
+  - source: /docs/developer-guides/zero-retention-mode
+    destination: /docs/resources/zero-retention-mode
+  - source: /docs/conversational-ai/docs/introduction
+    destination: /docs/conversational-ai/overview
+  - source: /docs/conversational-ai/docs/agent-setup
+    destination: /docs/conversational-ai/overview
+  - source: /docs/conversational-ai/guides/conversational-ai-guide-nextjs
+    destination: /docs/conversational-ai/guides/quickstarts/next-js
+  - source: /docs/conversational-ai/guides/conversational-ai-guide-vite
+    destination: /docs/conversational-ai/guides/quickstarts/java-script
+  - source: /docs/conversational-ai/guides/conversational-ai-twilio
+    destination: /docs/conversational-ai/guides/twilio/custom-server
+  - source: /docs/conversational-ai/guides/conversational-ai-twilio-dashboard
+    destination: /docs/conversational-ai/guides/twilio/dashboard
+  - source: /docs/conversational-ai/customization/byollm
+    destination: /docs/conversational-ai/customization/custom-llm
+  - source: /docs/conversational-ai/customization/conversation-configuration
+    destination: /docs/conversational-ai/customization/overrides
+  - source: /docs/conversational-ai/libraries/conversational-ai-sdk-python
+    destination: /docs/conversational-ai/libraries/python
+  - source: /docs/conversational-ai/libraries/conversational-ai-sdk-react
+    destination: /docs/conversational-ai/libraries/react
+  - source: /docs/conversational-ai/libraries/conversational-ai-sdk-js
+    destination: /docs/conversational-ai/libraries/java-script
+  - source: /docs/conversational-ai/libraries/conversational-ai-sdk-swift
+    destination: /docs/conversational-ai/libraries/swift
+  - source: /docs/api-reference/streaming-guide
+    destination: /docs/api-reference/streaming
+  - source: /docs/api-reference/text-to-speech
+    destination: /docs/api-reference/text-to-speech/convert
+  - source: /docs/api-reference/websockets/overview
+    destination: /docs/api-reference/websocket
+  - source: /docs/api-reference/projects-api-information
+    destination: /docs/api-reference/studio-api-information
+  - source: /docs/api-reference/projects/patch-chapter
+    destination: /docs/api-reference/studio/update-chapter
+  - source: /docs/api-reference/projects/update-pronunciation-dictionaries
+    destination: /docs/api-reference/studio/create-pronunciation-dictionaries
+  - source: /docs/api-reference/projects/:slug*
+    destination: /docs/api-reference/studio/:slug*
+  - source: /docs/conversational-ai/workflows/agent-agent-transfers
+    destination: /docs/conversational-ai/customization/tools/system-tools/agent-transfer
+  - source: /docs/best-practices/conversational-agents
+    destination: /docs/cookbooks/multi-context-web-socket
+  - source: /docs/conversational-ai/customization/tools/agent-transfer
+    destination: /docs/conversational-ai/customization/tools/system-tools/agent-transfer
+  - source: /docs/conversational-ai/customization/tools/human-transfer
+    destination: /docs/conversational-ai/customization/tools/system-tools/human-transfer
+  - source: /docs/conversational-ai/guides/sip-trunking.mdx
+    destination: /docs/conversational-ai/phone-numbers/sip-trunking
+  - source: /docs/conversational-ai/workflows/transfer-to-human
+    destination: /docs/conversational-ai/workflows/call-transfers/transfer-to-human
+  - source: /docs/conversational-ai/workflows/agent-to-agent-transfer
+    destination: /docs/conversational-ai/workflows/call-transfers/agent-to-agent-transfer
+  - source: /docs/conversational-ai/guides/twilio/outbound-calling
+    destination: /docs/conversational-ai/phone-numbers/twilio-integration/outbound-calling
+  - source: /docs/conversational-ai/guides/twilio/custom-server
+    destination: /docs/conversational-ai/phone-numbers/twilio-integration/custom-server
+  - source: /docs/conversational-ai/phone-numbers/twilio/native-integration
+    destination: /docs/conversational-ai/phone-numbers/twilio-integration/native-integration
+  - source: /docs/conversational-ai/phone-numbers/twilio/dynamic-calls
+    destination: /docs/conversational-ai/phone-numbers/twilio-integration/customising-calls
+  - source: /docs/api-reference/text-to-speech/convert-as-stream
+    destination: /docs/api-reference/text-to-speech/stream
+  - source: /docs/api-reference/audio-isolation/audio-isolation
+    destination: /docs/api-reference/audio-isolation/convert
+  - source: /docs/api-reference/workspace/share-workspace-resource
+    destination: /docs/api-reference/workspace/resources/share
+  - source: /docs/api-reference/voices/get-similar-library-voices
+    destination: /docs/api-reference/voices/find-similar-voices
+  - source: /docs/api-reference/agents/get-agents
+    destination: /docs/api-reference/agents/get
+  - source: /docs/conversational-ai/api-reference/conversations/get-conversations
+    destination: /docs/conversational-ai/api-reference/conversations/list
+  - source: /docs/conversational-ai/api-reference/conversations/get-conversation
+    destination: /docs/conversational-ai/api-reference/conversations/get
+  - source: /docs/api-reference/dubbing/get-dubbing-resource
+    destination: /docs/api-reference/dubbing/resources/get-resource
+  - source: /docs/api-reference/workspace/delete-member
+    destination: /docs/api-reference/workspace/members/delete
+  - source: /docs/api-reference/knowledge-base/get
+    destination: /docs/api-reference/knowledge-base/get-document
+  - source: /docs/api-reference/knowledge-base/get-knowledge-base-list
+    destination: /docs/api-reference/knowledge-base/list
+  - source: /docs/api-reference/conversations/get-conversation
+    destination: /docs/api-reference/conversations/get
+  - source: /docs/api-reference/knowledge-base/get-knowledge-base-document-part-by-id
+    destination: /docs/api-reference/knowledge-base/get-chunk
+  - source: /docs/api-reference/widget/get-agent-widget
+    destination: /docs/api-reference/widget/get
+  - source: /docs/api-reference/knowledge-base/get-knowledge-base-document-content
+    destination: /docs/api-reference/knowledge-base/get-content
+  - source: /docs/api-reference/workspace/invite-multiple-users
+    destination: /docs/api-reference/workspace/invites/create-batch
+  - source: /docs/api-reference/workspace/invite-user
+    destination: /docs/api-reference/workspace/invites/create
+  - source: /docs/api-reference/conversations/get-conversations
+    destination: /docs/api-reference/conversations/list
+  - source: /docs/api-reference/knowledge-base/update-knowledge-base-document
+    destination: /docs/api-reference/knowledge-base/update
+  - source: /docs/api-reference/workspace/search-user-groups
+    destination: /docs/api-reference/workspace/groups/search
+  - source: /docs/api-reference/dubbing/add-language-to-resource
+    destination: /docs/api-reference/dubbing/resources/add-language
+  - source: /docs/api-reference/dubbing/dub-segments
+    destination: /docs/api-reference/dubbing/resources/dub-segment
+  - source: /docs/api-reference/workspace/unshare-workspace-resource
+    destination: /docs/api-reference/workspace/resources/unshare
+  - source: /docs/api-reference/workspace/share-workspace-resource
+    destination: /docs/api-reference/workspace/resources/share
+  - source: /docs/api-reference/dubbing/update-segment-language
+    destination: /docs/api-reference/dubbing/resources/update-segment
+  - source: /docs/api-reference/workspace/get-resource
+    destination: /docs/api-reference/dubbing/resources/get-resource
+  - source: /docs/api-reference/dubbing/translate-segments
+    destination: /docs/api-reference/dubbing/resources/translate-segment
+  - source: /docs/api-reference/dubbing/render-dub
+    destination: /docs/api-reference/dubbing/resources/render-segment
+  - source: /docs/api-reference/audio-native/update-content
+    destination: /docs/api-reference/audio-native/update
+  - source: /docs/conversational-ai/api-reference/conversations/post-conversation-feedback
+    destination: /docs/conversational-ai/api-reference/conversations/create
+  - source: /docs/api-reference/audio-isolation/audio-isolation-stream
+    destination: /docs/api-reference/audio-isolation/stream
+  - source: /docs/api-reference/pronunciation-dictionary/add-rules
+    destination: /docs/api-reference/pronunciation-dictionaries/rules/add
+  - source: /docs/api-reference/pronunciation-dictionary/get
+    destination: /docs/api-reference/pronunciation-dictionaries/get
+  - source: /docs/api-reference/pronunciation-dictionary/get-all
+    destination: /docs/api-reference/pronunciation-dictionaries/list
+  - source: /docs/api-reference/pronunciation-dictionary/remove-rules
+    destination: /docs/api-reference/pronunciation-dictionaries/rules/remove
+  - source: /docs/api-reference/pronunciation-dictionary/add-from-file
+    destination: /docs/api-reference/pronunciation-dictionaries/create-from-file
+  - source: /docs/api-reference/pronunciation-dictionary/download
+    destination: /docs/api-reference/pronunciation-dictionaries/download
+  - source: /docs/conversational-ai/customization/privacy/hipaa-compliance
+    destination: /docs/conversational-ai/legal/hipaa
+  - source: /docs/conversational-ai/customization/hipaa-compliance
+    destination: /docs/conversational-ai/legal/hipaa-compliance
+  - source: /docs/api-reference/conversations/outbound-call
+    destination: /docs/api-reference/twilio/outbound-call
+  - source: /docs/api-reference/multi-context-text-to-speech/v-1-text-to-speech-voice-id-multi-stream-input
+    destination: /docs/api-reference/text-to-speech/v-1-text-to-speech-voice-id-multi-stream-input
+  - source: /docs/api-reference/quick-start/introduction
+    destination: /docs/api-reference/introduction
+  - source: /docs/api-reference/getting-started
+    destination: /docs/api-reference/introduction
+  - source: /docs/api-reference/gaming-text-to-speech-guide
+    destination: /docs/quickstart
+  - source: /docs/api-reference/react-text-to-speech-guide
+    destination: /docs/quickstart
+  - source: /docs/product-guides/voices/voice-cloning/projects/overview
+    destination: /docs/product-guides/voices/voice-cloning
+  - source: /docs/api-reference/audio-isolation/create
+    destination: /docs/api-reference/audio-isolation/convert
+  - source: /docs/api-reference/agents/create-agent
+    destination: /docs/api-reference/agents/create
+  - source: /docs/api-reference/quick-start/authentication
+    destination: /docs/api-reference/authentication
+  - source: /docs/developer-guides/cookbooks/dubbing/python-node-js-guide
+    destination: /docs/cookbooks/dubbing
+  - source: /docs/voice-library/overview
+    destination: /docs/product-guides/voices/voice-library
+  - source: /docs/voicelab/instant-voice-cloning
+    destination: /docs/product-guides/voices/voice-cloning/instant-voice-cloning
+  - source: /docs/cookbooks/sound-effects/python-guide
+    destination: /docs/cookbooks/sound-effects
+  - source: /docs/api-reference/dubbing/dub-a-video-or-an-audio-file
+    destination: /docs/api-reference/dubbing/create
+  - source: /docs/api-reference/user/get-subscription
+    destination: /docs/api-reference/user/subscription/get
+  - source: /docs/api-reference/text-to-speech-stream
+    destination: /docs/api-reference/text-to-speech/stream
+  - source: /docs/api-reference/history/get-all
+    destination: /docs/api-reference/history/list
+  - source: /docs/conversational-ai/customization/custom-llm
+    destination: /docs/conversational-ai/customization/llm/custom-llm
+  - source: /docs/product-guides/voices/voice-cloning/voice-design
+    destination: /docs/product-guides/voices/voice-design
+  - source: /docs/conversational-ai/api-reference/websocket
+    destination: /docs/conversational-ai/api-reference/conversational-ai/websocket
+  - source: /docs/api-reference/voices/add
+    destination: /docs/api-reference/voices/ivc/create
+  - source: /docs/developer-guides/cookbooks/sound-effects/python-guide
+    destination: /docs/cookbooks/sound-effects
+  - source: /docs/api-reference/voices/get-all
+    destination: /docs/api-reference/voices/search
+  - source: /docs/conversational-ai/customization/tools-events/client-tools
+    destination: /docs/conversational-ai/customization/tools/client-tools
+  - source: /docs/api-reference/websocket
+    destination: /docs/api-reference/text-to-speech/v-1-text-to-speech-voice-id-stream-input
+  - source: /docs/api-reference/models/get-all
+    destination: /docs/api-reference/models/list
+  - source: /docs/api-reference/conversational-ai
+    destination: /docs/conversational-ai/api-reference/conversational-ai/websocket
+  - source: /docs/developer-guides/cookbooks/text-to-speech/request-stitching
+    destination: /docs/cookbooks/text-to-speech/request-stitching
+  - source: /docs/api-reference/voices/get-default-settings
+    destination: /docs/api-reference/voices/settings/get-default
+  - source: /docs/product-guides/voices/voice-cloning/dubbing/studio
+    destination: /docs/product-guides/products/dubbing/dubbing-studio
+  - source: /docs/conversational-ai/customization/custom-llm/together-ai
+    destination: /docs/conversational-ai/customization/llm/custom-llm/together-ai
+  - source: /docs/conversational-ai/customization/custom-llm/groq-cloud
+    destination: /docs/conversational-ai/customization/llm/custom-llm/groq-cloud
+  - source: /docs/api-reference/voices/get-settings
+    destination: /docs/api-reference/voices/settings/get
+  - source: /docs/voicelab/pre-made-voices
+    destination: /docs/product-guides/voices/voice-library
+
+ai-search:
+  model: claude-4

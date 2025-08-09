@@ -1,0 +1,299 @@
+---
+title: Models
+description: Learn about the models that power the ElevenLabs API.
+---
+
+## Flagship models
+
+<Markdown src="/snippets/tts-models.mdx" />
+<Markdown src="/snippets/stt-models.mdx" />
+<div className="text-center">
+  <div>[Pricing](https://elevenlabs.io/pricing/api)</div>
+</div>
+
+## Models overview
+
+The ElevenLabs API offers a range of audio models optimized for different use cases, quality levels, and performance requirements.
+
+| Model ID                     | Description                                                                                                                                                                                                           | Languages                                                                                                                                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `eleven_v3`                  | Human-like and expressive speech generation                                                                                                                                                                           | [70+ languages](/docs/models#supported-languages)                                                                                                                                               |
+| `eleven_ttv_v3`              | Human-like and expressive voice design model (Text to Voice)                                                                                                                                                          | [70+ languages](/docs/models#supported-languages)                                                                                                                                               |
+| `eleven_multilingual_v2`     | Our most lifelike model with rich emotional expression                                                                                                                                                                | `en`, `ja`, `zh`, `de`, `hi`, `fr`, `ko`, `pt`, `it`, `es`, `id`, `nl`, `tr`, `fil`, `pl`, `sv`, `bg`, `ro`, `ar`, `cs`, `el`, `fi`, `hr`, `ms`, `sk`, `da`, `ta`, `uk`, `ru`                   |
+| `eleven_flash_v2_5`          | Ultra-fast model optimized for real-time use (~75ms&dagger;)                                                                                                                                                          | All `eleven_multilingual_v2` languages plus: `hu`, `no`, `vi`                                                                                                                                   |
+| `eleven_flash_v2`            | Ultra-fast model optimized for real-time use (~75ms&dagger;)                                                                                                                                                          | `en`                                                                                                                                                                                            |
+| `eleven_turbo_v2_5`          | High quality, low-latency model with a good balance of quality and speed (~250ms-300ms)                                                                                                                               | `en`, `ja`, `zh`, `de`, `hi`, `fr`, `ko`, `pt`, `it`, `es`, `id`, `nl`, `tr`, `fil`, `pl`, `sv`, `bg`, `ro`, `ar`, `cs`, `el`, `fi`, `hr`, `ms`, `sk`, `da`, `ta`, `uk`, `ru`, `hu`, `no`, `vi` |
+| `eleven_turbo_v2`            | High quality, low-latency model with a good balance of quality and speed (~250ms-300ms)                                                                                                                               | `en`                                                                                                                                                                                            |
+| `eleven_multilingual_sts_v2` | State-of-the-art multilingual voice changer model (Speech to Speech)                                                                                                                                                  | `en`, `ja`, `zh`, `de`, `hi`, `fr`, `ko`, `pt`, `it`, `es`, `id`, `nl`, `tr`, `fil`, `pl`, `sv`, `bg`, `ro`, `ar`, `cs`, `el`, `fi`, `hr`, `ms`, `sk`, `da`, `ta`, `uk`, `ru`                   |
+| `eleven_multilingual_ttv_v2` | State-of-the-art multilingual voice designer model (Text to Voice)                                                                                                                                                    | `en`, `ja`, `zh`, `de`, `hi`, `fr`, `ko`, `pt`, `it`, `es`, `id`, `nl`, `tr`, `fil`, `pl`, `sv`, `bg`, `ro`, `ar`, `cs`, `el`, `fi`, `hr`, `ms`, `sk`, `da`, `ta`, `uk`, `ru`                   |
+| `eleven_english_sts_v2`      | English-only voice changer model (Speech to Speech)                                                                                                                                                                   | `en`                                                                                                                                                                                            |
+| `scribe_v1`                  | State-of-the-art speech recognition model                                                                                                                                                                             | [99 languages](/docs/capabilities/speech-to-text#supported-languages)                                                                                                                           |
+| `scribe_v1_experimental`     | State-of-the-art speech recognition model with experimental features: improved multilingual performance, reduced hallucinations during silence, fewer audio tags, and better handling of early transcript termination | [99 languages](/docs/capabilities/speech-to-text#supported-languages)                                                                                                                           |
+
+<small>† Excluding application & network latency</small>
+
+<Accordion title="Older Models">
+
+<Warning>
+
+These models are maintained for backward compatibility but are not recommended for new projects.
+
+</Warning>
+
+| Model ID                 | Description                                          | Languages                                      |
+| ------------------------ | ---------------------------------------------------- | ---------------------------------------------- |
+| `eleven_monolingual_v1`  | First generation TTS model (outclassed by v2 models) | `en`                                           |
+| `eleven_multilingual_v1` | First multilingual model (outclassed by v2 models)   | `en`, `fr`, `de`, `hi`, `it`, `pl`, `pt`, `es` |
+
+</Accordion>
+
+## Eleven v3 (alpha)
+
+<Warning>
+  This model is currently in alpha and is subject to change. Eleven v3 is not made for real-time
+  applications like Conversational AI. When integrating Eleven v3 into your application, consider
+  generating several generations and allowing the user to select the best one.
+</Warning>
+
+Eleven v3 is our latest and most advanced speech synthesis model. It is a state-of-the-art model that produces natural, life-like speech with high emotional range and contextual understanding across multiple languages.
+
+This model works well in the following scenarios:
+
+- **Character Discussions**: Excellent for audio experiences with multiple characters that interact with each other.
+- **Audiobook Production**: Perfect for long-form narration with complex emotional delivery.
+- **Emotional Dialogue**: Generate natural, lifelike dialogue with high emotional range and contextual understanding.
+
+With Eleven v3 comes a new Text to Dialogue API, which allows you to generate natural, lifelike dialogue with high emotional range and contextual understanding across multiple languages. Eleven v3 can also be used with the Text to Speech API to generate natural, lifelike speech with high emotional range and contextual understanding across multiple languages.
+
+<Warning>
+  Eleven v3 API access is currently not publicly available, but will be soon. To request access,
+  please [contact our sales team](https://elevenlabs.io/contact-sales).
+</Warning>
+
+Read more about the Text to Dialogue API [here](/docs/capabilities/text-to-dialogue).
+
+### Model selection
+
+The model can be used with the Text to Speech API by selecting the `eleven_v3` model ID. The Text to Dialogue API defaults to using the v3 model. Alternatively you can select a preview version which is formatted as `eleven_v3_preview_YYYY_MM_DD`. When a preview version has been evaluated and is ready for production, it will be promoted to the `eleven_v3` model ID. Use the evergreen `eleven_v3` model ID for the most stable experience and the preview version for the latest features.
+
+### Supported languages
+
+<Markdown src="/snippets/v3-model-languages.mdx" />
+
+## Multilingual v2
+
+Eleven Multilingual v2 is our most advanced, emotionally-aware speech synthesis model. It produces natural, lifelike speech with high emotional range and contextual understanding across multiple languages.
+
+The model delivers consistent voice quality and personality across all supported languages while maintaining the speaker's unique characteristics and accent.
+
+This model excels in scenarios requiring high-quality, emotionally nuanced speech:
+
+- **Character Voiceovers**: Ideal for gaming and animation due to its emotional range.
+- **Professional Content**: Well-suited for corporate videos and e-learning materials.
+- **Multilingual Projects**: Maintains consistent voice quality across language switches.
+- **Stable Quality**: Produces consistent, high-quality audio output.
+
+While it has a higher latency & cost per character than Flash models, it delivers superior quality for projects where lifelike speech is important.
+
+<Markdown src="/snippets/v2-model-languages.mdx" />
+
+## Flash v2.5
+
+Eleven Flash v2.5 is our fastest speech synthesis model, designed for real-time applications and conversational AI. It delivers high-quality speech with ultra-low latency (~75ms&dagger;) across 32 languages.
+
+The model balances speed and quality, making it ideal for interactive applications while maintaining natural-sounding output and consistent voice characteristics across languages.
+
+This model is particularly well-suited for:
+
+- **Conversational AI**: Perfect for real-time voice agents and chatbots.
+- **Interactive Applications**: Ideal for games and applications requiring immediate response.
+- **Large-Scale Processing**: Efficient for bulk text-to-speech conversion.
+
+With its lower price point and 75ms latency, Flash v2.5 is the cost-effective option for anyone needing fast, reliable speech synthesis across multiple languages.
+
+<Markdown src="/snippets/v2-5-model-languages.mdx" />
+
+<small>† Excluding application & network latency</small>
+
+### Considerations
+
+<AccordionGroup>
+  <Accordion title="Text normalization with numbers">
+    When using Flash v2.5, numbers aren't normalized by default in a way you might expect. For example, phone numbers might be read out in way that isn't clear for the user. Dates and currencies are affected in a similar manner.
+
+    By default, normalization is disabled for Flash v2.5 to maintain the low latency. However, Enterprise customers can now enable text normalization for v2.5 models by setting the `apply_text_normalization` parameter to "on" in your request.
+
+    The Multilingual v2 model does a better job of normalizing numbers, so we recommend using it for phone numbers and other cases where number normalization is important.
+
+    For low-latency or Conversational AI applications, best practice is to have your LLM [normalize the text](/docs/best-practices/prompting/normalization) before passing it to the TTS model, or use the `apply_text_normalization` parameter (Enterprise plans only for v2.5 models).
+
+  </Accordion>
+</AccordionGroup>
+
+## Turbo v2.5
+
+Eleven Turbo v2.5 is our high-quality, low-latency model with a good balance of quality and speed.
+
+This model is an ideal choice for all scenarios where you'd use Flash v2.5, but where you're willing to trade off latency for higher quality voice generation.
+
+## Model selection guide
+
+<AccordionGroup>
+  <Accordion title="Requirements">
+    <CardGroup cols={1}>
+      <Card title="Quality">
+        Use `eleven_multilingual_v2`
+
+        Best for high-fidelity audio output with rich emotional expression
+      </Card>
+      <Card title="Low-latency">
+        Use Flash models
+
+        Optimized for real-time applications (~75ms latency)
+      </Card>
+      <Card title="Multilingual">
+        Use either either `eleven_multilingual_v2` or `eleven_flash_v2_5`
+
+        Both support up to 32 languages
+      </Card>
+      <Card title="Balanced">
+        Use `eleven_turbo_v2_5`
+
+        Good balance between quality and speed
+      </Card>
+    </CardGroup>
+
+  </Accordion>
+
+  <Accordion title="Use case">
+    <CardGroup cols={1}>
+      <Card title="Content creation">
+        Use `eleven_multilingual_v2`
+
+        Ideal for professional content, audiobooks & video narration.
+      </Card>
+
+      <Card title="Conversational AI">
+        Use `eleven_flash_v2_5`, `eleven_flash_v2`, `eleven_multilingual_v2`, `eleven_turbo_v2_5` or `eleven_turbo_v2`
+
+        Perfect for real-time conversational applications
+      </Card>
+
+      <Card title="Voice changer">
+        Use `eleven_multilingual_sts_v2`
+
+        Specialized for Speech-to-Speech conversion
+      </Card>
+    </CardGroup>
+
+  </Accordion>
+</AccordionGroup>
+
+## Character limits
+
+The maximum number of characters supported in a single text-to-speech request varies by model.
+
+| Model ID                 | Character limit | Approximate audio duration |
+| ------------------------ | --------------- | -------------------------- |
+| `eleven_flash_v2_5`      | 40,000          | ~40 minutes                |
+| `eleven_flash_v2`        | 30,000          | ~30 minutes                |
+| `eleven_turbo_v2_5`      | 40,000          | ~40 minutes                |
+| `eleven_turbo_v2`        | 30,000          | ~30 minutes                |
+| `eleven_multilingual_v2` | 10,000          | ~10 minutes                |
+| `eleven_multilingual_v1` | 10,000          | ~10 minutes                |
+| `eleven_english_sts_v2`  | 10,000          | ~10 minutes                |
+| `eleven_english_sts_v1`  | 10,000          | ~10 minutes                |
+
+<Note>For longer content, consider splitting the input into multiple requests.</Note>
+
+## Scribe v1
+
+Scribe v1 is our state-of-the-art speech recognition model designed for accurate transcription across 99 languages. It provides precise word-level timestamps and advanced features like speaker diarization and dynamic audio tagging.
+
+This model excels in scenarios requiring accurate speech-to-text conversion:
+
+- **Transcription Services**: Perfect for converting audio/video content to text
+- **Meeting Documentation**: Ideal for capturing and documenting conversations
+- **Content Analysis**: Well-suited for audio content processing and analysis
+- **Multilingual Recognition**: Supports accurate transcription across 99 languages
+
+Key features:
+
+- Accurate transcription with word-level timestamps
+- Speaker diarization for multi-speaker audio
+- Dynamic audio tagging for enhanced context
+- Support for 99 languages
+
+Read more about Scribe v1 [here](/docs/capabilities/speech-to-text).
+
+## Concurrency and priority
+
+Your subscription plan determines how many requests can be processed simultaneously and the priority level of your requests in the queue.
+Speech to Text has an elevated concurrency limit.
+Once the concurrency limit is met, subsequent requests are processed in a queue alongside lower-priority requests.
+In practice this typically only adds ~50ms of latency.
+
+| Plan       | Concurrency Limit<br /> (Multilingual v2) | Concurrency Limit<br /> (Turbo & Flash) | STT Concurrency Limit | Priority level |
+| ---------- | ----------------------------------------- | --------------------------------------- | --------------------- | -------------- |
+| Free       | 2                                         | 4                                       | 10                    | 3              |
+| Starter    | 3                                         | 6                                       | 15                    | 4              |
+| Creator    | 5                                         | 10                                      | 25                    | 5              |
+| Pro        | 10                                        | 20                                      | 50                    | 5              |
+| Scale      | 15                                        | 30                                      | 75                    | 5              |
+| Business   | 15                                        | 30                                      | 75                    | 5              |
+| Enterprise | Elevated                                  | Elevated                                | Elevated              | Highest        |
+
+The response headers include `current-concurrent-requests` and `maximum-concurrent-requests` which you can use to monitor your concurrency.
+
+How endpoint requests are made impacts concurrency limits:
+
+- With HTTP, each request counts individually toward your concurrency limit.
+- With a WebSocket, only the time where our model is generating audio counts towards your concurrency limit, this means a for most of the time an open websocket doesn't count towards your concurrency limit at all.
+
+### Understanding concurrency limits
+
+The concurrency limit associated with your plan should not be interpreted as the maximum number of simultaneous conversations, phone calls character voiceovers, etc that can be handled at once.
+The actual number depends on several factors, including the specific AI voices used and the characteristics of the use case.
+
+As a general rule of thumb, a concurrency limit of 5 can typically support up to approximately 100 simultaneous audio broadcasts.
+
+This is because of the speed it takes for audio to be generated relative to the time it takes for the TTS request to be processed.
+The diagram below is an example of how 4 concurrent calls with different users can be facilitated while only hitting 2 concurrent requests.
+
+<Frame background="subtle">
+  <img
+    src="/assets/images/product-guides/speech-to-text/tts-concurrency.png"
+    alt="Concurrency limits"
+  />
+</Frame>
+
+<AccordionGroup>
+  <Accordion title="Building AI Voice Agents">
+      Where TTS is used to facilitate dialogue, a concurrency limit of 5 can support about 100 broadcasts for balanced conversations between AI agents and human participants.
+
+      For use cases in which the AI agent speaks less frequently than the human, such as customer support interactions, more than 100 simultaneous conversations could be supported.
+
+  </Accordion>
+  <Accordion title="Character voiceovers">
+      Generally, more than 100 simultaneous character voiceovers can be supported for a concurrency limit of 5.
+
+      The number can vary depending on the character’s dialogue frequency, the length of pauses, and in-game actions between lines.
+
+  </Accordion>
+  <Accordion title="Live Dubbing">
+      Concurrent dubbing streams generally follow the provided heuristic.
+
+      If the broadcast involves periods of conversational pauses (e.g. because of a soundtrack, visual scenes, etc), more simultaneous dubbing streams than the suggestion may be possible.
+
+  </Accordion>
+</AccordionGroup>
+
+If you exceed your plan's concurrency limits at any point and you are on the Enterprise plan, model requests may still succeed, albeit slower, on a best efforts basis depending on available capacity.
+
+<Note>
+  To increase your concurrency limit & queue priority, [upgrade your subscription
+  plan](https://elevenlabs.io/pricing/api).
+
+Enterprise customers can request a higher concurrency limit by contacting their account manager.
+
+</Note>

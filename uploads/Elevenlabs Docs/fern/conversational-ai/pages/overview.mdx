@@ -1,0 +1,190 @@
+---
+title: Conversational AI overview
+headline: Introduction - Conversational voice AI agents
+subtitle: Deploy customized, conversational voice agents in minutes.
+---
+
+<div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%' }}>
+  <iframe
+    src="https://player.vimeo.com/video/1029660636"
+    frameBorder="0"
+    style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%' }}
+    className="aspect-video w-full rounded-lg"
+    allow="autoplay; fullscreen; picture-in-picture"
+    allowFullScreen
+  />
+</div>
+
+## What is Conversational AI?
+
+ElevenLabs [Conversational AI](https://elevenlabs.io/conversational-ai) is a platform for deploying customized, conversational voice agents. Built in response to our customers' needs, our platform eliminates months of development time typically spent building conversation stacks from scratch. It combines these building blocks:
+
+<CardGroup cols={2}>
+  <Card title="Speech to text">
+    Our fine tuned ASR model that transcribes the caller's dialogue.
+  </Card>
+  <Card title="Language model">
+    Choose from Gemini, Claude, OpenAI and more, or bring your own.
+  </Card>
+  <Card title="Text to speech">
+    Our low latency, human-like TTS across 5k+ voices and 31 languages.
+  </Card>
+  <Card title="Turn taking model">
+    Our custom turn taking model that understands when to speak, like a human would.
+  </Card>
+</CardGroup>
+
+Altogether it is a highly composable AI Voice agent solution that can scale to thousands of calls per day. With [server](/docs/conversational-ai/customization/tools/server-tools) & [client side](/docs/conversational-ai/customization/tools/client-tools) tools, [knowledge](/docs/conversational-ai/customization/knowledge-base) bases, [dynamic](/docs/conversational-ai/customization/personalization/dynamic-variables) agent instantiation and [overrides](/docs/conversational-ai/customization/personalization/overrides), plus built-in monitoring, it's the complete developer toolkit.
+
+<Card title="Pricing" horizontal>
+  15 minutes to get started on the free plan. Get 13,750 minutes included on the Business plan at
+  \$0.08 per minute on the Business plan, with extra minutes billed at \$0.08, as well as
+  significantly discounted pricing at higher volumes.
+  <br />
+  **Setup & Prompt Testing**: billed at half the cost.
+</Card>
+
+<Note>
+  Usage is billed to the account that created the agent. If authentication is not enabled, anybody
+  with your agent's id can connect to it and consume your credits. To protect against this, either
+  enable authentication for your agent or handle the agent id as a secret.
+</Note>
+
+## Pricing tiers
+
+<Tabs>
+  <Tab title="In Minutes">
+  
+  | Tier     | Price   | Minutes included | Cost per extra minute              |
+  | -------- | ------- | ---------------- | ---------------------------------- |
+  | Free     | \$0     | 15               | Unavailable                        |
+  | Starter  | \$5     | 50               | Unavailable                        |
+  | Creator  | \$22    | 250              | ~\$0.12                            |
+  | Pro      | \$99    | 1100             | ~\$0.11                            |
+  | Scale    | \$330   | 3,600            | ~\$0.10                            |
+  | Business | \$1,320 | 13,750           | \$0.08 (annual), \$0.096 (monthly) |
+
+  </Tab>
+  <Tab title="In Credits">
+  
+  | Tier     | Price   | Credits included | Cost in credits per extra minute |
+  | -------- | ------- | ---------------- | -------------------------------- |
+  | Free     | \$0     | 10,000           | Unavailable                      |
+  | Starter  | \$5     | 30,000           | Unavailable                      |
+  | Creator  | \$22    | 100,000          | 400                              |
+  | Pro      | \$99    | 500,000          | 454                              |
+  | Scale    | \$330   | 2,000,000        | 555                              |
+  | Business | \$1,320 | 11,000,000       | 800                              |
+
+  </Tab>
+</Tabs>
+
+In multimodal text + voice mode, text message pricing per message. LLM costs are passed through separately, see here for estimates of [LLM cost](/docs/conversational-ai/customization/llm#supported-llms).
+
+| Plan       | Price per text message |
+| ---------- | ---------------------- |
+| Free       | 0.4 cents              |
+| Starter    | 0.4 cents              |
+| Creator    | 0.3 cents              |
+| Pro        | 0.3 cents              |
+| Scale      | 0.3 cents              |
+| Business   | 0.3 cents              |
+| Enterprise | Custom pricing         |
+
+### Pricing during silent periods
+
+When a conversation is silent for longer than ten seconds, ElevenLabs reduces the inference of the turn-taking model and speech-to-text services until voice activity is detected again. This optimization means that extended periods of silence are charged at 5% of the usual per-minute cost.
+
+This reduction in cost:
+
+- Only applies to the period of silence.
+- Does not apply after voice activity is detected again.
+- Can be triggered at multiple times in the same conversation.
+
+## Models
+
+Currently, the following models are natively supported and can be configured via the agent settings:
+
+| Provider      | Model                 |
+| ------------- | --------------------- |
+| **Google**    | Gemini 2.5 Flash      |
+|               | Gemini 2.0 Flash      |
+|               | Gemini 2.0 Flash Lite |
+|               | Gemini 1.5 Flash      |
+|               | Gemini 1.5 Pro        |
+| **OpenAI**    | GPT-4.1               |
+|               | GPT-4.1 Mini          |
+|               | GPT-4.1 Nano          |
+|               | GPT-4o                |
+|               | GPT-4o Mini           |
+|               | GPT-4 Turbo           |
+|               | GPT-4                 |
+|               | GPT-3.5 Turbo         |
+| **Anthropic** | Claude Sonnet 4       |
+|               | Claude 3.5 Sonnet     |
+|               | Claude 3.5 Sonnet v1  |
+|               | Claude 3.7 Sonnet     |
+|               | Claude 3.0 Haiku      |
+
+Using your own Custom LLM is also supported by specifying the endpoint we should make requests to and providing credentials through our secure secret storage.
+
+<Note>
+  With EU data residency enabled, a small number of older Gemini and Claude LLMs are not available
+  in Conversational AI to maintain compliance with EU data residency. Custom LLMs and OpenAI LLMs
+  remain fully available. For more infomation please see [GDPR and data
+  residency](/docs/product-guides/administration/data-residency).
+</Note>
+
+![Supported models](/assets/images/conversational-ai/llms.png)
+
+You can start with our [free tier](https://elevenlabs.io/app/sign-up), which includes 15 minutes of conversation per month.
+
+Need more? Upgrade to a [paid plan](https://elevenlabs.io/pricing/api) instantly - no sales calls required. For enterprise usage (6+ hours of daily conversation), [contact our sales team](https://elevenlabs.io/contact-sales) for custom pricing tailored to your needs.
+
+## Popular applications
+
+Companies and creators use our Conversational AI orchestration platform to create:
+
+- **Customer service**: Assistants trained on company documentation that can handle customer queries, troubleshoot issues, and provide 24/7 support in multiple languages.
+- **Virtual assistants**: Assistants trained to manage scheduling, set reminders, look up information, and help users stay organized throughout their day.
+- **Retail support**: Assistants that help customers find products, provide personalized recommendations, track orders, and answer product-specific questions.
+- **Personalized learning**: Assistants that help students learn new topics & enhance reading comprehension by speaking with books and [articles](https://elevenlabs.io/blog/time-brings-conversational-ai-to-journalism).
+- **Multi-character storytelling**: Interactive narratives with distinct voices for different characters, powered by our new [multi-voice support](/docs/conversational-ai/customization/voice/multi-voice-support) feature.
+
+<Note>
+  Ready to get started? Check out our [quickstart guide](/docs/conversational-ai/quickstart) to
+  create your first AI agent in minutes.
+</Note>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Concurrency limits">
+Plan limits
+
+Your subscription plan determines how many calls can be made simultaneously.
+
+| Plan       | Concurrency limit |
+| ---------- | ----------------- |
+| Free       | 4                 |
+| Starter    | 6                 |
+| Creator    | 10                |
+| Pro        | 20                |
+| Scale      | 30                |
+| Business   | 30                |
+| Enterprise | Elevated          |
+
+    <Note>
+      To increase your concurrency limit [upgrade your subscription plan](https://elevenlabs.io/pricing/api)
+      or [contact sales](https://elevenlabs.io/contact-sales) to discuss enterprise plans.
+    </Note>
+
+  </Accordion>
+  <Accordion title="Supported audio formats">
+    The following audio output formats are supported in the Conversational AI platform:
+
+    - PCM (8 kHz / 16 kHz / 22.05 kHz / 24 kHz / 44.1 kHz)
+    - μ-law 8000Hz
+
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,171 @@
+---
+title: HIPAA
+subtitle: Learn how ElevenLabs Conversational AI, coupled with Zero Retention Mode, is designed to promote HIPAA compliance for healthcare applications. Please refer to our [compliance page](https://compliance.elevenlabs.io/) for the latest information.
+---
+
+## Overview
+
+ElevenLabs Conversational AI is one of ElevenLabs' HIPAA-eligible services, and we offer Business Associate Agreements (BAAs) to eligible customers. To the extent Covered Entities and Business Associates, as defined under HIPAA, have executed a BAA and have Zero Retention Mode engaged, ElevenLabs allows such customers to develop AI-powered voice agents for the handling Protected Health Information (PHI). The application of Zero Retention Mode is designed to promote compliance with HIPAA by limiting the processing of such PHI. You can read more about [Zero Retention Mode here](/docs/resources/zero-retention-mode).
+
+## Controls designed to promote HIPAA compliance
+
+When HIPAA compliance is required for a workspace, and to the extent a BAA has been executed with ElevenLabs, the following policies are enabled:
+
+1. **Zero Retention Mode** - You can read more about [Zero Retention Mode here](/docs/resources/zero-retention-mode)
+2. **LLM Provider Restrictions** - Only LLM from providers with whom we have a BAA in place are available as preconfigured options
+3. **Storage Limitations** - Raw audio files and transcripts containing PHI are not retained
+
+<Note>
+
+If you want to use LLMs that aren't available preconfigured in Zero Retention Mode, you can still use them in Conversational AI by:
+
+1. Arranging to sign a BAA directly with the LLM provider you'd like to use
+2. Using your API key with our Custom LLM integration
+
+</Note>
+
+To the extent Zero Retention Mode is engaged, ElevenLabs' platform is designed to ensure that PHI shared as part of a conversation is not stored or logged in any system component, including:
+
+- Conversation transcripts
+- Audio recordings
+- Tool calls and results
+- Data analytics
+- System logs
+
+<Warning>
+  For Conversational AI, your BAA applies only to the extent provided therein. To the extent you
+  wish to forego Zero Retention Mode with respect to any Conversational AI agent, no PHI should be
+  submitted to the Service in connection therewith, and such agent is no longer deemed a covered
+  service for purposes of the BAA. Notwithstanding anything to the contrary, while ElevenLabs'
+  Conversational AI Service, coupled with Zero Retention Mode, is designed to promote compliance
+  with HIPAA, you are fully responsible for ensuring compliance with all obligations applicable to
+  you and for ensuring your use of the Services is compliant with all applicable laws.
+</Warning>
+
+## Enterprise customers
+
+<Note>
+  Execution of a BAA, as may be required by HIPAA, is only available for Enterprise tier
+  subscriptions. Contact your account representative to discuss further. PHI should not be submitted
+  to the ElevenLabs Services unless a BAA is in place and only to the extent permitted under such
+  BAA.
+</Note>
+
+## Available LLMs
+
+When operating in Zero Retention Mode, only the following LLMs are available:
+
+<AccordionGroup>
+  <Accordion title="Google Models">
+
+    - Gemini 2.5 Flash
+    - Gemini 2.0 Flash
+    - Gemini 2.0 Flash Lite
+    - Gemini 1.5 Flash
+    - Gemini 1.5 Pro
+    - Gemini 1.0 Pro
+
+  </Accordion>
+  <Accordion title="Anthropic Models">
+
+    - Claude 3.7 Sonnet
+    - Claude 3.5 Sonnet
+    - Claude 3.0 Haiku
+
+  </Accordion>
+  <Accordion title="Custom LLMs">
+    - [Custom LLM](/docs/conversational-ai/customization/llm/custom-llm) (supports any OpenAI-API
+    compatible provider and requires you to bring your own API keys)
+  </Accordion>
+</AccordionGroup>
+
+## Technical implementation
+
+Zero Retention Mode implements several safeguards and is designed to:
+
+1. **LLM Allowlist** - Prevent use of LLMs except as provided above
+2. **PII Redaction** - Automatically redact sensitive fields before storage
+3. **Storage Prevention** - Disable uploading of raw audio files to cloud
+
+## Developer experience
+
+When working with Zero Retention Mode agents:
+
+<Steps>
+  <Step title="LLMs (except the available LLMs as described above) are disabled in the UI">
+    <Frame
+      background="subtle"
+      caption="The UI shows disabled LLM options with tooltip explanations"
+    >
+      ![Redacted conversation analysis showing Zero Retention Mode in
+      action](/assets/images/conversational-ai/hipaa-model.png)
+    </Frame>
+  </Step>
+  <Step title="Content is redacted from content history">
+    <Frame
+      background="subtle"
+      caption="All sensitive information contained within the prompt or output is redacted and not stored"
+    >
+      ![Redacted conversation history showing Zero Retention Mode in
+      action](/assets/images/conversational-ai/redacted.png)
+    </Frame>
+  </Step>
+  <Step title="Conversation analysis is limited">
+    <Frame
+      background="subtle"
+      caption="Minimal information is visible to ElevenLabs given Zero Retention Mode"
+    >
+      ![Redacted conversation analysis showing HIPAA compliance in
+      action](/assets/images/conversational-ai/redacted-summary.png)
+    </Frame>
+  </Step>
+</Steps>
+
+### API restrictions are enforced
+
+API calls attempting to use unavailable LLMs will receive an HTTP 400 error. Analytics data will be limited to non-sensitive metrics only.
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Can I use any LLM if I am subject to HIPAA?">
+    No. In such case, you can only use LLMs from the approved list. Attempts to use other LLMs will
+    produce an error. You can always use a custom LLM if you need a specific model not on the
+    allowlist.
+  </Accordion>
+  <Accordion title="Can I execute a BAA with ElevenLabs if I am subject to HIPAA?">
+    BAAs are only available to enterprise customers. Please refer to your account executive to
+    discuss further.
+  </Accordion>
+  <Accordion title="Does the application of Zero Retention Mode affect conversation quality?">
+    No. Zero Retention Mode and the execution of a BAA only affects how data is stored and which
+    LLMs can be used. It does not impact the quality or functionality of conversations while they
+    are active.
+  </Accordion>
+  <Accordion title="Can I still analyze conversation data?">
+    Yes, but with limitations. Conversation analytics will only include non-sensitive metadata like
+    call duration and success rates. Specific content from conversations will not be available.
+  </Accordion>
+</AccordionGroup>
+
+## Considerations
+
+When building voice agents, you may consider:
+
+1. **Use Custom LLMs** when possible, which may provide enhanced control over data processing
+2. **Implement proper authentication** for all healthcare applications
+3. **Validate configuration** is correct by checking redaction before launching + passing PHI
+
+## Related resources
+
+<CardGroup cols={2}>
+  <Card
+    title="Conversational AI Security"
+    href="/docs/conversational-ai/customization/authentication"
+  >
+    Learn about securing your Conversational AI agents
+  </Card>
+  <Card title="Custom LLM Integration" href="/docs/conversational-ai/customization/llm/custom-llm">
+    Set up your own LLM for maximum control and compliance
+  </Card>
+</CardGroup>

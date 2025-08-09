@@ -1,0 +1,197 @@
+---
+title: Transfer to human
+subtitle: Seamlessly transfer the user to a human operator via phone number based on defined conditions.
+---
+
+## Overview
+
+Human transfer allows a Conversational AI agent to transfer the ongoing call to a specified phone number or SIP URI when certain conditions are met. This enables agents to hand off complex issues, specific requests, or situations requiring human intervention to a live operator.
+
+This feature utilizes the `transfer_to_number` system tool which supports transfers via Twilio and SIP trunk numbers. When triggered, the agent can provide a message to the user while they wait and a separate message summarizing the situation for the human operator receiving the call.
+
+## Transfer Types
+
+The system supports two types of transfers:
+
+- **Conference Transfer**: Default behavior that calls the destination and adds the participant to a conference room, then removes the AI agent so only the caller and transferred participant remain.
+- **SIP REFER Transfer**: Uses the SIP REFER protocol to transfer calls directly to the destination. Works with both phone numbers and SIP URIs, but only available when using SIP protocol during the conversation and requires your SIP Trunk to allow transfer via SIP REFER.
+
+<Markdown src="/snippets/human_transfer_custom_llm.mdx" />
+
+## Numbers that can be transferred to
+
+Currently only [SIP trunking](/docs/conversational-ai/phone-numbers/sip-trunking) phone numbers support transferring to external numbers.
+[Twilio phone numbers](/docs/conversational-ai/phone-numbers/twilio-integration/native-integration) currently can only transfer to phone numbers hosted on Twilio. If this is needed we recommended using Twilio numbers via [Twilio elastic SIP trunking](https://www.twilio.com/docs/sip-trunking) and our SIP trunking support, rather than via the native integration.
+
+## Enabling human transfer
+
+Human transfer is configured using the `transfer_to_number` system tool.
+
+<Steps>
+    <Step title="Add the transfer tool">
+        Enable human transfer by selecting the `transfer_to_number` system tool in your agent's configuration within the `Agent` tab. Choose "Transfer to Human" when adding a tool.
+
+        <Frame background="subtle" caption="Select 'Transfer to Human' tool">
+            {/* Placeholder for image showing adding the 'Transfer to Human' tool */}
+            <img src="/assets/images/conversational-ai/transfer_human.png" alt="Add Human Transfer Tool" />
+        </Frame>
+    </Step>
+
+    <Step title="Configure tool description (optional)">
+        You can provide a custom description to guide the LLM on when to trigger a transfer. If left blank, a default description encompassing the defined transfer rules will be used.
+
+        <Frame background="subtle" caption="Configure transfer tool description">
+             {/* Placeholder for image showing the tool description field */}
+             <img src="/assets/images/conversational-ai/transfer_human_tool.png" alt="Human Transfer Tool Description" />
+        </Frame>
+    </Step>
+
+    <Step title="Define transfer rules">
+        Configure the specific rules for transferring to phone numbers or SIP URIs. For each rule, specify:
+
+        - **Transfer Type**: Choose between Conference (default) or SIP REFER transfer methods
+        - **Number Type**: Select Phone for regular phone numbers or SIP URI for SIP addresses
+        - **Phone Number/SIP URI**: The target destination in the appropriate format:
+          - Phone numbers: E.164 format (e.g., +12125551234)
+          - SIP URIs: SIP format (e.g., sip:1234567890@example.com)
+        - **Condition**: A natural language description of the circumstances under which the transfer should occur (e.g., "User explicitly requests to speak to a human", "User needs to update sensitive account information").
+
+        The LLM will use these conditions, along with the tool description, to decide when and to which destination to transfer.
+
+        <Note>
+            **SIP REFER transfers** require SIP protocol during the conversation and your SIP Trunk must allow transfer via SIP REFER. Only SIP REFER supports transferring to a SIP URI.
+        </Note>
+
+        <Frame background="subtle" caption="Define transfer rules with phone number and condition">
+            {/* Placeholder for image showing transfer rules configuration */}
+            <img src="/assets/images/conversational-ai/transfer_human_rule.png" alt="Human Transfer Rules Configuration" />
+        </Frame>
+
+        <Note>
+            Ensure destinations are correctly formatted:
+            - Phone numbers: E.164 format and associated with a properly configured account
+            - SIP URIs: Valid SIP format (sip:user@domain or sips:user@domain)
+        </Note>
+    </Step>
+
+</Steps>
+
+## API Implementation
+
+You can configure the `transfer_to_number` system tool when creating or updating an agent via the API. The tool allows specifying messages for both the client (user being transferred) and the agent (human operator receiving the call).
+
+<CodeBlocks>
+
+```python
+from elevenlabs import (
+    ConversationalConfig,
+    ElevenLabs,
+    AgentConfig,
+    PromptAgent,
+    PromptAgentInputToolsItem_System,
+    SystemToolConfigInputParams_TransferToNumber,
+    PhoneNumberTransfer,
+)
+
+# Initialize the client
+elevenlabs = ElevenLabs(api_key="YOUR_API_KEY")
+
+# Define transfer rules
+transfer_rules = [
+    PhoneNumberTransfer(
+        transfer_destination={"type": "phone", "phone_number": "+15551234567"},
+        condition="When the user asks for billing support.",
+        transfer_type="conference"
+    ),
+    PhoneNumberTransfer(
+        transfer_destination={"type": "sip_uri", "sip_uri": "sip:support@example.com"},
+        condition="When the user requests to file a formal complaint.",
+        transfer_type="sip_refer"
+    )
+]
+
+# Create the transfer tool configuration
+transfer_tool = PromptAgentInputToolsItem_System(
+    type="system",
+    name="transfer_to_human",
+    description="Transfer the user to a specialized agent based on their request.", # Optional custom description
+    params=SystemToolConfigInputParams_TransferToNumber(
+        transfers=transfer_rules
+    )
+)
+
+# Create the agent configuration
+conversation_config = ConversationalConfig(
+    agent=AgentConfig(
+        prompt=PromptAgent(
+            prompt="You are a helpful assistant.",
+            first_message="Hi, how can I help you today?",
+            tools=[transfer_tool],
+        )
+    )
+)
+
+# Create the agent
+response = elevenlabs.conversational_ai.agents.create(
+    conversation_config=conversation_config
+)
+
+# Note: When the LLM decides to call this tool, it needs to provide:
+# - transfer_number: The phone number to transfer to (must match one defined in rules).
+# - client_message: Message read to the user during transfer.
+# - agent_message: Message read to the human operator receiving the call.
+```
+
+```javascript
+import { ElevenLabs } from '@elevenlabs/elevenlabs-js';
+
+// Initialize the client
+const elevenlabs = new ElevenLabs({
+  apiKey: 'YOUR_API_KEY',
+});
+
+// Define transfer rules
+const transferRules = [
+  {
+    transferDestination: { type: 'phone', phoneNumber: '+15551234567' },
+    condition: 'When the user asks for billing support.',
+    transferType: 'conference'
+  },
+  {
+    transferDestination: { type: 'sip_uri', sipUri: 'sip:support@example.com' },
+    condition: 'When the user requests to file a formal complaint.',
+    transferType: 'sip_refer'
+  },
+];
+
+// Create the agent with the transfer tool
+await elevenlabs.conversationalAi.agents.create({
+  conversationConfig: {
+    agent: {
+      prompt: {
+        prompt: 'You are a helpful assistant.',
+        firstMessage: 'Hi, how can I help you today?',
+        tools: [
+          {
+            type: 'system',
+            name: 'transfer_to_number',
+            description: 'Transfer the user to a human operator based on their request.', // Optional custom description
+            params: {
+              systemToolType: 'transfer_to_number',
+              transfers: transferRules,
+            },
+          },
+        ],
+      },
+    },
+  },
+});
+
+// Note: When the LLM decides to call this tool, it needs to provide:
+// - transfer_number: The phone number to transfer to (must match one defined in rules).
+// - client_message: Message read to the user during transfer.
+// - agent_message: Message read to the human operator receiving the call.
+</code_block_to_apply_changes_from>
+```
+
+</CodeBlocks>

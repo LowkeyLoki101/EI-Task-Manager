@@ -1,0 +1,210 @@
+---
+title: System tools
+subtitle: Update the internal state of conversations without external requests.
+---
+
+**System tools** enable your assistant to update the internal state of a conversation. Unlike [server tools](/docs/conversational-ai/customization/tools/server-tools) or [client tools](/docs/conversational-ai/customization/tools/client-tools), system tools don't make external API calls or trigger client-side functions—they modify the internal state of the conversation without making external calls.
+
+## Overview
+
+Some applications require agents to control the flow or state of a conversation.
+System tools provide this capability by allowing the assistant to perform actions related to the state of the call that don't require communicating with external servers or the client.
+
+### Available system tools
+
+<CardGroup cols={2}>
+  <Card
+    title="End call"
+    icon="duotone square-phone-hangup"
+    href="/docs/conversational-ai/customization/tools/system-tools/end-call"
+  >
+    Let your agent automatically terminate a conversation when appropriate conditions are met.
+  </Card>
+  <Card
+    title="Language detection"
+    icon="duotone earth-europe"
+    href="/docs/conversational-ai/customization/tools/system-tools/language-detection"
+  >
+    Enable your agent to automatically switch to the user's language during conversations.
+  </Card>
+  <Card
+    title="Agent transfer"
+    icon="duotone arrow-right-arrow-left"
+    href="/docs/conversational-ai/customization/tools/system-tools/agent-transfer"
+  >
+    Seamlessly transfer conversations between AI agents based on defined conditions.
+  </Card>
+  <Card
+    title="Transfer to human"
+    icon="duotone user-headset"
+    href="/docs/conversational-ai/customization/tools/system-tools/transfer-to-human"
+  >
+    Seamlessly transfer the user to a human operator.
+  </Card>
+  <Card
+    title="Skip turn"
+    icon="duotone forward"
+    href="/docs/conversational-ai/customization/tools/system-tools/skip-turn"
+  >
+    Enable the agent to skip their turns if the LLM detects the agent should not speak yet.
+  </Card>
+  <Card
+    title="Play keypad touch tone"
+    icon="duotone phone-office"
+    href="/docs/conversational-ai/customization/tools/system-tools/play-keypad-touch-tone"
+  >
+    Enable agents to play DTMF tones to interact with automated phone systems and navigate menus.
+  </Card>
+  <Card
+    title="Voicemail detection"
+    icon="duotone voicemail"
+    href="/docs/conversational-ai/customization/tools/system-tools/voicemail-detection"
+  >
+    Enable agents to automatically detect voicemail systems and optionally leave messages.
+  </Card>
+</CardGroup>
+
+## Implementation
+
+When creating an agent via API, you can add system tools to your agent configuration. Here's how to implement both the end call and language detection tools:
+
+## Custom LLM integration
+
+When using a custom LLM with ElevenLabs agents, system tools are exposed as function definitions that your LLM can call. Each system tool has specific parameters and trigger conditions:
+
+### Available system tools
+
+<AccordionGroup>
+  <Accordion title="End call">
+    <Markdown src="/snippets/end_call_custom_llm.mdx" />
+
+    Learn more: [End call tool](/docs/conversational-ai/customization/tools/end-call)
+
+  </Accordion>
+
+  <Accordion title="Language detection">
+    <Markdown src="/snippets/language_detection_custom_llm.mdx" />
+
+    Learn more: [Language detection tool](/docs/conversational-ai/customization/tools/language-detection)
+
+  </Accordion>
+
+  <Accordion title="Agent transfer">
+    <Markdown src="/snippets/agent_transfer_custom_llm.mdx" />
+
+    Learn more: [Agent transfer tool](/docs/conversational-ai/customization/tools/agent-transfer)
+
+  </Accordion>
+
+  <Accordion title="Transfer to human">
+    <Markdown src="/snippets/human_transfer_custom_llm.mdx" />
+
+    Learn more: [Transfer to human tool](/docs/conversational-ai/customization/tools/human-transfer)
+
+  </Accordion>
+
+  <Accordion title="Skip turn">
+    <Markdown src="/snippets/skip_turn_custom_llm.mdx" />
+
+    Learn more: [Skip turn tool](/docs/conversational-ai/customization/tools/skip-turn)
+
+  </Accordion>
+
+  <Accordion title="Play keypad touch tone">
+    <Markdown src="/snippets/keypad_touch_tone_custom_llm.mdx" />
+
+    Learn more: [Play keypad touch tone tool](/docs/conversational-ai/customization/tools/play-keypad-touch-tone)
+
+  </Accordion>
+
+  <Accordion title="Voicemail detection">
+    <Markdown src="/snippets/voicemail_detection_custom_llm.mdx" />
+
+    Learn more: [Voicemail detection tool](/docs/conversational-ai/customization/tools/voicemail-detection)
+
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```python
+from elevenlabs import (
+    ConversationalConfig,
+    ElevenLabs,
+    AgentConfig,
+    PromptAgent,
+    PromptAgentInputToolsItem_System,
+)
+
+# Initialize the client
+elevenlabs = ElevenLabs(api_key="YOUR_API_KEY")
+
+# Create system tools
+end_call_tool = PromptAgentInputToolsItem_System(
+    name="end_call",
+    description=""  # Optional: Customize when the tool should be triggered
+)
+
+language_detection_tool = PromptAgentInputToolsItem_System(
+    name="language_detection",
+    description=""  # Optional: Customize when the tool should be triggered
+)
+
+# Create the agent configuration with both tools
+conversation_config = ConversationalConfig(
+    agent=AgentConfig(
+        prompt=PromptAgent(
+            tools=[end_call_tool, language_detection_tool]
+        )
+    )
+)
+
+# Create the agent
+response = elevenlabs.conversational_ai.agents.create(
+    conversation_config=conversation_config
+)
+```
+
+```javascript
+import { ElevenLabs } from '@elevenlabs/elevenlabs-js';
+
+// Initialize the client
+const elevenlabs = new ElevenLabs({
+  apiKey: 'YOUR_API_KEY',
+});
+
+// Create the agent with system tools
+await elevenlabs.conversationalAi.agents.create({
+  conversationConfig: {
+    agent: {
+      prompt: {
+        tools: [
+          {
+            type: 'system',
+            name: 'end_call',
+            description: '',
+          },
+          {
+            type: 'system',
+            name: 'language_detection',
+            description: '',
+          },
+        ],
+      },
+    },
+  },
+});
+```
+
+</CodeGroup>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Can system tools be combined with other tool types?">
+    Yes, system tools can be used alongside server tools and client tools in the same assistant.
+    This allows for comprehensive functionality that combines internal state management with
+    external interactions.
+  </Accordion>
+</AccordionGroup>
+```
