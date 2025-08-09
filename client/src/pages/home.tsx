@@ -132,13 +132,10 @@ export default function HomePage() {
                   <br />
                   <br />
                   <small className="text-sm opacity-75">
-                    {isWidgetReady 
-                      ? "🎤 Voice widget active! Click the voice bubble to start talking."
-                      : "💬 Voice widget loading... Text chat available below."
-                    }
+                    Currently using text chat. Voice mode requires ElevenLabs dashboard configuration.
                     <br />
                     <a href="/voice-sanity.html" target="_blank" className="text-blue-500 hover:text-blue-700 underline">
-                      Voice diagnostics →
+                      Test voice widget →
                     </a>
                   </small>
                 </p>
@@ -148,16 +145,16 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* ElevenLabs Widget - Working Configuration from Sanity Test */}
-      <VoiceWidget
-        agentId="agent_8201k251883jf0hr1ym7d6dbymxc"
-        chatOnly={false}
-      />
+      {/* Always show DirectChatWidget until ElevenLabs dashboard is configured */}
+      <DirectChatWidget agentId="agent_8201k251883jf0hr1ym7d6dbymxc" />
       
-      {/* Fallback Direct Chat Widget - Only show if widget fails */}
-      {!isWidgetReady && (
-        <DirectChatWidget agentId="agent_8201k251883jf0hr1ym7d6dbymxc" />
-      )}
+      {/* ElevenLabs Voice Widget - Hidden until dashboard configured */}
+      <div style={{ display: 'none' }}>
+        <VoiceWidget
+          agentId="agent_8201k251883jf0hr1ym7d6dbymxc"
+          chatOnly={false}
+        />
+      </div>
     </div>
   );
 }

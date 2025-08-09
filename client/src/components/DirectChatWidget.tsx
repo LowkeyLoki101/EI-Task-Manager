@@ -77,12 +77,21 @@ export default function DirectChatWidget({ agentId }: Props) {
         const conversationsResponse = await fetch(`/api/conversations/${sessionId}`);
         if (conversationsResponse.ok) {
           const conversations = await conversationsResponse.json();
-          const lastAssistantMessage = conversations.reverse().find((msg: any) => msg.role === 'assistant');
+          const conversationList = conversations.messages || conversations;
+          const lastAssistantMessage = conversationList.reverse().find((msg: any) => msg.role === 'assistant');
           
           if (lastAssistantMessage) {
             const assistantMessage: Message = {
               role: 'assistant',
               content: lastAssistantMessage.content,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, assistantMessage]);
+          } else {
+            // Provide default response if no assistant message found
+            const assistantMessage: Message = {
+              role: 'assistant',
+              content: 'I received your message. How can I help you create and manage tasks?',
               timestamp: new Date()
             };
             setMessages(prev => [...prev, assistantMessage]);
@@ -143,7 +152,7 @@ export default function DirectChatWidget({ agentId }: Props) {
         <div className="flex items-center justify-between p-4 border-b bg-blue-600 text-white rounded-t-lg">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            <span className="font-medium">AI Assistant</span>
+            <span className="font-medium">GPT-5 Assistant</span>
           </div>
           <Button
             variant="ghost"
