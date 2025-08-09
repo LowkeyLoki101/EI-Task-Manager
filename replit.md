@@ -7,7 +7,7 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 ### Primary Roles
 - **User**: speaks/types tasks; reviews/approves automation
 - **ElevenLabs Agent (Liaison)**: voice/ASR/TTS + KB host; calls actions; receives status to brief the user
-- **GPT-4o Ops Manager**: parses intent → creates/updates tasks/steps; runs tools; returns deltas; writes memory
+- **GPT-5 Ops Manager**: parses intent → creates/updates tasks/steps; runs tools; returns deltas; writes memory
 - **Replit Backend**: APIs, storage, embeddings, webhooks, multi-tenant platform
 
 ### Current Implementation Status
@@ -115,8 +115,10 @@ UI filters use these labels to show the right list at the right time.
 - **ESBuild**: Production build optimization for server-side code
 
 ## Recent Updates (August 2025)
-- ✅ **ElevenLabs API Key Configured**: Authentication resolved, full voice stack operational
+- ✅ **GPT-5 Integration**: Successfully upgraded to GPT-5 (model: gpt-5-2025-08-07) with corrected API parameters
+- ✅ **ElevenLabs API Validated**: Agent agent_8201k251883jf0hr1ym7d6dbymxc confirmed working with Pro subscription
+- ✅ **Complete API Stack**: Both OpenAI GPT-5 and ElevenLabs APIs fully authenticated and operational
 - ✅ **Enhanced Actions Implementation**: Complete SDK integration with file operations
 - ✅ **Excel/CSV Voice Integration**: File operations now provide audio confirmations
-- ✅ **Model Upgrade**: Using GPT-5 (latest available OpenAI model as of August 2025)
+- 🔧 **Widget Connectivity**: ElevenLabs ConvAI widget has endpoint version mismatch (API works, widget fetch fails)
 - ✅ **Mobile Voice Experience**: Optimized widget performance with chat-only mode for Replit preview
