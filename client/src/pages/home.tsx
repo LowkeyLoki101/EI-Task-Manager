@@ -109,8 +109,10 @@ export default function HomePage() {
                   <br />
                   <br />
                   <small className="text-sm opacity-75">
+                    Voice widget ready! Enable microphone in browser settings for voice chat.
+                    <br />
                     <a href="/voice-sanity.html" target="_blank" className="text-blue-500 hover:text-blue-700 underline">
-                      Test voice widget isolation →
+                      Voice diagnostics →
                     </a>
                   </small>
                 </p>
