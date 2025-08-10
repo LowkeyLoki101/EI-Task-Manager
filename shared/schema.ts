@@ -67,6 +67,45 @@ export const conversations = pgTable("conversations", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+// Event sourcing for persistent, adaptive sessions
+export const events = pgTable("events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  kind: text("kind").notNull(), // e.g., 'task.created', 'conversation.message', 'protocol.updated'
+  payloadJson: json("payload_json").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const snapshots = pgTable("snapshots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  atEventId: varchar("at_event_id").notNull(),
+  stateJson: json("state_json").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Adaptive notes and protocols for continuous learning
+export const notes = pgTable("notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  category: text("category").notNull(), // e.g., 'user_preference', 'workflow_pattern', 'context_hint'
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  confidence: integer("confidence").default(1).notNull(), // 1-10 scale
+  lastUsed: timestamp("last_used").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const protocols = pgTable("protocols", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  name: text("name").notNull(), // e.g., 'task_organization', 'meeting_processing'
+  rules: json("rules").notNull(), // adaptive rules that evolve
+  successCount: integer("success_count").default(0).notNull(),
+  version: integer("version").default(1).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const installations = pgTable("installations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sessionId: varchar("session_id").notNull(),
@@ -110,6 +149,10 @@ export const insertConversationSchema = createInsertSchema(conversations).omit({
 export const insertInstallationSchema = createInsertSchema(installations).omit({ createdAt: true, updatedAt: true });
 export const insertProposalSchema = createInsertSchema(proposals).omit({ createdAt: true });
 export const insertFileSchema = createInsertSchema(files).omit({ createdAt: true });
+export const insertEventSchema = createInsertSchema(events).omit({ id: true, createdAt: true });
+export const insertSnapshotSchema = createInsertSchema(snapshots).omit({ id: true, createdAt: true });
+export const insertNoteSchema = createInsertSchema(notes).omit({ id: true, createdAt: true, lastUsed: true });
+export const insertProtocolSchema = createInsertSchema(protocols).omit({ id: true, updatedAt: true });
 
 // Types
 export type Session = typeof sessions.$inferSelect;
@@ -121,6 +164,10 @@ export type Conversation = typeof conversations.$inferSelect;
 export type Installation = typeof installations.$inferSelect;
 export type Proposal = typeof proposals.$inferSelect;
 export type File = typeof files.$inferSelect;
+export type Event = typeof events.$inferSelect;
+export type Snapshot = typeof snapshots.$inferSelect;
+export type Note = typeof notes.$inferSelect;
+export type Protocol = typeof protocols.$inferSelect;
 
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
@@ -131,6 +178,10 @@ export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type InsertInstallation = z.infer<typeof insertInstallationSchema>;
 export type InsertProposal = z.infer<typeof insertProposalSchema>;
 export type InsertFile = z.infer<typeof insertFileSchema>;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type InsertSnapshot = z.infer<typeof insertSnapshotSchema>;
+export type InsertNote = z.infer<typeof insertNoteSchema>;
+export type InsertProtocol = z.infer<typeof insertProtocolSchema>;
 
 // Select types for enhanced actions
 export type SelectTask = typeof tasks.$inferSelect;

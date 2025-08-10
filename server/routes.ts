@@ -40,6 +40,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register audio transcription routes
   const { registerTranscriptionRoutes } = await import("./transcription");
   registerTranscriptionRoutes(app);
+
+  // Initialize sharing and tinker framework
+  const { initializeTinkerFramework, sharingSystem, tinkerFramework } = await import("./sharing-system");
+  await initializeTinkerFramework();
   
   // System Status and Diagnostics
   app.get("/api/status", async (req, res) => {
@@ -484,20 +488,36 @@ Return as a complete HTML page that can be saved and used immediately.`;
         return;
       }
 
-      // Direct GPT-5 chat - much faster and more conversational
+      // Use Adaptive Session for persistent, learning conversation
       const { isVoiceMessage } = req.body;
       
-      // Import and use direct GPT-5 integration
-      const { DirectGPT5Chat } = await import("./direct-gpt5");
-      const gpt5Chat = new DirectGPT5Chat(sessionId);
-      const result = await gpt5Chat.processMessage(message, { isVoiceMessage, hasFiles });
+      // Import and use adaptive session integration
+      const { AdaptiveSession } = await import("./adaptive-session");
+      const adaptiveSession = new AdaptiveSession(sessionId);
+      const result = await adaptiveSession.processMessage(message, { isVoiceMessage, hasFiles });
       
-      // The DirectGPT5Chat handles everything - much simpler
+      // The AdaptiveSession handles everything with learning
       let response = result.response;
       
       if (result.tasksCreated > 0) {
-        console.log(`Created ${result.tasksCreated} tasks from chat message`);
+        console.log(`Created ${result.tasksCreated} tasks from adaptive session`);
       }
+      
+      if (result.notesCreated > 0 || result.protocolsUpdated > 0) {
+        console.log(`Learning: ${result.notesCreated} notes, ${result.protocolsUpdated} protocols updated`);
+      }
+      
+      res.json({
+        response,
+        tasksCreated: result.tasksCreated,
+        tasksUpdated: result.tasksUpdated,
+        sessionState: result.sessionState,
+        learning: {
+          notesCreated: result.notesCreated,
+          protocolsUpdated: result.protocolsUpdated
+        }
+      });
+      return;
       
       // Only do fallback conversation if no response was generated
       if (!response || response.trim().length === 0) {
