@@ -1,0 +1,130 @@
+Love it—that’s exactly what an OpenAI Realtime agent with tools is good at. We can make one agent that talks with you, asks follow-ups, and live-edits a versioned to-do list (create/merge/delete/update) while also doing real-world actions (text/email/search/links/PDFs/images/forms) using your saved info.
+
+Here’s a tight, build-ready plan that slots right into your repo.
+
+Architecture at a glance
+	•	Voice agent (OpenAI Realtime): single agent handles speech-in/speech-out, planning, and tool calls.
+	•	Ops tools (your server): REST endpoints the agent can call (tasks CRUD, search links, PDFs, images, SMS/email, form-fill, QR, scaffold pages).
+	•	Versioned task store with undo/rewind: every change is an event → we can revert, diff, and explain “what changed.”
+	•	Memory vault: your reusable info (emails, phone, addresses, business names, logins/flows—not passwords), plus past successful flows for auto-prep.
+
+⸻
+
+Data model (supports merge/delete/undo)
+
+tables
+	•	tasks(id, title, status, context, priority, created_at, updated_at)
+	•	steps(id, task_id, title, status, can_auto, parent_step_id)
+	•	artifacts(id, step_id, type, url_or_path, summary)
+	•	events(id, session_id, kind, payload_json, created_at) ← source of truth for changes
+	•	snapshots(id, at_event_id, state_json) ← optional performance shortcut
+	•	memories(id, user_id, domain, key, value_json, last_used_at) ← profile + “how we did it last time”
+	•	secrets(id, user_id, key_name, encrypted_value) ← API keys/tokens (Twilio, Gmail, etc.)
+
+event kinds (examples)
+	•	task.created|updated|deleted|merged
+	•	step.created|updated|deleted
+	•	artifact.added
+	•	action.sent_email|sent_sms|created_pdf|filled_form
+	•	agent.summary|agent.question
+
+Undo/rewind = replay events up to N (or apply inverse delta). We can expose a time slider (“rewind to 10:42am”) or per-change undo.
+
+⸻
+
+Agent toolset (function calling)
+
+Expose these tools to the agent with strict JSON schemas:
+
+Tasking
+	•	tasks.create({ title, context?, steps? })
+	•	tasks.update({ taskId, patch })
+	•	tasks.merge({ taskIds[], newTitle? })
+	•	tasks.delete({ taskId })
+	•	steps.create({ taskId, title, parentStepId? })
+	•	steps.update({ stepId, patch })
+
+Knowledge & search
+	•	research.search({ query, k? }) → returns curated links/snippets
+	•	kb.attach({ url|fileId, tags? }) → store/cite and attach as artifact
+
+Output & automations
+	•	pdf.create({ html|markdown, fileName }) → returns file artifact
+	•	image.create({ prompt, size }) → returns image artifact
+	•	qr.generate({ url }) → PNG artifact
+	•	page.scaffold({ slug, html }) → creates landing page in your app
+
+Comms
+	•	sms.send({ to, body }) (Twilio)
+	•	email.send({ to, subject, html|text }) (Gmail API/SendGrid)
+	•	youtube.search({ query, k? }) → links + embeds
+
+Profile & forms
+	•	profile.get({ keys[] }) → e.g., business name, address, EIN, support email
+	•	form.fill({ formId, data }) → use stored defaults; return a ready-to-submit payload (or call site’s API if available)
+
+All tool calls create an event and attach artifacts (drafts, PDFs, links), so the history stays auditable and undoable.
+
+⸻
+
+Live conversation → live list (behavior)
+	•	As you talk, the agent:
+	•	Creates tasks/steps, tagging context (computer/phone/physical) + time window.
+	•	Merges duplicates using title similarity + embedding match; asks before destructive merges.
+	•	Deletes superseded tasks (after confirm) and logs a merge/delete event so you can undo.
+	•	Auto-runs safe steps (e.g., search links, generate QR/page scaffold, draft email) and attaches artifacts.
+	•	Asks clarifying questions only when needed (“Zoho or Google Workspace?”).
+	•	You can rewind or edit manually anytime; the agent adjusts.
+
+⸻
+
+UI you’ll see
+	•	Conversation pane (voice + transcript).
+	•	Rolling list beside it; items update in real time; AI edits show as green (added)/yellow (edited)/strike (deleted/merged).
+	•	Timeline panel (your Flow Studio) with event cards and an Undo button per card.
+	•	“Staging” toggle: “auto-apply” vs “review changes before apply.”
+
+⸻
+
+Security & consent
+	•	First time you ask it to text/email/fill forms, it will confirm and show preview (opt-in sticky setting).
+	•	All keys in Secrets; no plaintext passwords in DB. We store flows and endpoints, not creds.
+	•	Per-action allowlist (e.g., only send SMS to your contacts, only fill forms on approved domains).
+
+⸻
+
+Minimal MVP tasks (today)
+
+Backend
+	•	Add events + snapshots tables; keep your tasks/steps/artifacts as-is.
+	•	Implement tasks.*, steps.*, merge, delete with event writes.
+	•	Implement undo(eventId) → inverse delta + event.
+	•	Add tools: research.search, qr.generate, page.scaffold, email.send, sms.send, pdf.create.
+	•	Add profile.get (reads from memories + secrets without secrets leakage).
+
+Agent
+	•	Realtime voice agent with system prompt: “maintain a consistent, deduped, versioned task list; minimize questions; propose merges; log concise deltas.”
+	•	Tool schemas wired; safe defaults; “staging” mode flag.
+	•	Simple dedupe: title similarity + embedding cosine > threshold → propose merge.
+
+Frontend
+	•	Conversation pane + Rolling List (your Steps Visualizer works; add change coloring).
+	•	Timeline/undo (wire to events + undo endpoint).
+	•	“Staging” toggle.
+
+⸻
+
+A few decisions for you (so I wire it right)
+	1.	Auto-apply vs Review mode: default to review or auto for task edits?
+	2.	Channels for comms: SMS via Twilio? Email via Gmail API or SendGrid?
+	3.	File store: PDFs/images live in your repo’s storage or a bucket (Supabase/AWS)?
+	4.	Form fill targets: which sites should be pre-approved (so we don’t attempt random domains)?
+	5.	Manuals: OK to store in the agent’s file search (so the agent can cite) plus a copy in DB for audit?
+
+Give me those answers and I’ll push a branch that:
+	•	adds the event-sourced store + undo,
+	•	defines the tool schemas,
+	•	swaps in the Realtime agent,
+	•	wires your existing UI to show color-coded changes.
+
+If you want this staged, I’ll put it behind /labs/agent and keep the current flow untouched until you flip a flag.

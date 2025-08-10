@@ -100,7 +100,7 @@ Format as structured information that would help someone complete this task step
             model: "gpt-4o", // Latest OpenAI model
             messages: [{ role: "user", content: researchPrompt }],
             max_tokens: 1000,
-            temperature: 0.7
+            // GPT-5 only supports default temperature
           });
           
           researchResults = researchResponse.choices[0].message.content || researchResults;
@@ -242,7 +242,7 @@ Return as a complete HTML page that can be saved and used immediately.`;
             model: "gpt-4o", // Latest OpenAI model
             messages: [{ role: "user", content: scaffoldPrompt }],
             max_tokens: 1500,
-            temperature: 0.3
+            // Use default temperature for GPT models
           });
           
           const generatedCode = scaffoldResponse.choices[0].message.content;
@@ -484,21 +484,23 @@ Return as a complete HTML page that can be saved and used immediately.`;
         return;
       }
 
-      // Enhanced processing for voice messages
+      // Direct GPT-5 chat - much faster and more conversational
       const { isVoiceMessage } = req.body;
       
-      // Use GPT-5 to process the message and create tasks if needed
-      const opsManager = new OpsManager(sessionId);
-      const result = await opsManager.processIntent(message, { isVoiceMessage });
+      // Import and use direct GPT-5 integration
+      const { DirectGPT5Chat } = await import("./direct-gpt5");
+      const gpt5Chat = new DirectGPT5Chat(sessionId);
+      const result = await gpt5Chat.processMessage(message, { isVoiceMessage, hasFiles });
       
-      let response = "I understand. Let me help you with that.";
+      // The DirectGPT5Chat handles everything - much simpler
+      let response = result.response;
       
-      if (result.processed && result.tasks.length > 0) {
-        const taskTitles = result.tasks.map(t => t.title).join(", ");
-        response = `I've created ${result.tasks.length} task(s) for you: ${taskTitles}. You can enable Builder Mode to see automated progress.`;
-        
-        console.log(`Created ${result.tasks.length} tasks from chat message`);
-      } else {
+      if (result.tasksCreated > 0) {
+        console.log(`Created ${result.tasksCreated} tasks from chat message`);
+      }
+      
+      // Only do fallback conversation if no response was generated
+      if (!response || response.trim().length === 0) {
         // Enhanced conversational response
         try {
           let systemPrompt = `You are Colby, a friendly digital operations manager. Be naturally conversational and helpful.
@@ -514,20 +516,25 @@ If they're just greeting you or making conversation, respond naturally. If they 
             systemPrompt += " The user uploaded documents. Analyze them and offer to help extract actionable items if relevant.";
           }
 
-          const chatResponse = await openai.chat.completions.create({
-            model: "gpt-5-2025-08-07",
-            messages: [
-              {
-                role: "system",
-                content: systemPrompt
-              },
-              {
-                role: "user", 
-                content: message
-              }
-            ],
-            max_completion_tokens: 200
-          });
+          const chatResponse = await Promise.race([
+            openai.chat.completions.create({
+              model: "gpt-5-2025-08-07",
+              messages: [
+                {
+                  role: "system",
+                  content: systemPrompt
+                },
+                {
+                  role: "user", 
+                  content: message
+                }
+              ],
+              max_completion_tokens: 200
+            }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('OpenAI API timeout')), 10000)
+            )
+          ]) as any;
           
           response = chatResponse.choices[0].message.content || response;
         } catch (error) {
