@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Send, Bot, User, FileText, X } from 'lucide-react';
+import { Upload, Send, Bot, User, FileText, X, Mic, MicOff, Square } from 'lucide-react';
 import { useSessionId } from '@/hooks/useSessionId';
 
 interface Message {
@@ -27,6 +27,9 @@ export function DirectChatInterface() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sessionId = useSessionId();
@@ -71,6 +74,140 @@ export function DirectChatInterface() {
 
   const removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          setAudioChunks(prev => [...prev, event.data]);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        await transcribeAudio(audioBlob);
+        setAudioChunks([]);
+        
+        // Stop the stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('Could not access microphone. Please check permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    if (!sessionId) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+      formData.append('sessionId', sessionId);
+
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to transcribe audio');
+      }
+
+      const result = await response.json();
+      
+      if (result.transcription) {
+        // Add the transcribed text to the input
+        setInputMessage(result.transcription);
+        
+        // Add a user message showing the transcription
+        const transcriptionMessage: Message = {
+          id: Date.now().toString(),
+          role: 'user',
+          content: `🎤 "${result.transcription}"`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, transcriptionMessage]);
+        
+        // Automatically process the transcription
+        await processTranscription(result.transcription);
+      }
+    } catch (error) {
+      console.error('Transcription error:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Sorry, I could not transcribe your audio. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const processTranscription = async (transcription: string) => {
+    if (!sessionId) return;
+
+    try {
+      const response = await fetch('/api/chat/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: transcription,
+          sessionId,
+          hasFiles: false,
+          isVoiceMessage: true
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process transcription');
+      }
+
+      const result = await response.json();
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: result.response || 'I processed your voice message.',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+      // Show task creation feedback if tasks were created
+      if (result.tasksCreated > 0) {
+        const taskFeedback: Message = {
+          id: (Date.now() + 2).toString(),
+          role: 'assistant',
+          content: `✅ Created ${result.tasksCreated} task(s): ${result.tasks.map((t: any) => t.title).join(', ')}`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, taskFeedback]);
+      }
+
+    } catch (error) {
+      console.error('Processing error:', error);
+    }
   };
 
   const sendMessage = async () => {
@@ -275,7 +412,7 @@ export function DirectChatInterface() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask GPT-5 anything, create tasks, or upload documents..."
+              placeholder="Ask GPT-5 anything, create tasks, upload documents, or use voice recording..."
               className="min-h-[80px] resize-none"
               disabled={isLoading}
               data-testid="chat-input"
@@ -286,15 +423,25 @@ export function DirectChatInterface() {
               size="sm"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading}
+              disabled={isLoading || isRecording}
               data-testid="upload-button"
             >
               <Upload className="w-4 h-4" />
             </Button>
             <Button
               size="sm"
+              variant={isRecording ? "destructive" : "outline"}
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isLoading}
+              data-testid="record-button"
+              className={isRecording ? "animate-pulse" : ""}
+            >
+              {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </Button>
+            <Button
+              size="sm"
               onClick={sendMessage}
-              disabled={isLoading || (!inputMessage.trim() && uploadedFiles.length === 0)}
+              disabled={isLoading || isRecording || (!inputMessage.trim() && uploadedFiles.length === 0)}
               data-testid="send-button"
             >
               <Send className="w-4 h-4" />
@@ -313,7 +460,7 @@ export function DirectChatInterface() {
         />
 
         <div className="text-xs text-gray-500 text-center">
-          Powered by GPT-5 • Upload documents up to 10MB • Creates tasks automatically
+          Powered by GPT-5 • Upload documents up to 10MB • Voice recording • Creates tasks automatically
         </div>
       </CardContent>
     </Card>

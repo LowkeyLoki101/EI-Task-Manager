@@ -37,6 +37,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerColbyActions } = await import("./colby-actions");
   registerColbyActions(app);
   
+  // Register audio transcription routes
+  const { registerTranscriptionRoutes } = await import("./transcription");
+  registerTranscriptionRoutes(app);
+  
   // System Status and Diagnostics
   app.get("/api/status", async (req, res) => {
     const status = {
@@ -480,9 +484,12 @@ Return as a complete HTML page that can be saved and used immediately.`;
         return;
       }
 
+      // Enhanced processing for voice messages
+      const { isVoiceMessage } = req.body;
+      
       // Use GPT-5 to process the message and create tasks if needed
       const opsManager = new OpsManager(sessionId);
-      const result = await opsManager.processIntent(message);
+      const result = await opsManager.processIntent(message, { isVoiceMessage });
       
       let response = "I understand. Let me help you with that.";
       
@@ -501,7 +508,7 @@ Current context:
 - You can create new tasks when they mention specific work
 - Be personable and supportive, like a helpful colleague
 
-If they're just greeting you or making conversation, respond naturally. If they mention specific work, offer to help organize it.`;
+If they're just greeting you or making conversation, respond naturally. If they mention specific work, offer to help organize it.${isVoiceMessage ? ' The user just spoke their message - they may have listed multiple tasks that need organizing.' : ''}`;
           
           if (hasFiles) {
             systemPrompt += " The user uploaded documents. Analyze them and offer to help extract actionable items if relevant.";

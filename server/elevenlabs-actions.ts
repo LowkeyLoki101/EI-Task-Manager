@@ -234,7 +234,7 @@ export class OpsManager {
     return await storage.getMemory(this.sessionId, domain, key);
   }
 
-  async processIntent(intent: string, context?: any) {
+  async processIntent(intent: string, context?: { isVoiceMessage?: boolean }) {
     try {
       // First, determine if this message actually needs task creation
       const shouldCreateTask = await openai.chat.completions.create({
