@@ -236,20 +236,60 @@ export class OpsManager {
 
   async processIntent(intent: string, context?: any) {
     try {
-      // Use GPT-5 to parse intent and create tasks/steps
+      // First, determine if this message actually needs task creation
+      const shouldCreateTask = await openai.chat.completions.create({
+        model: "gpt-5-2025-08-07",
+        messages: [
+          {
+            role: "system", 
+            content: `Analyze if this message requires creating NEW tasks. Be very strict.
+
+ONLY return true for:
+- Clear work requests: "Create a website", "Research X", "Call Y", "Set up Z"
+- Project requests: "Build an app", "Organize my office", "Plan vacation"
+- Multi-step goals: "Start a business", "Learn programming"
+
+NEVER return true for:
+- Greetings: "Hello", "Hi", "Hey"
+- Questions: "What's up?", "How are you?", "What can you do?"
+- Thanks/acknowledgments: "Thanks", "OK", "Got it"
+- Task management: "Delete that task", "Mark as done", "Edit my task"
+- Casual chat: Any conversational message without specific work
+
+Respond ONLY with JSON: {"shouldCreateTask": boolean}`
+          },
+          {
+            role: "user",
+            content: intent
+          }
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const taskDecision = JSON.parse(shouldCreateTask.choices[0].message.content || '{"shouldCreateTask": false}');
+      
+      if (!taskDecision.shouldCreateTask) {
+        console.log(`[GPT-5] No task creation needed for: "${intent.slice(0, 50)}..."`);
+        return { tasks: [], processed: false, conversational: true };
+      }
+
+      // Now use GPT-5 to parse intent and create tasks/steps
       const response = await openai.chat.completions.create({
-        model: "gpt-5",
+        model: "gpt-5-2025-08-07",
         messages: [
           {
             role: "system",
-            content: `You are an AI Ops Manager that converts user intents into structured tasks and steps.
-            
+            content: `You are Colby, the digital operations manager. Convert this actionable user request into well-structured tasks and steps.
+
 Context: ${JSON.stringify(context || {})}
 
-Parse the user intent and create appropriate tasks with actionable steps. Each step should be labeled with:
-- context: computer/phone/physical
-- timeWindow: morning/midday/evening/any  
-- canAuto: true if the step can be automated
+Create tasks with clear, actionable titles. Each step should be:
+- Specific and measurable
+- Labeled with context: computer/phone/physical
+- Labeled with timeWindow: morning/midday/evening/any
+- Marked canAuto: true if it can be automated with tools
+
+Focus on breaking down complex requests into manageable steps. Use your knowledge to suggest logical workflows.
 
 Respond in JSON format: { "tasks": [{ "title": string, "context": string, "timeWindow": string, "steps": [{ "title": string, "canAuto": boolean, "toolHint": string }] }] }`
           },

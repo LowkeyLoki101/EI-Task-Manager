@@ -469,11 +469,22 @@ Return as a complete HTML page that can be saved and used immediately.`;
 
       console.log(`Processing chat message for session ${sessionId}: ${message.slice(0, 100)}... (hasFiles: ${hasFiles})`);
 
+      // Handle task management operations first
+      const taskManagementResult = await handleTaskManagement(message, sessionId);
+      if (taskManagementResult.handled) {
+        res.json({
+          response: taskManagementResult.response,
+          tasksCreated: 0,
+          tasks: []
+        });
+        return;
+      }
+
       // Use GPT-5 to process the message and create tasks if needed
       const opsManager = new OpsManager(sessionId);
       const result = await opsManager.processIntent(message);
       
-      let response = "I understand. Let me help you with that task.";
+      let response = "I understand. Let me help you with that.";
       
       if (result.processed && result.tasks.length > 0) {
         const taskTitles = result.tasks.map(t => t.title).join(", ");
@@ -481,12 +492,19 @@ Return as a complete HTML page that can be saved and used immediately.`;
         
         console.log(`Created ${result.tasks.length} tasks from chat message`);
       } else {
-        // Enhanced conversational response with document context
+        // Enhanced conversational response
         try {
-          let systemPrompt = "You are Colby, a helpful AI assistant for task management. You can create tasks, analyze documents, and help organize work. Respond conversationally and offer to help create tasks or organize work based on the conversation.";
+          let systemPrompt = `You are Colby, a friendly digital operations manager. Be naturally conversational and helpful.
+
+Current context:
+- User has tasks in their list that you can help manage
+- You can create new tasks when they mention specific work
+- Be personable and supportive, like a helpful colleague
+
+If they're just greeting you or making conversation, respond naturally. If they mention specific work, offer to help organize it.`;
           
           if (hasFiles) {
-            systemPrompt += " The user has uploaded documents. Analyze the content and offer to create relevant tasks, extract key information, or organize the content into actionable items.";
+            systemPrompt += " The user uploaded documents. Analyze them and offer to help extract actionable items if relevant.";
           }
 
           const chatResponse = await openai.chat.completions.create({
@@ -507,7 +525,7 @@ Return as a complete HTML page that can be saved and used immediately.`;
           response = chatResponse.choices[0].message.content || response;
         } catch (error) {
           console.error('GPT-5 chat error:', error);
-          // Use default response
+          response = "Hi there! I'm Colby, your digital operations manager. I can help you create and manage tasks, or just chat. What's on your mind?";
         }
       }
 
@@ -542,6 +560,108 @@ Return as a complete HTML page that can be saved and used immediately.`;
       });
     }
   });
+
+  // Task Management Handler
+  async function handleTaskManagement(message: string, sessionId: string) {
+    const lowerMessage = message.toLowerCase();
+    
+    // Delete task requests
+    if (lowerMessage.includes('delete') && (lowerMessage.includes('task') || lowerMessage.includes('that'))) {
+      try {
+        const tasks = await storage.listTasks(sessionId);
+        const lastTask = tasks[tasks.length - 1];
+        
+        if (lastTask) {
+          await storage.deleteTask(lastTask.id);
+          return {
+            handled: true,
+            response: `I've deleted the task "${lastTask.title}" for you.`
+          };
+        } else {
+          return {
+            handled: true,
+            response: "You don't have any tasks to delete right now."
+          };
+        }
+      } catch (error) {
+        return {
+          handled: true,
+          response: "I had trouble deleting that task. Could you try again?"
+        };
+      }
+    }
+
+    // Task status updates
+    if ((lowerMessage.includes('mark') || lowerMessage.includes('set')) && lowerMessage.includes('done')) {
+      try {
+        const tasks = await storage.listTasks(sessionId);
+        const activeTask = tasks.find((t: any) => t.status !== 'done');
+        
+        if (activeTask) {
+          await storage.updateTask(activeTask.id, { status: 'done' });
+          return {
+            handled: true,
+            response: `Great! I've marked "${activeTask.title}" as done. Well done!`
+          };
+        } else {
+          return {
+            handled: true,
+            response: "All your tasks are already completed! Ready for something new?"
+          };
+        }
+      } catch (error) {
+        return {
+          handled: true,
+          response: "I had trouble updating that task status."
+        };
+      }
+    }
+
+    // Task expansion requests
+    if (lowerMessage.includes('expand') || lowerMessage.includes('add steps') || lowerMessage.includes('break down')) {
+      try {
+        const tasks = await storage.listTasks(sessionId);
+        const activeTask = tasks.find((t: any) => t.status !== 'done');
+        
+        if (activeTask) {
+          // Use GPT-5 to suggest additional steps
+          const expansion = await openai.chat.completions.create({
+            model: "gpt-5-2025-08-07",
+            messages: [
+              {
+                role: "system",
+                content: "You are Colby. The user wants to expand a task with more detailed steps. Suggest 2-4 specific, actionable sub-steps that would help complete this task. Be practical and helpful."
+              },
+              {
+                role: "user",
+                content: `Please suggest detailed steps to expand this task: "${activeTask.title}"`
+              }
+            ],
+            max_completion_tokens: 150
+          });
+
+          const suggestions = expansion.choices[0].message.content || "I can help break this down into smaller steps.";
+          
+          return {
+            handled: true,
+            response: `Here are some ways to expand "${activeTask.title}":\n\n${suggestions}\n\nWould you like me to add any of these as subtasks?`
+          };
+        } else {
+          return {
+            handled: true,
+            response: "You don't have any active tasks to expand right now."
+          };
+        }
+      } catch (error) {
+        return {
+          handled: true,
+          response: "I had trouble expanding that task. What specific steps would you like to add?"
+        };
+      }
+    }
+
+    return { handled: false };
+  }
 
   // Supervisor Agent with GPT-5 Ops Manager
   app.post("/api/supervisor/ingest", async (req, res) => {
