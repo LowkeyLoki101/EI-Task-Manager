@@ -1,9 +1,11 @@
 import { randomUUID } from "crypto";
 import type { 
   Session, Task, Step, Artifact, Memory, Conversation, Installation,
-  Proposal, File, InsertSession, InsertTask, InsertStep, InsertArtifact, 
+  Proposal, File, Project, ResearchDoc, CalendarEvent, ProjectFile,
+  InsertSession, InsertTask, InsertStep, InsertArtifact, 
   InsertMemory, InsertConversation, InsertInstallation, InsertProposal, 
-  InsertFile, GetTodoListAction, AddTaskAction, UpdateStepStatusAction
+  InsertFile, InsertProject, InsertResearchDoc, InsertCalendarEvent, InsertProjectFile,
+  GetTodoListAction, AddTaskAction, UpdateStepStatusAction
 } from "@shared/schema";
 
 // Updated storage interface based on memory anchors architecture
@@ -54,11 +56,49 @@ export interface IStorage {
   listFiles(sessionId: string): Promise<File[]>;
   deleteFile(id: string): Promise<void>;
 
+  // **PROJECT MANAGEMENT**
+  
+  // Projects
+  createProject(project: InsertProject): Promise<Project>;
+  getProject(id: string): Promise<Project | undefined>;
+  listProjects(sessionId: string, filters?: { status?: string; priority?: string }): Promise<Project[]>;
+  updateProject(id: string, updates: Partial<InsertProject>): Promise<Project>;
+  deleteProject(id: string): Promise<void>;
+
+  // Research Documents
+  createResearchDoc(doc: InsertResearchDoc): Promise<ResearchDoc>;
+  getResearchDoc(id: string): Promise<ResearchDoc | undefined>;
+  listResearchDocs(sessionId: string, projectId?: string): Promise<ResearchDoc[]>;
+  updateResearchDoc(id: string, updates: Partial<InsertResearchDoc>): Promise<ResearchDoc>;
+  deleteResearchDoc(id: string): Promise<void>;
+
+  // Calendar Events
+  createCalendarEvent(event: InsertCalendarEvent): Promise<CalendarEvent>;
+  getCalendarEvent(id: string): Promise<CalendarEvent | undefined>;
+  listCalendarEvents(sessionId: string, filters?: { 
+    projectId?: string; 
+    taskId?: string; 
+    startDate?: Date; 
+    endDate?: Date; 
+  }): Promise<CalendarEvent[]>;
+  updateCalendarEvent(id: string, updates: Partial<InsertCalendarEvent>): Promise<CalendarEvent>;
+  deleteCalendarEvent(id: string): Promise<void>;
+
+  // Project Files
+  createProjectFile(file: InsertProjectFile): Promise<ProjectFile>;
+  getProjectFile(id: string): Promise<ProjectFile | undefined>;
+  listProjectFiles(sessionId: string, projectId?: string): Promise<ProjectFile[]>;
+  deleteProjectFile(id: string): Promise<void>;
+
   // Stats for dashboard
   getSystemStats(sessionId: string): Promise<{
     totalTasks: number;
     completedToday: number;
     activeProposal: string | null;
+    totalProjects: number;
+    activeProjects: number;
+    totalResearchDocs: number;
+    upcomingEvents: number;
   }>;
 }
 
@@ -72,6 +112,11 @@ export class MemStorage implements IStorage {
   private installations: Map<string, Installation>;
   private proposals: Map<string, Proposal>;
   private files: Map<string, File>;
+  // New project management storage
+  private projects: Map<string, Project>;
+  private researchDocs: Map<string, ResearchDoc>;
+  private calendarEvents: Map<string, CalendarEvent>;
+  private projectFiles: Map<string, ProjectFile>;
 
   constructor() {
     this.sessions = new Map();
@@ -83,6 +128,11 @@ export class MemStorage implements IStorage {
     this.installations = new Map();
     this.proposals = new Map();
     this.files = new Map();
+    // Initialize new project management storage
+    this.projects = new Map();
+    this.researchDocs = new Map();
+    this.calendarEvents = new Map();
+    this.projectFiles = new Map();
   }
 
   // Sessions
@@ -222,6 +272,8 @@ export class MemStorage implements IStorage {
     const artifact: Artifact = {
       ...insertArtifact,
       id: insertArtifact.id || randomUUID(),
+      stepId: insertArtifact.stepId || null,
+      projectId: insertArtifact.projectId || null,
       metadata: insertArtifact.metadata || {},
       createdAt: new Date(),
     };
@@ -389,17 +441,233 @@ export class MemStorage implements IStorage {
     this.files.delete(id);
   }
 
-  // Stats for dashboard
+  // Project management implementations need to be added before getSystemStats
+  // **PROJECT MANAGEMENT IMPLEMENTATIONS**
+
+  // Projects
+  async createProject(insertProject: InsertProject): Promise<Project> {
+    const project: Project = {
+      ...insertProject,
+      id: insertProject.id || randomUUID(),
+      tags: insertProject.tags || [],
+      metadata: insertProject.metadata || {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.projects.set(project.id, project);
+    return project;
+  }
+
+  async getProject(id: string): Promise<Project | undefined> {
+    return this.projects.get(id);
+  }
+
+  async listProjects(sessionId: string, filters?: { status?: string; priority?: string }): Promise<Project[]> {
+    let projects = Array.from(this.projects.values())
+      .filter(project => project.sessionId === sessionId);
+
+    if (filters?.status) {
+      projects = projects.filter(p => p.status === filters.status);
+    }
+    if (filters?.priority) {
+      projects = projects.filter(p => p.priority === filters.priority);
+    }
+
+    return projects.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+
+  async updateProject(id: string, updates: Partial<InsertProject>): Promise<Project> {
+    const existing = this.projects.get(id);
+    if (!existing) {
+      throw new Error("Project not found");
+    }
+    
+    const updated: Project = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.projects.set(id, updated);
+    return updated;
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    this.projects.delete(id);
+    // Also delete related research docs and project files
+    Array.from(this.researchDocs.values())
+      .filter(doc => doc.projectId === id)
+      .forEach(doc => this.researchDocs.delete(doc.id));
+    Array.from(this.projectFiles.values())
+      .filter(file => file.projectId === id)
+      .forEach(file => this.projectFiles.delete(file.id));
+  }
+
+  // Research Documents
+  async createResearchDoc(insertDoc: InsertResearchDoc): Promise<ResearchDoc> {
+    const doc: ResearchDoc = {
+      ...insertDoc,
+      id: insertDoc.id || randomUUID(),
+      sources: insertDoc.sources || [],
+      tags: insertDoc.tags || [],
+      metadata: insertDoc.metadata || {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.researchDocs.set(doc.id, doc);
+    return doc;
+  }
+
+  async getResearchDoc(id: string): Promise<ResearchDoc | undefined> {
+    return this.researchDocs.get(id);
+  }
+
+  async listResearchDocs(sessionId: string, projectId?: string): Promise<ResearchDoc[]> {
+    let docs = Array.from(this.researchDocs.values())
+      .filter(doc => doc.sessionId === sessionId);
+
+    if (projectId) {
+      docs = docs.filter(doc => doc.projectId === projectId);
+    }
+
+    return docs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+
+  async updateResearchDoc(id: string, updates: Partial<InsertResearchDoc>): Promise<ResearchDoc> {
+    const existing = this.researchDocs.get(id);
+    if (!existing) {
+      throw new Error("Research document not found");
+    }
+    
+    const updated: ResearchDoc = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.researchDocs.set(id, updated);
+    return updated;
+  }
+
+  async deleteResearchDoc(id: string): Promise<void> {
+    this.researchDocs.delete(id);
+  }
+
+  // Calendar Events
+  async createCalendarEvent(insertEvent: InsertCalendarEvent): Promise<CalendarEvent> {
+    const event: CalendarEvent = {
+      ...insertEvent,
+      id: insertEvent.id || randomUUID(),
+      attendees: insertEvent.attendees || [],
+      reminders: insertEvent.reminders || [],
+      metadata: insertEvent.metadata || {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.calendarEvents.set(event.id, event);
+    return event;
+  }
+
+  async getCalendarEvent(id: string): Promise<CalendarEvent | undefined> {
+    return this.calendarEvents.get(id);
+  }
+
+  async listCalendarEvents(sessionId: string, filters?: { 
+    projectId?: string; 
+    taskId?: string; 
+    startDate?: Date; 
+    endDate?: Date; 
+  }): Promise<CalendarEvent[]> {
+    let events = Array.from(this.calendarEvents.values())
+      .filter(event => event.sessionId === sessionId);
+
+    if (filters?.projectId) {
+      events = events.filter(e => e.projectId === filters.projectId);
+    }
+    if (filters?.taskId) {
+      events = events.filter(e => e.taskId === filters.taskId);
+    }
+    if (filters?.startDate) {
+      events = events.filter(e => e.startTime >= filters.startDate!);
+    }
+    if (filters?.endDate) {
+      events = events.filter(e => e.endTime <= filters.endDate!);
+    }
+
+    return events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+  }
+
+  async updateCalendarEvent(id: string, updates: Partial<InsertCalendarEvent>): Promise<CalendarEvent> {
+    const existing = this.calendarEvents.get(id);
+    if (!existing) {
+      throw new Error("Calendar event not found");
+    }
+    
+    const updated: CalendarEvent = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.calendarEvents.set(id, updated);
+    return updated;
+  }
+
+  async deleteCalendarEvent(id: string): Promise<void> {
+    this.calendarEvents.delete(id);
+  }
+
+  // Project Files
+  async createProjectFile(insertFile: InsertProjectFile): Promise<ProjectFile> {
+    const file: ProjectFile = {
+      ...insertFile,
+      id: insertFile.id || randomUUID(),
+      tags: insertFile.tags || [],
+      metadata: insertFile.metadata || {},
+      createdAt: new Date(),
+    };
+    this.projectFiles.set(file.id, file);
+    return file;
+  }
+
+  async getProjectFile(id: string): Promise<ProjectFile | undefined> {
+    return this.projectFiles.get(id);
+  }
+
+  async listProjectFiles(sessionId: string, projectId?: string): Promise<ProjectFile[]> {
+    let files = Array.from(this.projectFiles.values())
+      .filter(file => file.sessionId === sessionId);
+
+    if (projectId) {
+      files = files.filter(file => file.projectId === projectId);
+    }
+
+    return files.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async deleteProjectFile(id: string): Promise<void> {
+    this.projectFiles.delete(id);
+  }
+
+  // Enhanced stats with project management
   async getSystemStats(sessionId: string): Promise<{
     totalTasks: number;
     completedToday: number;
     activeProposal: string | null;
+    totalProjects: number;
+    activeProjects: number;
+    totalResearchDocs: number;
+    upcomingEvents: number;
   }> {
     const tasks = Array.from(this.tasks.values()).filter(t => t.sessionId === sessionId);
     const proposals = Array.from(this.proposals.values()).filter(p => p.sessionId === sessionId);
+    const projects = Array.from(this.projects.values()).filter(p => p.sessionId === sessionId);
+    const researchDocs = Array.from(this.researchDocs.values()).filter(d => d.sessionId === sessionId);
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const upcomingEvents = Array.from(this.calendarEvents.values())
+      .filter(e => e.sessionId === sessionId && e.startTime >= today && e.startTime <= tomorrow);
     
     return {
       totalTasks: tasks.length,
@@ -408,6 +676,10 @@ export class MemStorage implements IStorage {
         t.updatedAt >= today
       ).length,
       activeProposal: proposals.find(p => p.status === 'pending')?.id || null,
+      totalProjects: projects.length,
+      activeProjects: projects.filter(p => p.status === 'active').length,
+      totalResearchDocs: researchDocs.length,
+      upcomingEvents: upcomingEvents.length,
     };
   }
 }

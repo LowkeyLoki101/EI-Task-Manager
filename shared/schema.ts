@@ -39,8 +39,9 @@ export const steps = pgTable("steps", {
 
 export const artifacts = pgTable("artifacts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  stepId: varchar("step_id").notNull(),
-  type: text("type", { enum: ['link', 'file', 'note', 'html', 'qr', 'excel', 'csv', 'audio'] }).notNull(),
+  stepId: varchar("step_id"),
+  projectId: varchar("project_id"), // New: associate with projects
+  type: text("type", { enum: ['link', 'file', 'note', 'html', 'qr', 'excel', 'csv', 'audio', 'image', 'research'] }).notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(), // URL, file path, text content, etc.
   metadata: json("metadata").default({}),
@@ -106,6 +107,74 @@ export const protocols = pgTable("protocols", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Projects - New comprehensive project management
+export const projects = pgTable("projects", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("active"), // active, paused, completed, archived
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
+  dueDate: timestamp("due_date"),
+  tags: text("tags").array().default([]),
+  metadata: json("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Research Documents - For GPT-5 to create and save research
+export const researchDocs = pgTable("research_docs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id"),
+  sessionId: varchar("session_id").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  summary: text("summary"),
+  sources: text("sources").array().default([]),
+  tags: text("tags").array().default([]),
+  type: text("type").notNull().default("research"), // research, notes, analysis, proposal, draft
+  metadata: json("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Calendar Events - For scheduling and organization
+export const calendarEvents = pgTable("calendar_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  projectId: varchar("project_id"),
+  taskId: varchar("task_id"),
+  title: text("title").notNull(),
+  description: text("description"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  isAllDay: boolean("is_all_day").default(false),
+  recurrence: text("recurrence"), // "daily", "weekly", "monthly", etc.
+  location: text("location"),
+  attendees: text("attendees").array().default([]),
+  reminders: json("reminders").default([]),
+  metadata: json("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Project Files - Enhanced file management with project association
+export const projectFiles = pgTable("project_files", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id"),
+  sessionId: varchar("session_id").notNull(),
+  filename: text("filename").notNull(),
+  originalName: text("original_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(),
+  url: text("url").notNull(),
+  type: text("type").notNull().default("other"), // image, document, research, media, other
+  description: text("description"),
+  tags: text("tags").array().default([]),
+  metadata: json("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const installations = pgTable("installations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sessionId: varchar("session_id").notNull(),
@@ -154,6 +223,12 @@ export const insertSnapshotSchema = createInsertSchema(snapshots).omit({ id: tru
 export const insertNoteSchema = createInsertSchema(notes).omit({ id: true, createdAt: true, lastUsed: true });
 export const insertProtocolSchema = createInsertSchema(protocols).omit({ id: true, updatedAt: true });
 
+// New project management schemas
+export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertResearchDocSchema = createInsertSchema(researchDocs).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertProjectFileSchema = createInsertSchema(projectFiles).omit({ id: true, createdAt: true });
+
 // Types
 export type Session = typeof sessions.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
@@ -169,6 +244,12 @@ export type Snapshot = typeof snapshots.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type Protocol = typeof protocols.$inferSelect;
 
+// New project management types
+export type Project = typeof projects.$inferSelect;
+export type ResearchDoc = typeof researchDocs.$inferSelect;
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type ProjectFile = typeof projectFiles.$inferSelect;
+
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type InsertStep = z.infer<typeof insertStepSchema>;
@@ -182,6 +263,12 @@ export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type InsertSnapshot = z.infer<typeof insertSnapshotSchema>;
 export type InsertNote = z.infer<typeof insertNoteSchema>;
 export type InsertProtocol = z.infer<typeof insertProtocolSchema>;
+
+// New project management insert types
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type InsertResearchDoc = z.infer<typeof insertResearchDocSchema>;
+export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
+export type InsertProjectFile = z.infer<typeof insertProjectFileSchema>;
 
 // Select types for enhanced actions
 export type SelectTask = typeof tasks.$inferSelect;

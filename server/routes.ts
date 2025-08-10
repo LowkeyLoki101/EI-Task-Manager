@@ -6,7 +6,12 @@ import { registerEnhancedActions } from "./enhanced-actions";
 import { 
   insertTaskSchema, insertStepSchema, insertConversationSchema, 
   insertProposalSchema, insertFileSchema, insertSessionSchema,
-  addTaskActionSchema, getTodoListActionSchema
+  addTaskActionSchema, getTodoListActionSchema,
+  // New project management schemas
+  insertProjectSchema,
+  insertResearchDocSchema,
+  insertCalendarEventSchema,
+  insertProjectFileSchema
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import OpenAI from "openai";
@@ -32,6 +37,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Enhanced Actions with SDK integration
   registerEnhancedActions(app);
+  
+  // Import project context management
+  const { projectContextManager, processProjectAwareConversation } = await import("./project-context");
   
   // Register Colby Actions API - matches the comprehensive Colby toolset specification
   const { registerColbyActions } = await import("./colby-actions");
@@ -568,7 +576,7 @@ If they're just greeting you or making conversation, respond naturally. If they 
         sessionId,
         role: 'user',
         content: message,
-        taskId: result.tasks[0]?.id || null,
+        taskId: null,
         transcript: message
       });
 
@@ -576,14 +584,14 @@ If they're just greeting you or making conversation, respond naturally. If they 
         sessionId,
         role: 'assistant', 
         content: response,
-        taskId: result.tasks[0]?.id || null,
+        taskId: null,
         transcript: response
       });
 
       res.json({
         response,
-        tasksCreated: result.tasks.length,
-        tasks: result.tasks.map(t => ({ id: t.id, title: t.title }))
+        tasksCreated: result.tasksCreated || 0,
+        tasks: []
       });
       
     } catch (error) {
@@ -1011,9 +1019,346 @@ If they're just greeting you or making conversation, respond naturally. If they 
         elevenLabsActions: true,
         opsManager: true,
         memoryModel: true,
-        contextRouting: true
+        contextRouting: true,
+        projectManagement: true,
+        calendarIntegration: true,
+        researchTools: true
       }
     });
+  });
+
+  // **PROJECT MANAGEMENT API ENDPOINTS**
+  
+  // Projects
+  app.post("/api/projects", async (req, res) => {
+    try {
+      const projectData = insertProjectSchema.parse(req.body);
+      const project = await storage.createProject(projectData);
+      res.json(project);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid project data" });
+    }
+  });
+
+  app.get("/api/projects", async (req, res) => {
+    try {
+      const { sessionId, status, priority } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+      const projects = await storage.listProjects(sessionId as string, { 
+        status: status as string, 
+        priority: priority as string 
+      });
+      res.json({ projects });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch projects" });
+    }
+  });
+
+  app.get("/api/projects/:id", async (req, res) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      res.json(project);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch project" });
+    }
+  });
+
+  app.patch("/api/projects/:id", async (req, res) => {
+    try {
+      const updates = req.body;
+      const project = await storage.updateProject(req.params.id, updates);
+      res.json(project);
+    } catch (error) {
+      res.status(404).json({ error: "Project not found" });
+    }
+  });
+
+  app.delete("/api/projects/:id", async (req, res) => {
+    try {
+      await storage.deleteProject(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete project" });
+    }
+  });
+
+  // Research Documents
+  app.post("/api/research", async (req, res) => {
+    try {
+      const researchData = insertResearchDocSchema.parse(req.body);
+      const doc = await storage.createResearchDoc(researchData);
+      res.json(doc);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid research document data" });
+    }
+  });
+
+  app.get("/api/research", async (req, res) => {
+    try {
+      const { sessionId, projectId } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+      const docs = await storage.listResearchDocs(sessionId as string, projectId as string);
+      res.json({ documents: docs });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch research documents" });
+    }
+  });
+
+  app.get("/api/research/:id", async (req, res) => {
+    try {
+      const doc = await storage.getResearchDoc(req.params.id);
+      if (!doc) {
+        return res.status(404).json({ error: "Research document not found" });
+      }
+      res.json(doc);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch research document" });
+    }
+  });
+
+  app.patch("/api/research/:id", async (req, res) => {
+    try {
+      const updates = req.body;
+      const doc = await storage.updateResearchDoc(req.params.id, updates);
+      res.json(doc);
+    } catch (error) {
+      res.status(404).json({ error: "Research document not found" });
+    }
+  });
+
+  app.delete("/api/research/:id", async (req, res) => {
+    try {
+      await storage.deleteResearchDoc(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete research document" });
+    }
+  });
+
+  // Calendar Events
+  app.post("/api/calendar", async (req, res) => {
+    try {
+      const eventData = insertCalendarEventSchema.parse(req.body);
+      const event = await storage.createCalendarEvent(eventData);
+      res.json(event);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid calendar event data" });
+    }
+  });
+
+  app.get("/api/calendar", async (req, res) => {
+    try {
+      const { sessionId, projectId, taskId, startDate, endDate } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+      
+      const filters: any = {};
+      if (projectId) filters.projectId = projectId as string;
+      if (taskId) filters.taskId = taskId as string;
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      
+      const events = await storage.listCalendarEvents(sessionId as string, filters);
+      res.json({ events });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch calendar events" });
+    }
+  });
+
+  app.patch("/api/calendar/:id", async (req, res) => {
+    try {
+      const updates = req.body;
+      const event = await storage.updateCalendarEvent(req.params.id, updates);
+      res.json(event);
+    } catch (error) {
+      res.status(404).json({ error: "Calendar event not found" });
+    }
+  });
+
+  app.delete("/api/calendar/:id", async (req, res) => {
+    try {
+      await storage.deleteCalendarEvent(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete calendar event" });
+    }
+  });
+
+  // Project Files
+  app.post("/api/project-files/upload", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const { sessionId, projectId, description, type } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+
+      const file = await storage.createProjectFile({
+        sessionId,
+        projectId: projectId || null,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        url: `/uploads/${req.file.filename}`,
+        type: type || 'other',
+        description: description || null,
+      });
+
+      res.json(file);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to upload project file" });
+    }
+  });
+
+  app.get("/api/project-files", async (req, res) => {
+    try {
+      const { sessionId, projectId } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+      const files = await storage.listProjectFiles(sessionId as string, projectId as string);
+      res.json({ files });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch project files" });
+    }
+  });
+
+  // **PROJECT CONTEXT SWITCHING ENDPOINTS**
+
+  // Switch project context mid-conversation
+  app.post("/api/project-context/switch", async (req, res) => {
+    try {
+      const { sessionId, projectId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+
+      const context = await projectContextManager.switchProjectContext(
+        sessionId, 
+        projectId || null
+      );
+      
+      res.json({
+        success: true,
+        context,
+        message: projectId ? 
+          `Switched to project: ${context.projectTitle}` : 
+          'Switched to global view'
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message || "Failed to switch project context" });
+    }
+  });
+
+  // Get current project context
+  app.get("/api/project-context/:sessionId", async (req, res) => {
+    try {
+      const context = projectContextManager.getCurrentContext(req.params.sessionId);
+      const contextPrompt = projectContextManager.generateContextPrompt(req.params.sessionId);
+      
+      res.json({
+        context,
+        contextPrompt,
+        availableProjects: await projectContextManager.getAvailableProjects(req.params.sessionId)
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get project context" });
+    }
+  });
+
+  // Project-aware GPT-5 conversation endpoint
+  app.post("/api/conversations/project-aware", async (req, res) => {
+    try {
+      const { sessionId, message, projectId } = req.body;
+      if (!sessionId || !message) {
+        return res.status(400).json({ error: "sessionId and message required" });
+      }
+
+      const result = await processProjectAwareConversation(
+        sessionId,
+        message,
+        projectId
+      );
+      
+      res.json({
+        success: true,
+        response: result.response,
+        contextSwitched: result.contextSwitched,
+        itemsCreated: {
+          researchDocs: result.researchDocsCreated,
+          events: result.eventsScheduled,
+          tasks: result.tasksCreated
+        }
+      });
+    } catch (error) {
+      console.error('Project-aware conversation failed:', error);
+      res.status(500).json({ error: "Failed to process conversation" });
+    }
+  });
+
+  // Quick research document creation
+  app.post("/api/research/quick-create", async (req, res) => {
+    try {
+      const { sessionId, title, content, summary, sources } = req.body;
+      if (!sessionId || !title || !content) {
+        return res.status(400).json({ error: "sessionId, title, and content required" });
+      }
+
+      const doc = await projectContextManager.createResearchFromConversation(
+        sessionId,
+        title,
+        content,
+        summary,
+        sources
+      );
+      
+      res.json({
+        success: true,
+        document: doc,
+        message: `Research document "${title}" created and added to current project context`
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create research document" });
+    }
+  });
+
+  // Quick calendar event scheduling
+  app.post("/api/calendar/quick-schedule", async (req, res) => {
+    try {
+      const { sessionId, title, description, startTime, endTime, taskId } = req.body;
+      if (!sessionId || !title || !startTime || !endTime) {
+        return res.status(400).json({ error: "sessionId, title, startTime, and endTime required" });
+      }
+
+      const event = await projectContextManager.scheduleEventFromConversation(
+        sessionId,
+        title,
+        description,
+        new Date(startTime),
+        new Date(endTime),
+        taskId
+      );
+      
+      res.json({
+        success: true,
+        event,
+        message: `Event "${title}" scheduled and added to current project context`
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to schedule event" });
+    }
   });
 
   const httpServer = createServer(app);
