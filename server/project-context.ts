@@ -147,6 +147,30 @@ export class ProjectContextManager {
     return researchDoc;
   }
 
+  // Auto-sync to shared knowledge base
+  async createResearchFromConversationWithKB(
+    sessionId: string, 
+    title: string, 
+    content: string,
+    summary?: string,
+    sources?: string[]
+  ): Promise<ResearchDoc> {
+    const researchDoc = await this.createResearchFromConversation(
+      sessionId, title, content, summary, sources
+    );
+
+    // Auto-sync to shared knowledge base
+    try {
+      const { knowledgeBaseManager } = await import("./knowledge-base");
+      await knowledgeBaseManager.addFromResearchDoc(researchDoc);
+      console.log(`Research document "${title}" synced to shared knowledge base`);
+    } catch (error) {
+      console.error('Failed to sync research doc to knowledge base:', error);
+    }
+
+    return researchDoc;
+  }
+
   // Add calendar event from conversation
   async scheduleEventFromConversation(
     sessionId: string,

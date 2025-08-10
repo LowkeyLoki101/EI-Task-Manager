@@ -41,6 +41,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Import project context management
   const { projectContextManager, processProjectAwareConversation } = await import("./project-context");
   
+  // Import knowledge base management
+  const { knowledgeBaseManager } = await import("./knowledge-base");
+  
   // Register Colby Actions API - matches the comprehensive Colby toolset specification
   const { registerColbyActions } = await import("./colby-actions");
   registerColbyActions(app);
@@ -1358,6 +1361,247 @@ If they're just greeting you or making conversation, respond naturally. If they 
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to schedule event" });
+    }
+  });
+
+  // **SHARED KNOWLEDGE BASE ENDPOINTS**
+
+  // Upload document to shared knowledge base
+  app.post("/api/knowledge-base/upload", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const { sessionId, title, projectId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+
+      // Determine format from file extension
+      const fileExt = req.file.originalname.split('.').pop()?.toLowerCase();
+      const formatMap: { [key: string]: any } = {
+        'txt': 'text',
+        'pdf': 'pdf',
+        'docx': 'docx',
+        'html': 'html',
+        'epub': 'epub'
+      };
+      const format = formatMap[fileExt || 'txt'] || 'text';
+
+      const document = await knowledgeBaseManager.addFromUserUpload(
+        sessionId,
+        title || req.file.originalname,
+        req.file.path,
+        format,
+        projectId || undefined
+      );
+
+      res.json({
+        success: true,
+        document,
+        message: `Document "${document.title}" uploaded and synced to shared knowledge base`
+      });
+    } catch (error) {
+      console.error('Knowledge base upload error:', error);
+      res.status(500).json({ error: "Failed to upload document to knowledge base" });
+    }
+  });
+
+  // Add text document to knowledge base
+  app.post("/api/knowledge-base/add-text", async (req, res) => {
+    try {
+      const { sessionId, title, content, projectId, tags } = req.body;
+      if (!sessionId || !title || !content) {
+        return res.status(400).json({ error: "sessionId, title, and content required" });
+      }
+
+      const document = await knowledgeBaseManager.addManualDocument(
+        sessionId,
+        title,
+        content,
+        projectId || undefined,
+        tags || []
+      );
+
+      res.json({
+        success: true,
+        document,
+        message: `Document "${document.title}" added to shared knowledge base`
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add document to knowledge base" });
+    }
+  });
+
+  // Search knowledge base
+  app.get("/api/knowledge-base/search", async (req, res) => {
+    try {
+      const { sessionId, query, projectId } = req.query;
+      if (!sessionId || !query) {
+        return res.status(400).json({ error: "sessionId and query required" });
+      }
+
+      const documents = knowledgeBaseManager.searchDocuments(
+        sessionId as string,
+        query as string,
+        projectId as string
+      );
+
+      res.json({ documents });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to search knowledge base" });
+    }
+  });
+
+  // Get all knowledge base documents
+  app.get("/api/knowledge-base/documents", async (req, res) => {
+    try {
+      const { sessionId, projectId } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+
+      const documents = knowledgeBaseManager.getDocuments(
+        sessionId as string,
+        projectId as string
+      );
+
+      res.json({ documents });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch knowledge base documents" });
+    }
+  });
+
+  // Get sync status
+  app.get("/api/knowledge-base/sync-status/:sessionId", async (req, res) => {
+    try {
+      const status = knowledgeBaseManager.getSyncStatus(req.params.sessionId);
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get sync status" });
+    }
+  });
+
+  // Retry failed syncs
+  app.post("/api/knowledge-base/retry-sync", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId required" });
+      }
+
+      const successCount = await knowledgeBaseManager.retryFailedSyncs(sessionId);
+      res.json({
+        success: true,
+        syncedCount: successCount,
+        message: `Successfully synced ${successCount} documents to ElevenLabs`
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to retry sync" });
+    }
+  });
+
+  // Delete knowledge base document
+  app.delete("/api/knowledge-base/documents/:id", async (req, res) => {
+    try {
+      const success = await knowledgeBaseManager.removeDocument(req.params.id);
+      if (success) {
+        res.json({ success: true, message: "Document removed from knowledge base" });
+      } else {
+        res.status(404).json({ error: "Document not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to remove document" });
+    }
+  });
+
+  // Update knowledge base document
+  app.patch("/api/knowledge-base/documents/:id", async (req, res) => {
+    try {
+      const updates = req.body;
+      const success = await knowledgeBaseManager.updateDocument(req.params.id, updates);
+      
+      if (success) {
+        const document = knowledgeBaseManager.getDocument(req.params.id);
+        res.json({ success: true, document });
+      } else {
+        res.status(404).json({ error: "Document not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update document" });
+    }
+  });
+
+  // Knowledge-aware GPT-5 conversation
+  app.post("/api/conversations/knowledge-aware", async (req, res) => {
+    try {
+      const { sessionId, message, projectId, includeKnowledge = true } = req.body;
+      if (!sessionId || !message) {
+        return res.status(400).json({ error: "sessionId and message required" });
+      }
+
+      // Generate knowledge context if requested
+      let knowledgeContext = '';
+      if (includeKnowledge) {
+        knowledgeContext = knowledgeBaseManager.generateKnowledgeContext(
+          sessionId,
+          projectId,
+          message
+        );
+      }
+
+      // Enhanced system prompt with knowledge base awareness
+      const systemPrompt = `You are an AI assistant with access to a shared knowledge base that contains research documents, project files, and other information. This knowledge base is also accessible to ElevenLabs voice agents and users.
+
+${knowledgeContext}
+
+When answering questions:
+1. Reference relevant knowledge base documents when applicable
+2. Offer to save important information to the knowledge base
+3. Suggest creating research documents for new topics
+4. Maintain consistency with existing knowledge base content
+
+If the user asks about adding information to the knowledge base, explain that documents can be:
+- Automatically created by me during conversations
+- Uploaded by users (PDF, TXT, DOCX, HTML, EPUB)
+- Added manually as text entries
+- Automatically synced with ElevenLabs for voice agent access
+
+Current time: ${new Date().toLocaleString()}`;
+
+      try {
+        const openai = new (await import('openai')).default({ 
+          apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY 
+        });
+        
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: message }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+        });
+
+        const response = completion.choices[0].message.content || "I can help you manage and access your knowledge base.";
+
+        res.json({
+          success: true,
+          response,
+          knowledgeContext: includeKnowledge ? knowledgeContext : null
+        });
+      } catch (error) {
+        console.error('Knowledge-aware conversation error:', error);
+        res.json({
+          success: true,
+          response: "I'm here to help you manage your knowledge base and answer questions using your stored documents.",
+          knowledgeContext: includeKnowledge ? knowledgeContext : null
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to process knowledge-aware conversation" });
     }
   });
 
