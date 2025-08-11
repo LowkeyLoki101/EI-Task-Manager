@@ -36,11 +36,65 @@ export function registerTranscriptionRoutes(app: Express) {
         return res.status(400).json({ error: 'sessionId required' });
       }
 
-      console.log(`[Transcription] Processing audio file: ${req.file.filename}, size: ${req.file.size} bytes`);
+      console.log(`[Transcription] Processing audio file: ${req.file.filename}, size: ${req.file.size} bytes, mimetype: ${req.file.mimetype}`);
+
+      // Check if file has content
+      if (req.file.size === 0) {
+        // Clean up empty file
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (e) {}
+        
+        return res.status(400).json({ 
+          error: 'Audio file is empty', 
+          hint: 'Please ensure microphone permissions are granted and audio is being recorded properly'
+        });
+      }
+
+      // Check minimum file size (at least 1KB for valid audio)
+      if (req.file.size < 1024) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (e) {}
+        
+        return res.status(400).json({ 
+          error: 'Audio file too small', 
+          hint: 'Audio recording may have failed. Please try speaking for at least 1-2 seconds.'
+        });
+      }
+
+      // Check if OpenAI API key is configured
+      if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-fake-key-for-development') {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (e) {}
+        
+        return res.status(503).json({ 
+          error: 'Transcription service not configured', 
+          hint: 'OpenAI API key is required for audio transcription'
+        });
+      }
+
+      // Convert file if needed (ensure proper format for Whisper)
+      let audioFilePath = req.file.path;
+      const originalExtension = path.extname(req.file.originalname || '').toLowerCase();
+      
+      // If no extension or unknown format, try to detect and fix
+      if (!originalExtension || !['.wav', '.mp3', '.m4a', '.webm', '.ogg', '.flac'].includes(originalExtension)) {
+        // Rename file to .webm as default for web recordings
+        const newPath = req.file.path + '.webm';
+        try {
+          fs.renameSync(req.file.path, newPath);
+          audioFilePath = newPath;
+          console.log(`[Transcription] Renamed audio file to .webm format`);
+        } catch (renameError) {
+          console.warn('Could not rename audio file:', renameError);
+        }
+      }
 
       // Use OpenAI Whisper to transcribe the audio
       const transcription = await openai.audio.transcriptions.create({
-        file: fs.createReadStream(req.file.path),
+        file: fs.createReadStream(audioFilePath),
         model: 'whisper-1',
         language: 'en', // Can be made dynamic based on user preference
         response_format: 'json',
@@ -49,9 +103,13 @@ export function registerTranscriptionRoutes(app: Express) {
 
       console.log(`[Transcription] Result: "${transcription.text}"`);
 
-      // Clean up the uploaded file
+      // Clean up the uploaded file(s)
       try {
-        fs.unlinkSync(req.file.path);
+        fs.unlinkSync(audioFilePath);
+        // Also clean up original if we renamed it
+        if (audioFilePath !== req.file.path && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
       } catch (cleanupError) {
         console.warn('Failed to cleanup audio file:', cleanupError);
       }
@@ -65,25 +123,48 @@ export function registerTranscriptionRoutes(app: Express) {
     } catch (error) {
       console.error('Transcription error:', error);
       
-      // Clean up the uploaded file if it exists
+      // Clean up any uploaded files if they exist
       if (req.file?.path) {
         try {
           fs.unlinkSync(req.file.path);
+          // Also try to clean up renamed file
+          const renamedPath = req.file.path + '.webm';
+          if (fs.existsSync(renamedPath)) {
+            fs.unlinkSync(renamedPath);
+          }
         } catch (cleanupError) {
           console.warn('Failed to cleanup audio file after error:', cleanupError);
         }
       }
 
-      if (error instanceof Error && error.message.includes('API key')) {
-        return res.status(500).json({ 
-          error: 'OpenAI API key not configured for transcription',
-          hint: 'Please ensure OPENAI_API_KEY environment variable is set'
-        });
+      // Provide specific error messages based on the error type
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          return res.status(503).json({ 
+            error: 'OpenAI API key not configured for transcription',
+            hint: 'Please ensure OPENAI_API_KEY environment variable is set'
+          });
+        }
+        
+        if (error.message.includes('Unrecognized file format') || error.message.includes('file format')) {
+          return res.status(400).json({ 
+            error: 'Unsupported audio format',
+            hint: 'Please use a supported audio format: MP3, WAV, WebM, M4A, OGG, or FLAC'
+          });
+        }
+        
+        if (error.message.includes('file is empty') || error.message.includes('No audio')) {
+          return res.status(400).json({ 
+            error: 'No audio detected in file',
+            hint: 'Please ensure microphone is working and try recording for a longer duration'
+          });
+        }
       }
 
       res.status(500).json({ 
         error: 'Failed to transcribe audio',
-        hint: 'Please try again or check that the audio file is valid'
+        hint: 'Please check your microphone permissions and try again',
+        details: error instanceof Error ? error.message : 'Unknown transcription error'
       });
     }
   });

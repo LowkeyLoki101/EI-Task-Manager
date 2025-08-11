@@ -78,17 +78,74 @@ export function DirectChatInterface() {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      // Clear any previous chunks
+      setAudioChunks([]);
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        } 
+      });
+      
+      // Check if browser supports WebM
+      const options: MediaRecorderOptions = {};
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        options.mimeType = 'audio/webm;codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        options.mimeType = 'audio/webm';
+      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        options.mimeType = 'audio/mp4';
+      } else {
+        console.warn('No supported audio format found, using default');
+      }
+      
+      const recorder = new MediaRecorder(stream, options);
+      const chunks: Blob[] = [];
       
       recorder.ondataavailable = (event) => {
+        console.log('Audio data available:', event.data.size, 'bytes');
         if (event.data.size > 0) {
+          chunks.push(event.data);
           setAudioChunks(prev => [...prev, event.data]);
         }
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        console.log('Recording stopped, chunks collected:', chunks.length);
+        
+        if (chunks.length === 0) {
+          console.error('No audio data recorded');
+          const errorMessage: Message = {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: 'No audio was recorded. Please try holding the button longer and speaking clearly.',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          return;
+        }
+        
+        // Use the chunks collected in this scope (more reliable)
+        const audioBlob = new Blob(chunks, { 
+          type: options.mimeType || 'audio/webm' 
+        });
+        
+        console.log('Audio blob created:', audioBlob.size, 'bytes, type:', audioBlob.type);
+        
+        if (audioBlob.size === 0) {
+          console.error('Audio blob is empty');
+          const errorMessage: Message = {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: 'Audio recording failed. Please check your microphone permissions and try again.',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          return;
+        }
+        
         await transcribeAudio(audioBlob);
         setAudioChunks([]);
         
@@ -96,17 +153,55 @@ export function DirectChatInterface() {
         stream.getTracks().forEach(track => track.stop());
       };
 
-      recorder.start();
+      recorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: 'Recording error occurred. Please try again.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        stream.getTracks().forEach(track => track.stop());
+        setIsRecording(false);
+        setMediaRecorder(null);
+      };
+
+      // Record in small time slices to ensure data is collected
+      recorder.start(1000); // Request data every 1000ms
       setMediaRecorder(recorder);
       setIsRecording(true);
+      
+      console.log('Recording started with format:', options.mimeType || 'default');
     } catch (error) {
       console.error('Error starting recording:', error);
-      alert('Could not access microphone. Please check permissions.');
+      
+      let errorMessage = 'Could not access microphone. ';
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage += 'Please allow microphone permissions and try again.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage += 'No microphone found. Please connect a microphone.';
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage += 'Audio recording not supported in this browser.';
+        } else {
+          errorMessage += 'Please check your microphone settings.';
+        }
+      }
+      
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: errorMessage,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMsg]);
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorder && mediaRecorder.state === 'recording') {
+      console.log('Stopping recording...');
       mediaRecorder.stop();
       setIsRecording(false);
       setMediaRecorder(null);
@@ -152,10 +247,26 @@ export function DirectChatInterface() {
       }
     } catch (error) {
       console.error('Transcription error:', error);
+      
+      let errorContent = 'Sorry, I could not transcribe your audio. Please try again.';
+      
+      // Try to get more specific error message from server
+      try {
+        const response = error as Response;
+        if (response && response.json) {
+          const errorData = await response.json();
+          if (errorData.hint) {
+            errorContent = `${errorData.error || 'Transcription failed'}: ${errorData.hint}`;
+          }
+        }
+      } catch (parseError) {
+        console.log('Could not parse error response');
+      }
+      
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'Sorry, I could not transcribe your audio. Please try again.',
+        content: errorContent,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
