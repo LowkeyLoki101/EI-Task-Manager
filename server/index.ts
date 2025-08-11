@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import realtimeRouter from "./realtime";
 
 const app = express();
 app.use(express.json());
@@ -34,6 +35,9 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, xi-api-key');
   res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Add permissions policy for microphone access
+  res.header('Permissions-Policy', 'microphone=*');
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -71,6 +75,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Mount realtime router
+app.use(realtimeRouter);
 
 (async () => {
   const server = await registerRoutes(app);

@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Send, Bot, User, FileText, X, Mic, MicOff, Square } from 'lucide-react';
+import { Upload, Send, Bot, User, FileText, X, Mic, MicOff, Square, Phone, PhoneOff } from 'lucide-react';
 import { useSessionId } from '@/hooks/useSessionId';
+import { createRealtimeSession, connectRealtime } from '@/lib/realtime';
 
 interface Message {
   id: string;
@@ -30,6 +31,12 @@ export function DirectChatInterface() {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  
+  // GPT Realtime Voice States
+  const [voiceReady, setVoiceReady] = useState(false);
+  const [voiceConnecting, setVoiceConnecting] = useState(false);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sessionId = useSessionId();
@@ -348,6 +355,70 @@ export function DirectChatInterface() {
     }
   };
 
+  // GPT Realtime Voice Functions
+  const startGPTVoice = async () => {
+    try {
+      setVoiceConnecting(true);
+      const session = await createRealtimeSession();
+      const token = session?.client_secret?.value;
+      
+      if (!token) {
+        throw new Error('No client token returned from server');
+      }
+      
+      const { pc } = await connectRealtime(token);
+      pcRef.current = pc;
+      setVoiceReady(true);
+      
+      // Add a message indicating voice chat is ready
+      const voiceReadyMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: '🔊 GPT voice chat is now active. Speak directly to me!',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, voiceReadyMessage]);
+      
+    } catch (error) {
+      console.error('GPT voice connect error:', error);
+      
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `Voice chat failed to connect: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your microphone permissions and try again.`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setVoiceConnecting(false);
+    }
+  };
+
+  const stopGPTVoice = () => {
+    if (pcRef.current) {
+      pcRef.current.close();
+      pcRef.current = null;
+      setVoiceReady(false);
+      
+      const voiceStoppedMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: '🔇 GPT voice chat disconnected.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, voiceStoppedMessage]);
+    }
+  };
+
+  // Cleanup voice connection on unmount
+  useEffect(() => {
+    return () => {
+      if (pcRef.current) {
+        pcRef.current.close();
+      }
+    };
+  }, []);
+
   const sendMessage = async () => {
     if (!inputMessage.trim() && uploadedFiles.length === 0) return;
     if (!sessionId) return;
@@ -570,16 +641,28 @@ export function DirectChatInterface() {
               size="sm"
               variant={isRecording ? "destructive" : "outline"}
               onClick={isRecording ? stopRecording : startRecording}
-              disabled={isLoading}
+              disabled={isLoading || voiceReady}
               data-testid="record-button"
               className={isRecording ? "animate-pulse" : ""}
+              title="Record & Transcribe"
             >
               {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </Button>
             <Button
               size="sm"
+              variant={voiceReady ? "destructive" : "outline"}
+              onClick={voiceReady ? stopGPTVoice : startGPTVoice}
+              disabled={isLoading || voiceConnecting || isRecording}
+              data-testid="voice-chat-button"
+              className={voiceReady ? "animate-pulse" : voiceConnecting ? "animate-pulse" : ""}
+              title="GPT Voice Chat"
+            >
+              {voiceReady ? <PhoneOff className="w-4 h-4" /> : voiceConnecting ? <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div> : <Phone className="w-4 h-4" />}
+            </Button>
+            <Button
+              size="sm"
               onClick={sendMessage}
-              disabled={isLoading || isRecording || (!inputMessage.trim() && uploadedFiles.length === 0)}
+              disabled={isLoading || isRecording || voiceReady || (!inputMessage.trim() && uploadedFiles.length === 0)}
               data-testid="send-button"
             >
               <Send className="w-4 h-4" />
@@ -598,7 +681,7 @@ export function DirectChatInterface() {
         />
 
         <div className="text-xs text-gray-500 text-center">
-          Powered by GPT-5 • Upload documents up to 10MB • Voice recording • Creates tasks automatically
+          Powered by GPT-5 • Upload documents up to 10MB • Voice recording & GPT Voice Chat • Creates tasks automatically
         </div>
       </CardContent>
     </Card>
