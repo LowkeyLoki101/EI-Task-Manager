@@ -49,6 +49,8 @@ A conversational, zoomable rolling to-do system where an ElevenLabs voice agent 
 - ✅ **Knowledge Base Management**: Complete UI for uploading, searching, and managing shared documents
 - ✅ **ElevenLabs Actions**: kb_attach_doc, kb_search, kb_sync_status endpoints for voice interaction
 - ✅ **Bi-directional Sync**: Research documents auto-sync to ElevenLabs, files upload to shared KB
+- ✅ **GPT Realtime Voice Integration**: WebRTC voice chat with GPT-5 alongside existing ElevenLabs system
+- ✅ **Audio Format Compatibility Fix**: WebM prioritization for reliable OpenAI Whisper transcription
 
 ## User Preferences
 
@@ -159,3 +161,4 @@ UI filters use these labels to show the right list at the right time.
 - ✅ **Sharing System**: Create shareable links for tasks, workflows, and session snapshots
 - ✅ **Tinker Framework**: Lightweight component system for custom widgets and automations
 - ✅ **PROJECT MANAGEMENT READY**: Complete transition to comprehensive project workspace platform
+- ✅ **TRIPLE VOICE SYSTEM**: ElevenLabs Actions + GPT Realtime WebRTC + Whisper transcription with format compatibility fixes

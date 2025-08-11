@@ -81,21 +81,25 @@ export function registerTranscriptionRoutes(app: Express) {
       
       console.log(`[Transcription] Original file: ${req.file.originalname}, Extension: ${originalExtension}, MIME: ${req.file.mimetype}`);
       
-      // Always add proper extension for OpenAI Whisper compatibility
+      // Always ensure proper extension for OpenAI Whisper compatibility
+      let newExtension = originalExtension;
+      
       if (!originalExtension) {
-        let newExtension = '.webm'; // default
+        // Default to webm as it's most reliable with OpenAI
+        newExtension = '.webm';
         
-        // Try to determine extension from MIME type or filename
-        if (req.file.mimetype?.includes('mp4') || req.file.originalname?.includes('mp4')) {
-          newExtension = '.mp4';
-        } else if (req.file.mimetype?.includes('m4a') || req.file.originalname?.includes('m4a')) {
-          newExtension = '.m4a';
-        } else if (req.file.mimetype?.includes('wav') || req.file.originalname?.includes('wav')) {
-          newExtension = '.wav';
+        // Try to determine extension from MIME type or filename, prioritizing webm
+        if (req.file.mimetype?.includes('webm') || req.file.originalname?.includes('webm')) {
+          newExtension = '.webm';
         } else if (req.file.mimetype?.includes('ogg') || req.file.originalname?.includes('ogg')) {
           newExtension = '.ogg';
-        } else if (req.file.mimetype?.includes('webm') || req.file.originalname?.includes('webm')) {
-          newExtension = '.webm';
+        } else if (req.file.mimetype?.includes('wav') || req.file.originalname?.includes('wav')) {
+          newExtension = '.wav';
+        } else if (req.file.mimetype?.includes('m4a') || req.file.originalname?.includes('m4a')) {
+          newExtension = '.m4a';
+        } else if (req.file.mimetype?.includes('mp4') || req.file.originalname?.includes('mp4')) {
+          // Convert MP4 extension to m4a for better OpenAI compatibility
+          newExtension = '.m4a';
         }
         
         const newPath = req.file.path + newExtension;
@@ -106,11 +110,28 @@ export function registerTranscriptionRoutes(app: Express) {
         } catch (renameError) {
           console.warn('Could not rename audio file:', renameError);
         }
+      } else if (originalExtension === '.mp4') {
+        // Convert .mp4 to .m4a for better OpenAI compatibility
+        const newPath = req.file.path.replace('.mp4', '.m4a');
+        try {
+          fs.renameSync(req.file.path, newPath);
+          audioFilePath = newPath;
+          console.log(`[Transcription] Converted .mp4 to .m4a for OpenAI compatibility`);
+        } catch (renameError) {
+          console.warn('Could not convert mp4 to m4a:', renameError);
+        }
       }
 
       // Use OpenAI Whisper to transcribe the audio
+      const fileStream = fs.createReadStream(audioFilePath);
+      
+      // Ensure proper filename for OpenAI (important for format detection)
+      const finalFilename = path.basename(audioFilePath);
+      
+      console.log(`[Transcription] Sending to OpenAI: ${finalFilename}, Path: ${audioFilePath}`);
+      
       const transcription = await openai.audio.transcriptions.create({
-        file: fs.createReadStream(audioFilePath),
+        file: fileStream,
         model: 'whisper-1',
         language: 'en', // Can be made dynamic based on user preference
         response_format: 'json',

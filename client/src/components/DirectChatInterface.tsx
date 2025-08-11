@@ -100,12 +100,13 @@ export function DirectChatInterface() {
       const options: MediaRecorderOptions = {};
       
       // Check which formats are supported by the browser
+      // WebM is most reliable with OpenAI Whisper, prioritize it
       const supportedFormats = [
-        'audio/mp4',           // Most compatible with OpenAI Whisper
-        'audio/mp4;codecs=mp4a.40.2',  // MP4 with AAC codec
-        'audio/webm;codecs=opus',      // WebM with Opus (fallback)
+        'audio/webm;codecs=opus',      // WebM with Opus - most reliable 
         'audio/webm',                  // WebM default
-        'audio/ogg;codecs=opus'        // OGG as last resort
+        'audio/ogg;codecs=opus',       // OGG as fallback
+        'audio/mp4',                   // MP4 (some codecs cause issues)
+        'audio/mp4;codecs=mp4a.40.2'   // MP4 with AAC codec
       ];
       
       for (const format of supportedFormats) {
@@ -234,18 +235,19 @@ export function DirectChatInterface() {
     
     try {
       const formData = new FormData();
-      // Determine file extension based on mime type
-      let filename = 'recording.webm'; // default fallback
-      if (audioBlob.type.includes('mp4')) {
-        filename = 'recording.mp4';
-      } else if (audioBlob.type.includes('m4a')) {
-        filename = 'recording.m4a';
-      } else if (audioBlob.type.includes('wav')) {
-        filename = 'recording.wav';
+      // Determine file extension based on mime type, prioritizing reliable formats
+      let filename = 'recording.webm'; // webm default (most reliable)
+      if (audioBlob.type.includes('webm')) {
+        filename = 'recording.webm';
       } else if (audioBlob.type.includes('ogg')) {
         filename = 'recording.ogg';
-      } else if (audioBlob.type.includes('webm')) {
-        filename = 'recording.webm';
+      } else if (audioBlob.type.includes('wav')) {
+        filename = 'recording.wav';
+      } else if (audioBlob.type.includes('m4a')) {
+        filename = 'recording.m4a';
+      } else if (audioBlob.type.includes('mp4')) {
+        // Use .m4a extension for better OpenAI compatibility
+        filename = 'recording.m4a';
       }
       
       console.log('Sending audio file:', filename, 'Type:', audioBlob.type, 'Size:', audioBlob.size);
