@@ -79,14 +79,30 @@ export function registerTranscriptionRoutes(app: Express) {
       let audioFilePath = req.file.path;
       const originalExtension = path.extname(req.file.originalname || '').toLowerCase();
       
-      // If no extension or unknown format, try to detect and fix
-      if (!originalExtension || !['.wav', '.mp3', '.m4a', '.webm', '.ogg', '.flac'].includes(originalExtension)) {
-        // Rename file to .webm as default for web recordings
-        const newPath = req.file.path + '.webm';
+      console.log(`[Transcription] Original file: ${req.file.originalname}, Extension: ${originalExtension}, MIME: ${req.file.mimetype}`);
+      
+      // Always add proper extension for OpenAI Whisper compatibility
+      if (!originalExtension) {
+        let newExtension = '.webm'; // default
+        
+        // Try to determine extension from MIME type or filename
+        if (req.file.mimetype?.includes('mp4') || req.file.originalname?.includes('mp4')) {
+          newExtension = '.mp4';
+        } else if (req.file.mimetype?.includes('m4a') || req.file.originalname?.includes('m4a')) {
+          newExtension = '.m4a';
+        } else if (req.file.mimetype?.includes('wav') || req.file.originalname?.includes('wav')) {
+          newExtension = '.wav';
+        } else if (req.file.mimetype?.includes('ogg') || req.file.originalname?.includes('ogg')) {
+          newExtension = '.ogg';
+        } else if (req.file.mimetype?.includes('webm') || req.file.originalname?.includes('webm')) {
+          newExtension = '.webm';
+        }
+        
+        const newPath = req.file.path + newExtension;
         try {
           fs.renameSync(req.file.path, newPath);
           audioFilePath = newPath;
-          console.log(`[Transcription] Renamed audio file to .webm format`);
+          console.log(`[Transcription] Added extension: ${newExtension}`);
         } catch (renameError) {
           console.warn('Could not rename audio file:', renameError);
         }

@@ -89,16 +89,28 @@ export function DirectChatInterface() {
         } 
       });
       
-      // Check if browser supports WebM
+      // Try formats that OpenAI Whisper definitely supports, in order of preference
       const options: MediaRecorderOptions = {};
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        options.mimeType = 'audio/webm;codecs=opus';
-      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-        options.mimeType = 'audio/webm';
-      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        options.mimeType = 'audio/mp4';
-      } else {
-        console.warn('No supported audio format found, using default');
+      
+      // Check which formats are supported by the browser
+      const supportedFormats = [
+        'audio/mp4',           // Most compatible with OpenAI Whisper
+        'audio/mp4;codecs=mp4a.40.2',  // MP4 with AAC codec
+        'audio/webm;codecs=opus',      // WebM with Opus (fallback)
+        'audio/webm',                  // WebM default
+        'audio/ogg;codecs=opus'        // OGG as last resort
+      ];
+      
+      for (const format of supportedFormats) {
+        if (MediaRecorder.isTypeSupported(format)) {
+          options.mimeType = format;
+          console.log(`Using audio format: ${format}`);
+          break;
+        }
+      }
+      
+      if (!options.mimeType) {
+        console.warn('No preferred audio format found, using browser default');
       }
       
       const recorder = new MediaRecorder(stream, options);
@@ -215,7 +227,22 @@ export function DirectChatInterface() {
     
     try {
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
+      // Determine file extension based on mime type
+      let filename = 'recording.webm'; // default fallback
+      if (audioBlob.type.includes('mp4')) {
+        filename = 'recording.mp4';
+      } else if (audioBlob.type.includes('m4a')) {
+        filename = 'recording.m4a';
+      } else if (audioBlob.type.includes('wav')) {
+        filename = 'recording.wav';
+      } else if (audioBlob.type.includes('ogg')) {
+        filename = 'recording.ogg';
+      } else if (audioBlob.type.includes('webm')) {
+        filename = 'recording.webm';
+      }
+      
+      console.log('Sending audio file:', filename, 'Type:', audioBlob.type, 'Size:', audioBlob.size);
+      formData.append('audio', audioBlob, filename);
       formData.append('sessionId', sessionId);
 
       const response = await fetch('/api/transcribe', {

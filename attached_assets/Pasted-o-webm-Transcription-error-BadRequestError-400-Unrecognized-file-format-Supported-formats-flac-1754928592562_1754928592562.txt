@@ -1,0 +1,49 @@
+o/webm
+Transcription error: BadRequestError: 400 Unrecognized file format. Supported formats: ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']
+    at Function.generate (/home/runner/workspace/node_modules/openai/src/core/error.ts:72:14)
+    at OpenAI.makeStatusError (/home/runner/workspace/node_modules/openai/src/client.ts:445:28)
+    at OpenAI.makeRequest (/home/runner/workspace/node_modules/openai/src/client.ts:668:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/transcription.ts:96:29) {
+  status: 400,
+  headers: Headers {
+    date: 'Mon, 11 Aug 2025 16:09:36 GMT',
+    'content-type': 'application/json',
+    'content-length': '239',
+    connection: 'keep-alive',
+    'access-control-expose-headers': 'X-Request-ID',
+    'openai-organization': 'new-mind-technologies',
+    'openai-processing-ms': '557',
+    'openai-project': 'proj_NuAqDcWFdEeuKn1X8x2sU1F7',
+    'openai-version': '2020-10-01',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    via: 'envoy-router-69cf494888-hprxh',
+    'x-envoy-upstream-service-time': '734',
+    'x-ratelimit-limit-requests': '7500',
+    'x-ratelimit-remaining-requests': '7499',
+    'x-ratelimit-reset-requests': '8ms',
+    'x-request-id': 'req_b81ffd1f96a94d67b9f969abe4224951',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '__cf_bm=tPz5Rq9Z9m89.FN43lzrzOXpSlSHJylkwUQPN_BQI1o-1754928576-1.0.1.1-vJwD.by3e_AzyvRJoNk.6ts0v86Ml8_EaU3ruF.I4yOdkr0HfDSOrqELHZ4Dh7SVOfkZtjoIzkChW1lIioY4cFDGxVFD71h2653XMitw5RQ; path=/; expires=Mon, 11-Aug-25 16:39:36 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None, _cfuvid=6i2qfj4Dxm4Fe1MrHIfEvCnQWVllwjc9MCzK.Gh3WOk-1754928576829-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None',
+    'x-content-type-options': 'nosniff',
+    server: 'cloudflare',
+    'cf-ray': '96d8ff902e6d34ef-SEA',
+    'alt-svc': 'h3=":443"; ma=86400'
+  },
+  requestID: 'req_b81ffd1f96a94d67b9f969abe4224951',
+  error: {
+    message: "Unrecognized file format. Supported formats: ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']",
+    type: 'invalid_request_error',
+    param: null,
+    code: null
+  },
+  code: null,
+  param: null,
+  type: 'invalid_request_error'
+}
+4:09:36 PM [express] POST /api/transcribe 400 in 839ms :: {"error":"Unsupported audio format","hint"…
+4:09:38 PM [express] GET /api/tasks 304 in 0ms :: {"tasks":[]}
+4:09:41 PM [express] GET /api/tasks 304 in 0ms :: {"tasks":[]}
+4:09:44 PM [express] GET /api/tasks 304 in 0ms :: {"tasks":[]}
+4:09:47 PM [express] GET /api/tasks 304 in 0ms :: {"tasks":[]}
+4:09:50 PM [express] GET /api/tasks 304 in 0ms :: {"tasks":[]}
