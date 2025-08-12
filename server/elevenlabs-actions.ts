@@ -100,25 +100,61 @@ export function registerElevenLabsActions(app: Express) {
     }
   });
 
-  // update_step_status{ step_id, status }
+  // update_step_status{ taskIndex, stepIndex, status }
   app.post("/api/actions/update_step_status", async (req, res) => {
     try {
-      const parsedAction = updateStepStatusActionSchema.parse(req.body);
+      console.log('[ElevenLabs] UPDATE_STEP_STATUS webhook called:', JSON.stringify(req.body, null, 2));
       
-      const step = await storage.updateStep(parsedAction.stepId, {
-        status: parsedAction.status
-      });
+      const { taskIndex, stepIndex, status } = req.body;
+      
+      if (!taskIndex || !stepIndex || !status) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "taskIndex, stepIndex, and status are required" 
+        });
+      }
 
+      // Get all tasks to find the one at taskIndex (1-based)
+      const sessionId = 'elevenlabs-default-session'; // Use default session for ElevenLabs
+      const tasks = await storage.listTasks(sessionId);
+      
+      // Convert 1-based index to 0-based for array access
+      const task = tasks[taskIndex - 1];
+      if (!task) {
+        return res.status(404).json({ 
+          success: false, 
+          error: `Task ${taskIndex} not found (only ${tasks.length} tasks exist)` 
+        });
+      }
+
+      // Get steps for this task
+      const steps = await storage.listSteps(task.id);
+      const step = steps[stepIndex - 1];
+      if (!step) {
+        return res.status(404).json({ 
+          success: false, 
+          error: `Step ${stepIndex} not found in task ${taskIndex} (only ${steps.length} steps exist)` 
+        });
+      }
+
+      // Update step status
+      const updatedStep = await storage.updateStep(step.id, { status: status as any });
+      
+      console.log(`[ElevenLabs] Updated step ${stepIndex} in task ${taskIndex} to status: ${status}`);
+      
       res.json({ 
         success: true, 
-        step,
-        message: `Updated step status to "${parsedAction.status}"`
+        message: `Step ${stepIndex} marked as ${status}`,
+        taskTitle: task.title,
+        stepTitle: step.title,
+        newStatus: status
       });
+      
     } catch (error) {
       console.error('Update step status action error:', error);
-      res.status(400).json({ 
-        error: "Invalid update_step_status payload or step not found",
-        hint: "Expected: { stepId: string, status: 'pending'|'running'|'blocked'|'done' }"
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to update step status" 
       });
     }
   });

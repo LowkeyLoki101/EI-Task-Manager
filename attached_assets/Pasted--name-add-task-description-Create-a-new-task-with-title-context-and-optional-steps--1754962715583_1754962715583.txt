@@ -1,0 +1,78 @@
+{
+  "name": "add_task",
+  "description": "Create a new task with title, context, and optional steps.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto",
+  "assignments": [],
+  "type": "webhook",
+  "api_schema": {
+    "url": "https://Emergent-Assistant.replit.app/api/actions/add_task",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Collect sessionId (string), title (string), optional context (computer|phone|physical), and optional steps (array of strings). Ask a follow-up if title is missing.",
+      "properties": [
+        {
+          "id": "title",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Short title for the task.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": true
+        },
+        {
+          "id": "steps",
+          "type": "array",
+          "description": "Optional list of step descriptions.",
+          "items": {
+            "id": "",
+            "type": "string",
+            "value_type": "llm_prompt",
+            "description": "Optional list of step descriptions.",
+            "dynamic_variable": "",
+            "constant_value": "",
+            "required": false
+          },
+          "required": false,
+          "value_type": "llm_prompt"
+        },
+        {
+          "id": "context",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "computer, phone, physical.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "sessionId",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Session identifier for this user.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": true
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}
