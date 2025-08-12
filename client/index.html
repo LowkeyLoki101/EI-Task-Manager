@@ -2,18 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
     <!-- CSP removed to allow ElevenLabs widget full access -->
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- ElevenLabs Widget - with positioning like voice-sanity.html -->
+    <!-- ElevenLabs Widget - Mobile Optimized -->
     <elevenlabs-convai 
       id="el-agent"
       agent-id="agent_7401k28d3x9kfdntv7cjrj6t43be"
-      style="position: fixed; right: 24px; bottom: 24px; z-index: 9999;"
+      style="position: fixed; right: 12px; bottom: 12px; z-index: 9999; max-width: calc(100vw - 24px); max-height: calc(100vh - 24px);"
     ></elevenlabs-convai>
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
     
