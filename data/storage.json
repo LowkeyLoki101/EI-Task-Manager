@@ -14,6 +14,20 @@
         "createdAt": "2025-08-12T02:51:37.658Z",
         "updatedAt": "2025-08-12T02:51:37.658Z"
       }
+    ],
+    [
+      "e2267996-42d0-4bc0-89c6-efd2052f7460",
+      {
+        "id": "e2267996-42d0-4bc0-89c6-efd2052f7460",
+        "sessionId": "s_y439m78bw1",
+        "title": "Debug Test Task",
+        "context": "computer",
+        "timeWindow": "any",
+        "status": "today",
+        "description": null,
+        "createdAt": "2025-08-12T03:04:16.515Z",
+        "updatedAt": "2025-08-12T03:04:16.515Z"
+      }
     ]
   ],
   "steps": [],

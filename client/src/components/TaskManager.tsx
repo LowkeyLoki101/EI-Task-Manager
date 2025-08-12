@@ -38,6 +38,11 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
   // Extract tasks array from response
   const tasks = tasksResponse.tasks || tasksResponse || [];
   
+  // Debug logging to help user understand what's happening
+  console.log('[TaskManager Debug] SessionId:', sessionId);
+  console.log('[TaskManager Debug] Tasks found:', tasks.length);
+  console.log('[TaskManager Debug] Tasks:', tasks.map(t => ({ title: t.title, sessionId: t.sessionId })));
+  
   const filteredTasks = tasks.filter((task: Task) => {
     if (statusFilter === 'all') return true;
     return task.status === statusFilter;

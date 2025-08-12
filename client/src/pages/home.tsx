@@ -128,6 +128,9 @@ export default function HomePage() {
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Your Tasks
               </h3>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                Session: {sessionId.slice(0, 8)}...
+              </div>
               <button
                 onClick={async () => {
                   try {
@@ -138,7 +141,7 @@ export default function HomePage() {
                         title: 'Voice Test Task',
                         context: 'computer',
                         steps: ['Research topic', 'Create outline', 'Write content'],
-                        sessionId: 'elevenlabs-default-session'
+                        sessionId: sessionId
                       })
                     });
                     if (response.ok) {
