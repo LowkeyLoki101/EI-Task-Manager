@@ -96,6 +96,26 @@
         "createdAt": "2025-08-12T16:17:58.757Z",
         "updatedAt": "2025-08-12T16:17:58.757Z"
       }
+    ],
+    [
+      "532ea061-239c-4e3d-a781-92e543a98b98",
+      {
+        "title": "Verify and Track Workstation Tool Functionality",
+        "context": "computer",
+        "timeWindow": "any",
+        "status": "today",
+        "sessionId": "s_njlk7hja5y9",
+        "id": "532ea061-239c-4e3d-a781-92e543a98b98",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "category": "general",
+        "dueDate": null,
+        "resources": [],
+        "notes": null,
+        "createdAt": "2025-08-12T16:33:53.125Z",
+        "updatedAt": "2025-08-12T16:33:53.125Z"
+      }
     ]
   ],
   "steps": [],

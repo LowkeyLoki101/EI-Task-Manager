@@ -53,6 +53,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register AI Workstation Artifact System
   const { registerArtifactRoutes } = await import('./artifacts');
   registerArtifactRoutes(app);
+
+  // Register AI Autonomous Workstation Controller
+  const { registerAiWorkstationRoutes } = await import('./ai-workstation');
+  registerAiWorkstationRoutes(app);
   
   // Import project context management
   const { projectContextManager, processProjectAwareConversation } = await import("./project-context");

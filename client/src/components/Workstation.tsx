@@ -19,6 +19,13 @@ interface WorkstationProps {
   className?: string;
 }
 
+interface WorkstationState {
+  mode: 'ai' | 'human';
+  aiActive: boolean;
+  lastAiAction: Date | null;
+  maintenanceSchedule: string[];
+}
+
 const tools: WorkstationTool[] = [
   {
     id: 'diary',
@@ -65,9 +72,112 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
   const [isExpanded, setIsExpanded] = useState(true);
   const [aiThinking, setAiThinking] = useState<string>('');
   const [currentPayload, setCurrentPayload] = useState<any>(null);
+  const [workstationState, setWorkstationState] = useState<WorkstationState>({
+    mode: 'human',
+    aiActive: false,
+    lastAiAction: null,
+    maintenanceSchedule: []
+  });
+  const [userActions, setUserActions] = useState<string[]>([]);
   const workstationRef = useRef<HTMLDivElement>(null);
+  const aiIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Listen for AI workstation control events
+  // AI Autonomous Mode Logic
+  useEffect(() => {
+    if (workstationState.mode === 'ai' && workstationState.aiActive) {
+      // Start AI autonomous behavior
+      aiIntervalRef.current = setInterval(() => {
+        performAutonomousAiAction();
+      }, 15000); // Every 15 seconds, AI considers an action
+
+      // Initial AI action
+      setTimeout(() => {
+        performAutonomousAiAction();
+      }, 2000);
+
+      return () => {
+        if (aiIntervalRef.current) {
+          clearInterval(aiIntervalRef.current);
+        }
+      };
+    }
+  }, [workstationState.mode, workstationState.aiActive, sessionId]);
+
+  // Human Mode - Log user actions
+  const logUserAction = (action: string) => {
+    if (workstationState.mode === 'human') {
+      const timestamp = new Date().toISOString();
+      const logEntry = `${timestamp}: ${action}`;
+      setUserActions(prev => [...prev.slice(-10), logEntry]);
+      console.log('[Workstation Human Mode]', logEntry);
+      
+      // Send to backend for AI observation
+      fetch('/api/workstation/human-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, action: logEntry })
+      }).catch(console.error);
+    }
+  };
+
+  // AI Autonomous Actions
+  const performAutonomousAiAction = async () => {
+    if (workstationState.mode !== 'ai') return;
+
+    try {
+      const response = await fetch(`/api/workstation/ai-action/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          currentTool: activeTool,
+          lastAction: workstationState.lastAiAction 
+        })
+      });
+
+      if (response.ok) {
+        const action = await response.json();
+        if (action.tool && action.thinking) {
+          setAiThinking(action.thinking);
+          setActiveTool(action.tool);
+          setCurrentPayload(action.payload || null);
+          setIsExpanded(true);
+          
+          setWorkstationState(prev => ({
+            ...prev,
+            lastAiAction: new Date()
+          }));
+
+          // Log AI action
+          console.log('[Workstation AI Mode]', action.thinking);
+        }
+      }
+    } catch (error) {
+      console.error('[Workstation AI] Action failed:', error);
+    }
+  };
+
+  // Toggle between AI and Human modes
+  const toggleMode = () => {
+    setWorkstationState(prev => {
+      const newMode: 'ai' | 'human' = prev.mode === 'ai' ? 'human' : 'ai';
+      const newState: WorkstationState = {
+        ...prev,
+        mode: newMode,
+        aiActive: newMode === 'ai'
+      };
+      
+      if (newMode === 'ai') {
+        setAiThinking('Initiating autonomous mode...');
+      } else {
+        setAiThinking('');
+        setUserActions([]);
+      }
+      
+      return newState;
+    });
+  };
+
+  // Listen for external workstation control events
   useEffect(() => {
     const handleWorkstationOpen = (event: CustomEvent) => {
       const { tool, payload, thinking } = event.detail;
@@ -79,16 +189,9 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       }
     };
 
-    const handleAiThinking = (event: CustomEvent) => {
-      setAiThinking(event.detail.message || '');
-    };
-
     window.addEventListener('workstation:open', handleWorkstationOpen as EventListener);
-    window.addEventListener('workstation:thinking', handleAiThinking as EventListener);
-
     return () => {
       window.removeEventListener('workstation:open', handleWorkstationOpen as EventListener);
-      window.removeEventListener('workstation:thinking', handleAiThinking as EventListener);
     };
   }, []);
 
@@ -133,9 +236,22 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-amber-500/20 bg-gradient-to-r from-slate-800/50 to-gray-700/50">
         <div className="flex items-center gap-3">
-          <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse shadow-lg shadow-amber-400/50"></div>
+          <div className={`w-3 h-3 rounded-full shadow-lg ${
+            workstationState.mode === 'ai' 
+              ? 'bg-amber-400 animate-pulse shadow-amber-400/50' 
+              : 'bg-blue-400 shadow-blue-400/50'
+          }`}></div>
           <div>
-            <h3 className="text-sm font-bold text-amber-100">AI WORKSTATION</h3>
+            <h3 className="text-sm font-bold text-amber-100">
+              AI WORKSTATION
+              <span className={`ml-2 text-xs px-2 py-0.5 rounded ${
+                workstationState.mode === 'ai' 
+                  ? 'bg-amber-900/30 text-amber-300' 
+                  : 'bg-blue-900/30 text-blue-300'
+              }`}>
+                {workstationState.mode === 'ai' ? 'AI MODE' : 'HUMAN MODE'}
+              </span>
+            </h3>
             {aiThinking && (
               <p className="text-xs text-amber-300/80 mt-0.5">
                 {aiThinking}
@@ -146,6 +262,19 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
         
         {/* Controls */}
         <div className="flex items-center gap-2">
+          {/* AI/Human Mode Toggle */}
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={toggleMode}
+            className={`text-xs px-3 border ${
+              workstationState.mode === 'ai' 
+                ? 'border-amber-500/40 text-amber-300 hover:bg-amber-900/20' 
+                : 'border-blue-500/40 text-blue-300 hover:bg-blue-900/20'
+            }`}
+          >
+            {workstationState.mode === 'ai' ? 'Switch to Human' : 'Enable AI'}
+          </Button>
           {/* Height Controls */}
           <div className="flex items-center gap-1">
             <Button 
@@ -206,13 +335,18 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
               key={tool.id}
               variant={activeTool === tool.id ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => setActiveTool(tool.id)}
+              onClick={() => {
+                setActiveTool(tool.id);
+                logUserAction(`Switched to ${tool.name} tool`);
+              }}
+              disabled={workstationState.mode === 'ai'}
               className={`
                 flex items-center gap-1.5 text-xs h-8 px-3
                 ${activeTool === tool.id 
                   ? 'bg-amber-900/30 text-amber-100 border border-amber-500/30 shadow-md' 
                   : 'text-amber-300/70 hover:text-amber-200 hover:bg-amber-900/10'
                 }
+                ${workstationState.mode === 'ai' ? 'opacity-50 cursor-not-allowed' : ''}
               `}
             >
               <Icon className="h-3.5 w-3.5" />

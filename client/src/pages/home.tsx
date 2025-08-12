@@ -18,7 +18,6 @@ import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
 import { Code, BookOpen } from 'lucide-react';
 import Workstation from '../components/Workstation';
-import WorkstationDemo from '../components/WorkstationDemo';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -141,9 +140,6 @@ export default function HomePage() {
           
           {/* AI Workstation - Dynamic Tools Panel */}
           <Workstation sessionId={sessionId} className="mb-6" />
-
-          {/* Workstation Demo Controls */}
-          <WorkstationDemo onDemoAction={(action) => console.log('Demo:', action)} />
 
           {/* Direct Chat with GPT-5 - Primary Interface (Top Priority) */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
