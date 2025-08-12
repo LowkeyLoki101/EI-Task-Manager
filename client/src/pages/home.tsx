@@ -188,7 +188,7 @@ export default function HomePage() {
       </main>
 
       {/* ElevenLabs Voice Widget */}
-      <VoiceWidget />
+      <VoiceWidget sessionId={sessionId} />
     </div>
   );
 }

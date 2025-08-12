@@ -10,9 +10,13 @@ declare global {
 
 interface VoiceWidgetProps {
   agentId?: string;
+  sessionId?: string;
 }
 
-export function VoiceWidget({ agentId = 'agent_7401k28d3x9kfdntv7cjrj6t43be' }: VoiceWidgetProps) {
+export function VoiceWidget({ 
+  agentId = 'agent_7401k28d3x9kfdntv7cjrj6t43be',
+  sessionId = 'default'
+}: VoiceWidgetProps) {
   const widgetRef = useRef<HTMLElement>(null);
   const scriptLoaded = useRef(false);
 
@@ -67,6 +71,7 @@ export function VoiceWidget({ agentId = 'agent_7401k28d3x9kfdntv7cjrj6t43be' }: 
       <elevenlabs-convai
         ref={widgetRef}
         agent-id={agentId}
+        session-id={sessionId}
         data-testid="elevenlabs-widget"
         key="single-voice-widget"
       />
