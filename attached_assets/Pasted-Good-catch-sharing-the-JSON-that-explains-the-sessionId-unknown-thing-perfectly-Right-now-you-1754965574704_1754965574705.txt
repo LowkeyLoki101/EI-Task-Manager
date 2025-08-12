@@ -1,0 +1,68 @@
+Good catch sharing the JSON — that explains the “sessionId: unknown” thing perfectly.
+
+Right now your add_task tool says:
+
+{
+  "id": "sessionId",
+  "type": "string",
+  "value_type": "llm_prompt",   <-- this is the problem
+  "dynamic_variable": "",
+  "required": true
+}
+
+That tells ElevenLabs: “ask the model to guess the sessionId from what the user says.” The model has no clue, so you get "unknown".
+
+You want the tool to say: “use the dynamic variable named sessionId that my page provides.”
+
+Fix (Form mode, exact clicks)
+	•	Open add_task → Edit.
+	•	Body parameters → find the sessionId property.
+	•	Value Type: change from LLM Prompt → Dynamic variable.
+	•	A small input appears; type sessionId in that box (exactly).
+	•	Save.
+
+(why: Dynamic variable = “fill this from the host app”, not from the transcript.)
+
+If you prefer JSON (just this property)
+
+Replace only the sessionId property with:
+
+{
+  "id": "sessionId",
+  "type": "string",
+  "value_type": "dynamic_variable",
+  "dynamic_variable": "sessionId",
+  "description": "Session identifier for this user.",
+  "required": true
+}
+
+Everything else in your tool JSON can stay as-is.
+
+Also make sure the widget provides it
+
+Your React hook is creating the value, but the widget needs to receive it:
+
+useEffect(() => {
+  const el = document.querySelector("elevenlabs-convai");
+  if (el && sessionId) {
+    el.setAttribute("dynamic-variables", JSON.stringify({ sessionId }));
+  }
+}, [sessionId]);
+
+(If you don’t set this attribute, the dynamic variable is empty → “unknown”.)
+
+Quick test
+	1.	Refresh your page (so the widget re-initializes with the attribute).
+	2.	Speak: “Create a task to call Lauren.”
+	3.	In your Replit logs you should now see:
+
+{
+  "sessionId": "s_abcdef...", 
+  "title": "Call Lauren",
+  "context": "phone",
+  "steps": []
+}
+
+(If you still see "unknown", it means either the tool field is still set to LLM Prompt, or the widget attribute isn’t being set. Double-check both.)
+
+Want me to do the same change for get_todo_list next (it also needs sessionId as a Dynamic variable)?

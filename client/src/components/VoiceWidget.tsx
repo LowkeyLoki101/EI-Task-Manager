@@ -66,6 +66,15 @@ export function VoiceWidget({
     };
   }, []);
 
+  // Set dynamic variables when sessionId changes
+  useEffect(() => {
+    const el = document.querySelector("elevenlabs-convai");
+    if (el && sessionId) {
+      el.setAttribute("dynamic-variables", JSON.stringify({ sessionId }));
+      console.log('[ElevenLabs] Set dynamic variables:', { sessionId });
+    }
+  }, [sessionId]);
+
   return (
     <div className="fixed bottom-4 right-4 z-50">
       <elevenlabs-convai
