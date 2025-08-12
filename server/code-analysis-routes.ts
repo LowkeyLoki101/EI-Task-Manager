@@ -243,10 +243,9 @@ export function registerCodeAnalysisRoutes(app: Express) {
     try {
       const { sessionId } = req.params;
       
-      const [recommendations, analyses, stats] = await Promise.all([
+      const [recommendations, analyses] = await Promise.all([
         storage.listCodeRecommendations(sessionId),
-        storage.listFileAnalysis(sessionId),
-        storage.getSystemStats(sessionId)
+        storage.listFileAnalysis(sessionId)
       ]);
 
       // Generate insights summary
@@ -257,8 +256,7 @@ export function registerCodeAnalysisRoutes(app: Express) {
           pendingRecommendations: recommendations.filter(r => r.status === 'pending').length,
           approvedRecommendations: recommendations.filter(r => r.status === 'approved').length,
           averageConfidence: recommendations.reduce((sum, r) => sum + r.confidence, 0) / recommendations.length || 0,
-          totalAnalyses: analyses.length,
-          ...stats
+          totalAnalyses: analyses.length
         },
         recentRecommendations: recommendations.slice(0, 10),
         topIssueTypes: getTopIssueTypes(analyses),

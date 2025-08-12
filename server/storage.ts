@@ -284,9 +284,10 @@ export class MemStorage implements IStorage {
 
   // Tasks (Memory Anchors Architecture)
   async createTask(insertTask: InsertTask): Promise<Task> {
+    const id = randomUUID();
     const task: Task = {
       ...insertTask,
-      id: insertTask.id || randomUUID(),
+      id,
       status: insertTask.status || 'backlog',
       context: insertTask.context || 'computer',
       timeWindow: insertTask.timeWindow || 'any',
@@ -837,6 +838,8 @@ export class MemStorage implements IStorage {
       confidence: insertRecommendation.confidence || 5,
       tags: insertRecommendation.tags || [],
       metadata: insertRecommendation.metadata || {},
+      filePath: insertRecommendation.filePath || null,
+      codeSnippet: insertRecommendation.codeSnippet || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -898,6 +901,7 @@ export class MemStorage implements IStorage {
     const vote: RecommendationVote = {
       ...insertVote,
       id,
+      feedback: insertVote.feedback || null,
       createdAt: new Date(),
     };
     this.recommendationVotes.set(vote.id, vote);
@@ -986,6 +990,8 @@ export class MemStorage implements IStorage {
       status: insertRequest.status || "pending",
       filters: insertRequest.filters || {},
       metadata: insertRequest.metadata || {},
+      fileUrl: insertRequest.fileUrl || null,
+      fileName: insertRequest.fileName || null,
       createdAt: new Date(),
       completedAt: null,
     };
