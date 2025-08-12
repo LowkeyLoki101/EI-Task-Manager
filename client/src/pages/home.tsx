@@ -7,6 +7,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import SimpleTaskManager from '../components/SimpleTaskManager';
 import { DirectChatInterface } from '../components/DirectChatInterface';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
+import VoiceWidget from '../components/VoiceWidget';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -160,7 +161,8 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Widget is now in index.html as per ElevenLabs documentation */}
+      {/* ElevenLabs Voice Widget */}
+      <VoiceWidget />
     </div>
   );
 }
