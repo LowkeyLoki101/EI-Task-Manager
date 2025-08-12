@@ -20,12 +20,18 @@ export function registerElevenLabsActions(app: Express) {
   // add_task{ title, context?, time_window?, steps? }
   app.post("/api/actions/add_task", async (req, res) => {
     try {
-      const { sessionId, ...actionData } = req.body;
+      console.log('[ElevenLabs] add_task webhook called:', JSON.stringify(req.body, null, 2));
+      
+      let { sessionId, ...actionData } = req.body;
       const parsedAction = addTaskActionSchema.parse(actionData);
       
+      // If no sessionId provided, generate a default one that the frontend can use
       if (!sessionId) {
-        return res.status(400).json({ error: "sessionId required" });
+        sessionId = 'elevenlabs-default-session';
+        console.log('[ElevenLabs] No sessionId provided, using default:', sessionId);
       }
+      
+      console.log('[ElevenLabs] Creating task with sessionId:', sessionId);
 
       // Create the task
       const task = await storage.createTask({

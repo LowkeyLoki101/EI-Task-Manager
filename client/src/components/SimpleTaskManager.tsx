@@ -13,11 +13,25 @@ export default function SimpleTaskManager({ sessionId }: SimpleTaskManagerProps)
   const [statusFilter, setStatusFilter] = useState('all');
   const queryClient = useQueryClient();
   
+  // Query tasks from both user session and ElevenLabs session
   const { data: tasksResponse = { tasks: [] }, isLoading } = useQuery({
     queryKey: ['/api/tasks', sessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/tasks?sessionId=${sessionId}`);
-      return response.json();
+      // Get tasks from user's session
+      const userResponse = await fetch(`/api/tasks?sessionId=${sessionId}`);
+      const userData = await userResponse.json();
+      
+      // Also get tasks from ElevenLabs default session
+      const elevenlabsResponse = await fetch(`/api/tasks?sessionId=elevenlabs-default-session`);
+      const elevenlabsData = await elevenlabsResponse.json();
+      
+      // Combine tasks from both sessions
+      const allTasks = [
+        ...(userData.tasks || []),
+        ...(elevenlabsData.tasks || [])
+      ];
+      
+      return { tasks: allTasks };
     },
     refetchInterval: 3000,
     enabled: !!sessionId

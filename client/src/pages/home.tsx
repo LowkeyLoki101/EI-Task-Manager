@@ -121,9 +121,36 @@ export default function HomePage() {
 
           {/* Task Manager - Now Connected to Main UI */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Your Tasks
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Your Tasks
+              </h3>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/actions/add_task', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        title: 'Voice Test Task',
+                        context: 'computer',
+                        steps: ['Research topic', 'Create outline', 'Write content'],
+                        sessionId: 'elevenlabs-default-session'
+                      })
+                    });
+                    if (response.ok) {
+                      console.log('Test task created!');
+                    }
+                  } catch (error) {
+                    console.error('Failed to create test task:', error);
+                  }
+                }}
+                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                data-testid="button-test-voice"
+              >
+                Test Voice Task
+              </button>
+            </div>
             <SimpleTaskManager sessionId={sessionId} />
           </div>
 
