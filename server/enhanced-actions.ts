@@ -1,279 +1,265 @@
-// Enhanced ElevenLabs Actions with SDK integration and file operations
-import type { Express } from "express";
-import { storage } from "./storage";
-import type { SelectTask, SelectStep } from "@shared/schema";
-import { voiceService } from "./elevenlabs-sdk";
-import { fileOperationsService } from "./file-operations";
-import { z } from "zod";
-import { randomUUID } from "crypto";
-import path from "path";
+import { Express } from 'express';
+import { storage } from './storage';
+import { n8nService } from './n8n-integration';
 
-// Enhanced action schemas for file operations
-export const createFileReportActionSchema = z.object({
-  sessionId: z.string(),
-  type: z.enum(['tasks', 'steps']),
-  format: z.enum(['excel', 'csv']),
-  filters: z.object({
-    status: z.string().optional(),
-    context: z.string().optional(),
-    timeWindow: z.string().optional()
-  }).optional()
-});
-
-export const importTasksActionSchema = z.object({
-  sessionId: z.string(),
-  filePath: z.string()
-});
-
-export const voiceSynthesisActionSchema = z.object({
-  text: z.string(),
-  voiceId: z.string().optional()
-});
-
-export const taskSummaryActionSchema = z.object({
-  sessionId: z.string(),
-  includeAudio: z.boolean().default(true)
-});
-
+// Enhanced actions for n8n integration
 export function registerEnhancedActions(app: Express) {
-  
-  // Voice synthesis endpoint - Generate TTS for system responses
-  app.post("/api/actions/synthesize_voice", async (req, res) => {
+  // Enhanced add_task with automatic workflow suggestions
+  app.post('/api/actions/add_task_with_automation', async (req, res) => {
     try {
-      const { text, voiceId } = voiceSynthesisActionSchema.parse(req.body);
+      const { title, sessionId, context = 'computer', priority = 'medium' } = req.body;
       
-      const audioBuffer = await voiceService.synthesizeVoice(text, voiceId);
-      
-      res.set({
-        'Content-Type': 'audio/mpeg',
-        'Content-Length': audioBuffer.byteLength.toString()
-      });
-      
-      res.send(Buffer.from(audioBuffer));
-    } catch (error) {
-      console.error('Voice synthesis error:', error);
-      res.status(400).json({ 
-        error: "Voice synthesis failed",
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  // Get voice capabilities and settings
-  app.get("/api/actions/voice_capabilities", async (req, res) => {
-    try {
-      const capabilities = await voiceService.getVoiceCapabilities();
-      res.json({
-        success: true,
-        ...capabilities
-      });
-    } catch (error) {
-      console.error('Voice capabilities error:', error);
-      res.status(500).json({
-        error: "Failed to get voice capabilities",
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  // Create file report (Excel/CSV export of tasks or steps)
-  app.post("/api/actions/create_file_report", async (req, res) => {
-    try {
-      const { sessionId, type, format, filters } = createFileReportActionSchema.parse(req.body);
-      
-      let result;
-      
-      if (type === 'tasks') {
-        const tasks = await storage.listTasks(sessionId, {
-          context: filters?.context as any,
-          view: 'items'
-        });
-        result = await fileOperationsService.createTaskReport(tasks, format);
-      } else {
-        // Get all tasks first, then all their steps
-        const tasks = await storage.listTasks(sessionId, {
-          context: filters?.context as any,
-          view: 'items'
-        });
-        const allSteps = [];
-        for (const task of tasks) {
-          const steps = await storage.listSteps(task.id);
-          allSteps.push(...steps);
-        }
-        result = await fileOperationsService.createStepsReport(allSteps, format);
+      if (!title || !sessionId) {
+        return res.status(400).json({ error: 'Title and sessionId required' });
       }
 
-      if (result.success) {
-        res.json({
-          success: true,
-          message: result.message,
-          filePath: result.filePath,
-          downloadUrl: `/api/files/download/${path.basename(result.filePath!)}`
-        });
-
-        // Send audio response if available
-        if (result.audioResponse) {
-          // Could stream audio response here if needed
-        }
-      } else {
-        res.status(500).json({
-          error: result.message,
-          success: false
-        });
-      }
-    } catch (error) {
-      console.error('Create file report error:', error);
-      res.status(400).json({
-        error: "Failed to create file report",
-        message: error instanceof Error ? error.message : 'Unknown error'
+      // Create the task first
+      const task = await storage.createTask({
+        id: `task-${Date.now()}`,
+        title: title.trim(),
+        status: 'backlog',
+        context: context as 'computer' | 'phone' | 'physical',
+        priority: priority as 'low' | 'medium' | 'high',
+        sessionId,
+        timeWindow: 'any'
       });
-    }
-  });
 
-  // Import tasks from Excel/CSV file
-  app.post("/api/actions/import_tasks", async (req, res) => {
-    try {
-      const { sessionId, filePath } = importTasksActionSchema.parse(req.body);
-      
-      const result = await fileOperationsService.importTasksFromFile(filePath);
-      
-      if (result.success && result.data) {
-        // Save imported tasks to storage
-        const savedTasks = [];
-        for (const taskData of result.data) {
-          const task = await storage.createTask({
-            ...taskData,
-            sessionId
+      console.log(`[Enhanced Actions] Created task with automation: ${title}`);
+
+      // Get workflow suggestions for this task
+      let suggestions: any[] = [];
+      if (n8nService.isReady()) {
+        try {
+          const response = await fetch('http://localhost:5000/api/n8n/suggest-workflows', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              taskTitle: title,
+              taskContext: context,
+              sessionId
+            })
           });
-          savedTasks.push(task);
+          
+          if (response.ok) {
+            const data = await response.json();
+            suggestions = data.suggestions || [];
+          }
+        } catch (error) {
+          console.warn('[Enhanced Actions] Failed to get workflow suggestions:', error);
         }
-
-        res.json({
-          success: true,
-          message: result.message,
-          tasks: savedTasks,
-          importedCount: savedTasks.length
-        });
-
-        // Send audio response if available
-        if (result.audioResponse) {
-          // Could stream audio response here if needed
-        }
-      } else {
-        res.status(500).json({
-          error: result.message,
-          success: false
-        });
-      }
-    } catch (error) {
-      console.error('Import tasks error:', error);
-      res.status(400).json({
-        error: "Failed to import tasks",
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  // Generate voice task summary
-  app.post("/api/actions/task_summary", async (req, res) => {
-    try {
-      const { sessionId, includeAudio } = taskSummaryActionSchema.parse(req.body);
-      
-      const tasks = await storage.listTasks(sessionId, { view: 'items' });
-      const completedTasks = tasks.filter(t => t.status === 'done');
-      const pendingTasks = tasks.filter(t => t.status !== 'done');
-
-      const summary = {
-        total: tasks.length,
-        completed: completedTasks.length,
-        pending: pendingTasks.length,
-        byContext: {
-          computer: tasks.filter(t => t.context === 'computer').length,
-          phone: tasks.filter(t => t.context === 'phone').length,
-          physical: tasks.filter(t => t.context === 'physical').length
-        },
-        byStatus: {
-          backlog: tasks.filter(t => t.status === 'backlog').length,
-          today: tasks.filter(t => t.status === 'today').length,
-          doing: tasks.filter(t => t.status === 'doing').length,
-          done: tasks.filter(t => t.status === 'done').length
-        }
-      };
-
-      let audioResponse;
-      if (includeAudio) {
-        audioResponse = await voiceService.generateTaskSummary(tasks);
       }
 
-      res.json({
-        success: true,
-        summary,
-        hasAudio: !!audioResponse
-      });
-
-      // Send audio response if generated
-      if (audioResponse) {
-        // Could stream audio response here if needed
+      // Auto-create simple workflow for certain task types
+      let autoWorkflow = null;
+      if (n8nService.isReady() && shouldAutoCreateWorkflow(title)) {
+        try {
+          autoWorkflow = await n8nService.createTaskWorkflow(task);
+          console.log(`[Enhanced Actions] Auto-created workflow for task: ${title}`);
+        } catch (error) {
+          console.warn('[Enhanced Actions] Failed to auto-create workflow:', error);
+        }
       }
-    } catch (error) {
-      console.error('Task summary error:', error);
-      res.status(400).json({
-        error: "Failed to generate task summary",
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
 
-  // Enhanced task update with voice feedback
-  app.post("/api/actions/update_task_with_voice", async (req, res) => {
-    try {
-      const { taskId, updates } = req.body;
-      
-      const task = await storage.updateTask(taskId, updates);
-      
-      // Generate voice notification
-      const action = updates.status ? `marked as ${updates.status}` : 'updated';
-      const audioResponse = await voiceService.generateTaskNotification(task.title, action);
-      
       res.json({
         success: true,
         task,
-        message: `Task "${task.title}" ${action}`,
-        hasAudio: true
+        message: `Task "${title}" created successfully${autoWorkflow ? ' with automation workflow' : ''}`,
+        workflowSuggestions: suggestions,
+        autoWorkflow: autoWorkflow ? { id: autoWorkflow.id, name: autoWorkflow.name } : null
       });
-
-      // Send audio response if generated
-      if (audioResponse) {
-        // Could stream audio response here if needed
-      }
-    } catch (error) {
-      console.error('Update task with voice error:', error);
-      res.status(400).json({
-        error: "Failed to update task",
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
+    } catch (error: any) {
+      console.error('[Enhanced Actions] Error creating task with automation:', error);
+      res.status(500).json({ error: error?.message || 'Failed to create task' });
     }
   });
 
-  // File download endpoint for generated reports
-  app.get("/api/files/download/:filename", async (req, res) => {
+  // Create and execute LLM workflow for a task
+  app.post('/api/actions/automate_task_with_llm', async (req, res) => {
     try {
-      const filename = req.params.filename;
-      const filePath = path.join('uploads', filename);
+      const { taskId, prompt, sessionId } = req.body;
       
-      if (!filename.match(/^[a-zA-Z0-9\-_.]+$/)) {
-        return res.status(400).json({ error: "Invalid filename" });
+      if (!taskId || !prompt || !sessionId) {
+        return res.status(400).json({ error: 'TaskId, prompt, and sessionId required' });
       }
 
-      res.download(filePath, (err) => {
-        if (err) {
-          console.error('File download error:', err);
-          res.status(404).json({ error: "File not found" });
-        }
+      const task = await storage.getTask(taskId);
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+
+      if (!n8nService.isReady()) {
+        return res.status(503).json({ error: 'n8n automation service not available' });
+      }
+
+      // Create LLM workflow
+      const workflow = await n8nService.createLLMWorkflow(prompt, taskId);
+      
+      // Execute the workflow immediately
+      await n8nService.executeWorkflow(workflow.id);
+
+      // Update task to show it's being automated
+      await storage.updateTask(taskId, {
+        status: 'running',
+        description: `${task.description || ''}\n\n🤖 LLM Automation: ${prompt}`
       });
-    } catch (error) {
-      console.error('Download endpoint error:', error);
-      res.status(500).json({ error: "Download failed" });
+
+      res.json({
+        success: true,
+        workflow,
+        message: `LLM automation started for task: ${task.title}`,
+        taskStatus: 'running'
+      });
+    } catch (error: any) {
+      console.error('[Enhanced Actions] Error automating task with LLM:', error);
+      res.status(500).json({ error: error?.message || 'Failed to automate task' });
     }
   });
+
+  // Get automation status for tasks
+  app.get('/api/actions/automation_status/:sessionId', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      const tasks = await storage.getTasks(sessionId);
+      const automatedTasks = tasks.filter(task => 
+        task.description?.includes('🤖') || task.status === 'running'
+      );
+
+      let workflowCount = 0;
+      if (n8nService.isReady()) {
+        try {
+          const workflows = await n8nService.getWorkflows();
+          workflowCount = workflows.length;
+        } catch (error) {
+          console.warn('[Enhanced Actions] Failed to get workflow count:', error);
+        }
+      }
+
+      res.json({
+        success: true,
+        automatedTasks: automatedTasks.length,
+        totalTasks: tasks.length,
+        activeWorkflows: workflowCount,
+        n8nConnected: n8nService.isReady(),
+        message: `Found ${automatedTasks.length} automated tasks with ${workflowCount} active workflows`
+      });
+    } catch (error: any) {
+      console.error('[Enhanced Actions] Error getting automation status:', error);
+      res.status(500).json({ error: error?.message || 'Failed to get automation status' });
+    }
+  });
+
+  // Smart task recommendations based on workflow patterns
+  app.post('/api/actions/recommend_automations', async (req, res) => {
+    try {
+      const { sessionId, taskTitle } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ error: 'SessionId required' });
+      }
+
+      const recommendations = getAutomationRecommendations(taskTitle);
+      
+      res.json({
+        success: true,
+        recommendations,
+        message: `Found ${recommendations.length} automation recommendations`
+      });
+    } catch (error: any) {
+      console.error('[Enhanced Actions] Error getting recommendations:', error);
+      res.status(500).json({ error: error?.message || 'Failed to get recommendations' });
+    }
+  });
+}
+
+// Helper function to determine if a task should auto-create a workflow
+function shouldAutoCreateWorkflow(title: string): boolean {
+  const autoWorkflowPatterns = [
+    /send.*email/i,
+    /notify.*when/i,
+    /backup.*data/i,
+    /schedule.*meeting/i,
+    /report.*daily/i,
+    /monitor.*status/i
+  ];
+  
+  return autoWorkflowPatterns.some(pattern => pattern.test(title));
+}
+
+// Helper function to get automation recommendations
+function getAutomationRecommendations(taskTitle?: string): any[] {
+  const baseRecommendations = [
+    {
+      type: 'email_notification',
+      title: 'Email Status Updates',
+      description: 'Get notified via email when tasks are completed',
+      icon: '📧',
+      complexity: 'Easy'
+    },
+    {
+      type: 'slack_integration',
+      title: 'Slack Notifications',
+      description: 'Send task updates to your Slack channels',
+      icon: '💬',
+      complexity: 'Easy'
+    },
+    {
+      type: 'calendar_sync',
+      title: 'Calendar Integration',
+      description: 'Automatically schedule task deadlines in your calendar',
+      icon: '📅',
+      complexity: 'Medium'
+    },
+    {
+      type: 'data_backup',
+      title: 'Automated Backups',
+      description: 'Backup important task data to cloud storage',
+      icon: '💾',
+      complexity: 'Medium'
+    },
+    {
+      type: 'ai_analysis',
+      title: 'AI Task Analysis',
+      description: 'Get AI insights and suggestions for task optimization',
+      icon: '🤖',
+      complexity: 'Advanced'
+    }
+  ];
+
+  // Add task-specific recommendations
+  if (taskTitle) {
+    const title = taskTitle.toLowerCase();
+    
+    if (title.includes('email') || title.includes('send')) {
+      baseRecommendations.unshift({
+        type: 'email_automation',
+        title: 'Smart Email Automation',
+        description: 'Automatically compose and send emails based on task context',
+        icon: '🔄',
+        complexity: 'Medium'
+      });
+    }
+    
+    if (title.includes('data') || title.includes('analyze')) {
+      baseRecommendations.unshift({
+        type: 'data_processing',
+        title: 'Data Processing Pipeline',
+        description: 'Automated data analysis and reporting workflow',
+        icon: '📊',
+        complexity: 'Advanced'
+      });
+    }
+    
+    if (title.includes('social') || title.includes('post')) {
+      baseRecommendations.unshift({
+        type: 'social_automation',
+        title: 'Social Media Automation',
+        description: 'Schedule and post content across social platforms',
+        icon: '📱',
+        complexity: 'Medium'
+      });
+    }
+  }
+
+  return baseRecommendations.slice(0, 5); // Return top 5 recommendations
 }

@@ -55,6 +55,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register GPT-5 supervisor routes
   const { setupGPTSupervisor } = await import("./gpt-supervisor");
   setupGPTSupervisor(app);
+  
+  // Register n8n integration routes
+  try {
+    const { registerN8nRoutes } = await import("./n8n-routes");
+    registerN8nRoutes(app);
+    
+    // Register enhanced actions with n8n integration
+    const { registerEnhancedActions } = await import("./enhanced-actions");
+    registerEnhancedActions(app);
+    console.log('[Routes] n8n integration enabled');
+  } catch (error) {
+    console.warn('[Routes] Failed to load n8n integration:', error);
+  }
 
   // Register System Modifier for advanced GPT-5 capabilities
   const { registerSystemModifier } = await import("./system-modifier");

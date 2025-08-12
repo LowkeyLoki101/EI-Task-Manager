@@ -7,6 +7,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import TaskManager from '../components/TaskManager';
 import GPTSupervisor from '../components/GPTSupervisor';
 import TranscriptManager from '../components/TranscriptManager';
+import WorkflowVisualizer from '../components/WorkflowVisualizer';
 
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
@@ -160,6 +161,13 @@ export default function HomePage() {
             <TaskManager 
               sessionId={sessionId} 
               onVideoSelect={(video) => console.log('Video selected:', video)}
+            />
+          </div>
+
+          {/* n8n Workflow Automation */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <WorkflowVisualizer 
+              sessionId={sessionId} 
             />
           </div>
 
