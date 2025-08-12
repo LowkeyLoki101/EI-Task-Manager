@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb, Upload, X, Code, Zap } from 'lucide-react';
+import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb, Upload, X, Code, Zap, Copy, Check } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -42,6 +42,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const [showDiary, setShowDiary] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUserTyping, setIsUserTyping] = useState(false);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -174,6 +175,16 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const copyToClipboard = async (text: string, messageId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessageId(messageId);
+      setTimeout(() => setCopiedMessageId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
     }
   };
 
@@ -412,6 +423,31 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
                   <div className="text-sm whitespace-pre-wrap leading-relaxed">
                     {renderFormattedText(msg.content)}
                   </div>
+                  
+                  {/* Copy button for assistant messages */}
+                  {msg.role === 'assistant' && (
+                    <div className="mt-2 flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(msg.content, msg.id)}
+                        className="h-7 px-2 text-xs"
+                        data-testid={`copy-message-${msg.id}`}
+                      >
+                        {copiedMessageId === msg.id ? (
+                          <>
+                            <Check className="h-3 w-3 mr-1" />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3 mr-1" />
+                            Copy
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                   
                   {/* Show actions taken */}
                   {msg.metadata?.actionsTaken && msg.metadata.actionsTaken.length > 0 && (
