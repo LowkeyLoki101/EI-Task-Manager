@@ -126,50 +126,61 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Task Manager - Now Connected to Main UI */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Your Tasks
-              </h3>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Session: {sessionId.slice(0, 8)}...
+          {/* Task Manager with Integrated Chat - One cohesive structure */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            {/* Task Manager Header */}
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Your Tasks
+                </h3>
+                <div className="flex items-center gap-4">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Session: {sessionId.slice(0, 8)}...
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/actions/add_task', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            title: 'Voice Test Task',
+                            context: 'computer',
+                            steps: ['Research topic', 'Create outline', 'Write content'],
+                            sessionId: sessionId
+                          })
+                        });
+                        if (response.ok) {
+                          console.log('Test task created!');
+                        }
+                      } catch (error) {
+                        console.error('Failed to create test task:', error);
+                      }
+                    }}
+                    className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                    data-testid="button-test-voice"
+                  >
+                    Test Voice Task
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/actions/add_task', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        title: 'Voice Test Task',
-                        context: 'computer',
-                        steps: ['Research topic', 'Create outline', 'Write content'],
-                        sessionId: sessionId
-                      })
-                    });
-                    if (response.ok) {
-                      console.log('Test task created!');
-                    }
-                  } catch (error) {
-                    console.error('Failed to create test task:', error);
-                  }
-                }}
-                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                data-testid="button-test-voice"
-              >
-                Test Voice Task
-              </button>
             </div>
-            <TaskManager 
-              sessionId={sessionId} 
-              onVideoSelect={(video) => console.log('Video selected:', video)}
-            />
-          </div>
+            
+            {/* Task Manager Content */}
+            <div className="p-6">
+              <TaskManager 
+                sessionId={sessionId} 
+                onVideoSelect={(video) => console.log('Video selected:', video)}
+              />
+            </div>
 
-          {/* Autonomous Chat - Positioned directly under Task Manager */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <AutonomousChat sessionId={sessionId} />
+            {/* Integrated Autonomous Chat - Part of the same structure */}
+            <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+              <div className="p-6">
+                <AutonomousChat sessionId={sessionId} />
+              </div>
+            </div>
           </div>
 
           {/* Workflow Suggestions - Where the user can see automation features */}

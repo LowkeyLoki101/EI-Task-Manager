@@ -402,6 +402,22 @@ Return as a complete HTML page that can be saved and used immediately.`;
     }
   });
 
+  // DELETE /tasks/:id
+  app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+      const { sessionId } = req.query;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId query parameter required" });
+      }
+      
+      await storage.deleteTask(req.params.id);
+      res.json({ success: true, message: "Task deleted successfully" });
+    } catch (error) {
+      console.error('Delete task error:', error);
+      res.status(500).json({ error: "Failed to delete task" });
+    }
+  });
+
   // POST /tasks/:id/steps
   app.post("/api/tasks/:id/steps", async (req, res) => {
     try {

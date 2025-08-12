@@ -67,13 +67,21 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
 
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/tasks/${id}`, {
-        method: 'DELETE'
+      const response = await fetch(`/api/tasks/${id}?sessionId=${sessionId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
       });
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
+      console.log('[TaskManager] Task deleted successfully');
+    },
+    onError: (error) => {
+      console.error('[TaskManager] Delete task failed:', error);
     }
   });
 
@@ -156,7 +164,7 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
     <div className="space-y-4" data-testid="task-manager">
       {/* Header with controls */}
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Task Manager</h2>
+        <h2 className="text-xl font-semibold">Your Tasks</h2>
         <div className="flex gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-32" data-testid="status-filter">
