@@ -46,6 +46,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerCalendarRoutes } = await import('./calendar-integration');
   registerCalendarRoutes(app);
   
+  // Register Code Analysis and Recommendations System
+  const { registerCodeAnalysisRoutes } = await import('./code-analysis-routes');
+  registerCodeAnalysisRoutes(app);
+  
   // Import project context management
   const { projectContextManager, processProjectAwareConversation } = await import("./project-context");
   

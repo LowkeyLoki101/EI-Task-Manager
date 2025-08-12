@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb, Upload, X } from 'lucide-react';
+import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb, Upload, X, Code, Zap } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -288,6 +288,15 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               data-testid="generate-ideas"
             >
               <Lightbulb className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => window.open('/code-analysis', '_blank')}
+              data-testid="code-analysis"
+              title="Open Code Analysis (GPT-5 powered)"
+            >
+              <Code className="h-4 w-4" />
             </Button>
             <Button 
               variant="ghost" 

@@ -332,4 +332,89 @@ export const insertConversationTranscriptSchema = createInsertSchema(conversatio
 });
 
 export type InsertConversationTranscript = z.infer<typeof insertConversationTranscriptSchema>;
+export type ConversationTranscript = typeof conversationTranscripts.$inferSelect;
+
+// Code Analysis and Recommendations System
+export const codeRecommendations = pgTable("code_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  type: text("type", { enum: ['improvement', 'bug_fix', 'feature', 'optimization', 'security', 'refactor'] }).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  filePath: text("file_path"),
+  codeSnippet: text("code_snippet"),
+  recommendation: text("recommendation").notNull(),
+  reasoning: text("reasoning").notNull(),
+  priority: text("priority", { enum: ['low', 'medium', 'high', 'critical'] }).default('medium').notNull(),
+  estimatedEffort: text("estimated_effort", { enum: ['quick', 'moderate', 'substantial', 'major'] }).default('moderate').notNull(),
+  status: text("status", { enum: ['pending', 'approved', 'rejected', 'implemented'] }).default('pending').notNull(),
+  votes: integer("votes").default(0).notNull(),
+  confidence: integer("confidence").default(5).notNull(), // 1-10 scale
+  tags: text("tags").array().default([]),
+  metadata: json("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Voting system for recommendations
+export const recommendationVotes = pgTable("recommendation_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recommendationId: varchar("recommendation_id").notNull(),
+  sessionId: varchar("session_id").notNull(),
+  voteType: text("vote_type", { enum: ['up', 'down'] }).notNull(),
+  feedback: text("feedback"), // Optional user feedback
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// File analysis results
+export const fileAnalysis = pgTable("file_analysis", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  filePath: text("file_path").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  analysisType: text("analysis_type", { enum: ['code_review', 'security_scan', 'performance', 'architecture', 'documentation'] }).notNull(),
+  summary: text("summary").notNull(),
+  details: json("details").notNull(), // Detailed analysis results
+  issues: json("issues").default([]), // List of issues found
+  suggestions: json("suggestions").default([]), // List of suggestions
+  complexity: integer("complexity").default(1).notNull(), // 1-10 scale
+  maintainability: integer("maintainability").default(5).notNull(), // 1-10 scale
+  status: text("status", { enum: ['analyzing', 'completed', 'error'] }).default('analyzing').notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Export requests tracking
+export const exportRequests = pgTable("export_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  exportType: text("export_type", { enum: ['pdf', 'txt', 'json', 'ts', 'markdown'] }).notNull(),
+  contentType: text("content_type", { enum: ['insights', 'recommendations', 'analysis', 'tasks', 'all'] }).notNull(),
+  filters: json("filters").default({}), // Filter criteria for export
+  status: text("status", { enum: ['pending', 'processing', 'completed', 'error'] }).default('pending').notNull(),
+  fileUrl: text("file_url"), // URL to generated file
+  fileName: text("file_name"),
+  metadata: json("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+// Insert schemas for new tables
+export const insertCodeRecommendationSchema = createInsertSchema(codeRecommendations).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertRecommendationVoteSchema = createInsertSchema(recommendationVotes).omit({ id: true, createdAt: true });
+export const insertFileAnalysisSchema = createInsertSchema(fileAnalysis).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertExportRequestSchema = createInsertSchema(exportRequests).omit({ id: true, createdAt: true, completedAt: true });
+
+// Types for new tables
+export type CodeRecommendation = typeof codeRecommendations.$inferSelect;
+export type RecommendationVote = typeof recommendationVotes.$inferSelect;
+export type FileAnalysis = typeof fileAnalysis.$inferSelect;
+export type ExportRequest = typeof exportRequests.$inferSelect;
+
+export type InsertCodeRecommendation = z.infer<typeof insertCodeRecommendationSchema>;
+export type InsertRecommendationVote = z.infer<typeof insertRecommendationVoteSchema>;
+export type InsertFileAnalysis = z.infer<typeof insertFileAnalysisSchema>;
+export type InsertExportRequest = z.infer<typeof insertExportRequestSchema>;
+
 export type SelectConversationTranscript = typeof conversationTranscripts.$inferSelect;

@@ -16,6 +16,7 @@ import CompactTaskManager from '../components/CompactTaskManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
+import { Code } from 'lucide-react';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -97,6 +98,16 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
+              <a 
+                href="/code-analysis" 
+                target="_blank"
+                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900 dark:hover:bg-blue-800 transition-colors"
+                title="GPT-5 powered code analysis"
+              >
+                <Code className="h-3 w-3 mr-1" />
+                <span className="hidden sm:inline">Code Analysis</span>
+                <span className="sm:hidden">Code</span>
+              </a>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Label htmlFor="builder-mode" className="text-xs sm:text-sm whitespace-nowrap hidden sm:inline">Builder Mode</Label>
                 <Label htmlFor="builder-mode" className="text-xs whitespace-nowrap sm:hidden">Builder</Label>

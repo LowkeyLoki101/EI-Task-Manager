@@ -3,9 +3,11 @@ import { writeFileSync, readFileSync, existsSync } from "fs";
 import type { 
   Session, Task, Step, Artifact, Memory, Conversation, Installation,
   Proposal, File, Project, ResearchDoc, CalendarEvent, ProjectFile,
+  CodeRecommendation, RecommendationVote, FileAnalysis, ExportRequest,
   InsertSession, InsertTask, InsertStep, InsertArtifact, 
   InsertMemory, InsertConversation, InsertInstallation, InsertProposal, 
   InsertFile, InsertProject, InsertResearchDoc, InsertCalendarEvent, InsertProjectFile,
+  InsertCodeRecommendation, InsertRecommendationVote, InsertFileAnalysis, InsertExportRequest,
   GetTodoListAction, AddTaskAction, UpdateStepStatusAction
 } from "@shared/schema";
 
@@ -91,6 +93,36 @@ export interface IStorage {
   listProjectFiles(sessionId: string, projectId?: string): Promise<ProjectFile[]>;
   deleteProjectFile(id: string): Promise<void>;
 
+  // **CODE ANALYSIS & RECOMMENDATIONS**
+  
+  // Code Recommendations
+  createCodeRecommendation(recommendation: InsertCodeRecommendation): Promise<CodeRecommendation>;
+  getCodeRecommendation(id: string): Promise<CodeRecommendation | undefined>;
+  listCodeRecommendations(sessionId: string, filters?: { 
+    type?: string; 
+    status?: string; 
+    priority?: string; 
+  }): Promise<CodeRecommendation[]>;
+  updateCodeRecommendation(id: string, updates: Partial<InsertCodeRecommendation>): Promise<CodeRecommendation>;
+  deleteCodeRecommendation(id: string): Promise<void>;
+
+  // Recommendation Voting
+  createRecommendationVote(vote: InsertRecommendationVote): Promise<RecommendationVote>;
+  listRecommendationVotes(recommendationId: string): Promise<RecommendationVote[]>;
+  getUserVoteForRecommendation(recommendationId: string, sessionId: string): Promise<RecommendationVote | undefined>;
+
+  // File Analysis
+  createFileAnalysis(analysis: InsertFileAnalysis): Promise<FileAnalysis>;
+  getFileAnalysis(id: string): Promise<FileAnalysis | undefined>;
+  listFileAnalysis(sessionId: string, filePath?: string): Promise<FileAnalysis[]>;
+  updateFileAnalysis(id: string, updates: Partial<InsertFileAnalysis>): Promise<FileAnalysis>;
+
+  // Export Requests
+  createExportRequest(request: InsertExportRequest): Promise<ExportRequest>;
+  getExportRequest(id: string): Promise<ExportRequest | undefined>;
+  listExportRequests(sessionId: string): Promise<ExportRequest[]>;
+  updateExportRequest(id: string, updates: Partial<InsertExportRequest>): Promise<ExportRequest>;
+
   // Stats for dashboard
   getSystemStats(sessionId: string): Promise<{
     totalTasks: number;
@@ -100,6 +132,9 @@ export interface IStorage {
     activeProjects: number;
     totalResearchDocs: number;
     upcomingEvents: number;
+    totalRecommendations: number;
+    pendingRecommendations: number;
+    approvedRecommendations: number;
   }>;
 }
 
@@ -118,6 +153,11 @@ export class MemStorage implements IStorage {
   private researchDocs: Map<string, ResearchDoc>;
   private calendarEvents: Map<string, CalendarEvent>;
   private projectFiles: Map<string, ProjectFile>;
+  // Code analysis and recommendations storage
+  private codeRecommendations: Map<string, CodeRecommendation>;
+  private recommendationVotes: Map<string, RecommendationVote>;
+  private fileAnalysis: Map<string, FileAnalysis>;
+  private exportRequests: Map<string, ExportRequest>;
 
   constructor() {
     this.sessions = new Map();
@@ -134,6 +174,11 @@ export class MemStorage implements IStorage {
     this.researchDocs = new Map();
     this.calendarEvents = new Map();
     this.projectFiles = new Map();
+    // Initialize code analysis storage
+    this.codeRecommendations = new Map();
+    this.recommendationVotes = new Map();
+    this.fileAnalysis = new Map();
+    this.exportRequests = new Map();
     
     // Load persisted data on startup
     this.loadFromFile();
@@ -533,9 +578,14 @@ export class MemStorage implements IStorage {
 
   // Projects
   async createProject(insertProject: InsertProject): Promise<Project> {
+    const id = randomUUID();
     const project: Project = {
       ...insertProject,
-      id: insertProject.id || randomUUID(),
+      id,
+      status: insertProject.status || "active",
+      priority: insertProject.priority || "medium",
+      description: insertProject.description || null,
+      dueDate: insertProject.dueDate || null,
       tags: insertProject.tags || [],
       metadata: insertProject.metadata || {},
       createdAt: new Date(),
@@ -591,9 +641,13 @@ export class MemStorage implements IStorage {
 
   // Research Documents
   async createResearchDoc(insertDoc: InsertResearchDoc): Promise<ResearchDoc> {
+    const id = randomUUID();
     const doc: ResearchDoc = {
       ...insertDoc,
-      id: insertDoc.id || randomUUID(),
+      id,
+      projectId: insertDoc.projectId || null,
+      type: insertDoc.type || "research",
+      summary: insertDoc.summary || null,
       sources: insertDoc.sources || [],
       tags: insertDoc.tags || [],
       metadata: insertDoc.metadata || {},
@@ -640,9 +694,16 @@ export class MemStorage implements IStorage {
 
   // Calendar Events
   async createCalendarEvent(insertEvent: InsertCalendarEvent): Promise<CalendarEvent> {
+    const id = randomUUID();
     const event: CalendarEvent = {
       ...insertEvent,
-      id: insertEvent.id || randomUUID(),
+      id,
+      description: insertEvent.description || null,
+      projectId: insertEvent.projectId || null,
+      taskId: insertEvent.taskId || null,
+      isAllDay: insertEvent.isAllDay || false,
+      recurrence: insertEvent.recurrence || null,
+      location: insertEvent.location || null,
       attendees: insertEvent.attendees || [],
       reminders: insertEvent.reminders || [],
       metadata: insertEvent.metadata || {},
@@ -703,9 +764,13 @@ export class MemStorage implements IStorage {
 
   // Project Files
   async createProjectFile(insertFile: InsertProjectFile): Promise<ProjectFile> {
+    const id = randomUUID();
     const file: ProjectFile = {
       ...insertFile,
-      id: insertFile.id || randomUUID(),
+      id,
+      projectId: insertFile.projectId || null,
+      type: insertFile.type || "other",
+      description: insertFile.description || null,
       tags: insertFile.tags || [],
       metadata: insertFile.metadata || {},
       createdAt: new Date(),
@@ -733,7 +798,203 @@ export class MemStorage implements IStorage {
     this.projectFiles.delete(id);
   }
 
-  // Enhanced stats with project management
+  // **CODE ANALYSIS & RECOMMENDATIONS IMPLEMENTATIONS**
+
+  // Code Recommendations
+  async createCodeRecommendation(insertRecommendation: InsertCodeRecommendation): Promise<CodeRecommendation> {
+    const id = randomUUID();
+    const recommendation: CodeRecommendation = {
+      ...insertRecommendation,
+      id,
+      votes: 0,
+      status: insertRecommendation.status || "pending",
+      priority: insertRecommendation.priority || "medium",
+      estimatedEffort: insertRecommendation.estimatedEffort || "moderate",
+      confidence: insertRecommendation.confidence || 5,
+      tags: insertRecommendation.tags || [],
+      metadata: insertRecommendation.metadata || {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.codeRecommendations.set(recommendation.id, recommendation);
+    return recommendation;
+  }
+
+  async getCodeRecommendation(id: string): Promise<CodeRecommendation | undefined> {
+    return this.codeRecommendations.get(id);
+  }
+
+  async listCodeRecommendations(sessionId: string, filters?: { 
+    type?: string; 
+    status?: string; 
+    priority?: string; 
+  }): Promise<CodeRecommendation[]> {
+    let recommendations = Array.from(this.codeRecommendations.values())
+      .filter(rec => rec.sessionId === sessionId);
+
+    if (filters?.type) {
+      recommendations = recommendations.filter(r => r.type === filters.type);
+    }
+    if (filters?.status) {
+      recommendations = recommendations.filter(r => r.status === filters.status);
+    }
+    if (filters?.priority) {
+      recommendations = recommendations.filter(r => r.priority === filters.priority);
+    }
+
+    return recommendations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async updateCodeRecommendation(id: string, updates: Partial<InsertCodeRecommendation>): Promise<CodeRecommendation> {
+    const existing = this.codeRecommendations.get(id);
+    if (!existing) {
+      throw new Error("Code recommendation not found");
+    }
+    
+    const updated: CodeRecommendation = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.codeRecommendations.set(id, updated);
+    return updated;
+  }
+
+  async deleteCodeRecommendation(id: string): Promise<void> {
+    this.codeRecommendations.delete(id);
+    // Also delete related votes
+    Array.from(this.recommendationVotes.values())
+      .filter(vote => vote.recommendationId === id)
+      .forEach(vote => this.recommendationVotes.delete(vote.id));
+  }
+
+  // Recommendation Voting
+  async createRecommendationVote(insertVote: InsertRecommendationVote): Promise<RecommendationVote> {
+    const id = randomUUID();
+    const vote: RecommendationVote = {
+      ...insertVote,
+      id,
+      createdAt: new Date(),
+    };
+    this.recommendationVotes.set(vote.id, vote);
+    
+    // Update recommendation vote count
+    const recommendation = this.codeRecommendations.get(insertVote.recommendationId);
+    if (recommendation) {
+      const allVotes = Array.from(this.recommendationVotes.values())
+        .filter(v => v.recommendationId === insertVote.recommendationId);
+      const upVotes = allVotes.filter(v => v.voteType === 'up').length;
+      const downVotes = allVotes.filter(v => v.voteType === 'down').length;
+      
+      recommendation.votes = upVotes - downVotes;
+      recommendation.updatedAt = new Date();
+      this.codeRecommendations.set(recommendation.id, recommendation);
+    }
+    
+    return vote;
+  }
+
+  async listRecommendationVotes(recommendationId: string): Promise<RecommendationVote[]> {
+    return Array.from(this.recommendationVotes.values())
+      .filter(vote => vote.recommendationId === recommendationId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getUserVoteForRecommendation(recommendationId: string, sessionId: string): Promise<RecommendationVote | undefined> {
+    return Array.from(this.recommendationVotes.values())
+      .find(vote => vote.recommendationId === recommendationId && vote.sessionId === sessionId);
+  }
+
+  // File Analysis
+  async createFileAnalysis(insertAnalysis: InsertFileAnalysis): Promise<FileAnalysis> {
+    const id = randomUUID();
+    const analysis: FileAnalysis = {
+      ...insertAnalysis,
+      id,
+      status: insertAnalysis.status || "analyzing",
+      complexity: insertAnalysis.complexity || 1,
+      maintainability: insertAnalysis.maintainability || 5,
+      issues: insertAnalysis.issues || [],
+      suggestions: insertAnalysis.suggestions || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.fileAnalysis.set(analysis.id, analysis);
+    return analysis;
+  }
+
+  async getFileAnalysis(id: string): Promise<FileAnalysis | undefined> {
+    return this.fileAnalysis.get(id);
+  }
+
+  async listFileAnalysis(sessionId: string, filePath?: string): Promise<FileAnalysis[]> {
+    let analyses = Array.from(this.fileAnalysis.values())
+      .filter(analysis => analysis.sessionId === sessionId);
+
+    if (filePath) {
+      analyses = analyses.filter(analysis => analysis.filePath === filePath);
+    }
+
+    return analyses.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async updateFileAnalysis(id: string, updates: Partial<InsertFileAnalysis>): Promise<FileAnalysis> {
+    const existing = this.fileAnalysis.get(id);
+    if (!existing) {
+      throw new Error("File analysis not found");
+    }
+    
+    const updated: FileAnalysis = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.fileAnalysis.set(id, updated);
+    return updated;
+  }
+
+  // Export Requests
+  async createExportRequest(insertRequest: InsertExportRequest): Promise<ExportRequest> {
+    const id = randomUUID();
+    const request: ExportRequest = {
+      ...insertRequest,
+      id,
+      status: insertRequest.status || "pending",
+      filters: insertRequest.filters || {},
+      metadata: insertRequest.metadata || {},
+      createdAt: new Date(),
+      completedAt: null,
+    };
+    this.exportRequests.set(request.id, request);
+    return request;
+  }
+
+  async getExportRequest(id: string): Promise<ExportRequest | undefined> {
+    return this.exportRequests.get(id);
+  }
+
+  async listExportRequests(sessionId: string): Promise<ExportRequest[]> {
+    return Array.from(this.exportRequests.values())
+      .filter(request => request.sessionId === sessionId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async updateExportRequest(id: string, updates: Partial<InsertExportRequest>): Promise<ExportRequest> {
+    const existing = this.exportRequests.get(id);
+    if (!existing) {
+      throw new Error("Export request not found");
+    }
+    
+    const updated: ExportRequest = {
+      ...existing,
+      ...updates,
+      completedAt: updates.status === 'completed' ? new Date() : existing.completedAt,
+    };
+    this.exportRequests.set(id, updated);
+    return updated;
+  }
+
+  // Enhanced stats with project management and code analysis
   async getSystemStats(sessionId: string): Promise<{
     totalTasks: number;
     completedToday: number;
@@ -742,11 +1003,15 @@ export class MemStorage implements IStorage {
     activeProjects: number;
     totalResearchDocs: number;
     upcomingEvents: number;
+    totalRecommendations: number;
+    pendingRecommendations: number;
+    approvedRecommendations: number;
   }> {
     const tasks = Array.from(this.tasks.values()).filter(t => t.sessionId === sessionId);
     const proposals = Array.from(this.proposals.values()).filter(p => p.sessionId === sessionId);
     const projects = Array.from(this.projects.values()).filter(p => p.sessionId === sessionId);
     const researchDocs = Array.from(this.researchDocs.values()).filter(d => d.sessionId === sessionId);
+    const recommendations = Array.from(this.codeRecommendations.values()).filter(r => r.sessionId === sessionId);
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -767,6 +1032,9 @@ export class MemStorage implements IStorage {
       activeProjects: projects.filter(p => p.status === 'active').length,
       totalResearchDocs: researchDocs.length,
       upcomingEvents: upcomingEvents.length,
+      totalRecommendations: recommendations.length,
+      pendingRecommendations: recommendations.filter(r => r.status === 'pending').length,
+      approvedRecommendations: recommendations.filter(r => r.status === 'approved').length,
     };
   }
 

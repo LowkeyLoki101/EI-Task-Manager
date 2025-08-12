@@ -8,6 +8,7 @@ import Proposals from "./pages/proposals";
 import Preview from "./pages/preview";
 import Assistant from "./pages/assistant";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
+import CodeAnalysis from "./pages/CodeAnalysis";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/knowledge-base" component={KnowledgeBasePage} />
       <Route path="/proposals" component={Proposals} />
       <Route path="/preview/:id" component={Preview} />
+      <Route path="/code-analysis" component={CodeAnalysis} />
       <Route component={NotFound} />
     </Switch>
   );
