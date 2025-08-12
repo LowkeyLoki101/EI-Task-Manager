@@ -412,7 +412,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               ref={fileInputRef}
               onChange={handleFileUpload}
               multiple
-              accept="image/*,.pdf,.txt,.doc,.docx"
+              accept="image/*,.pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp"
               className="hidden"
             />
             <Button 

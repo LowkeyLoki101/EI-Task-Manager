@@ -273,15 +273,23 @@ export function registerAutonomousChat(app: Express) {
     dest: 'uploads/',
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
-      // Accept images, PDFs, and text files
-      const allowedTypes = /jpeg|jpg|png|gif|pdf|txt|doc|docx/;
-      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-      const mimetype = allowedTypes.test(file.mimetype);
+      console.log('[File Upload] Checking file:', file.originalname, 'MIME:', file.mimetype);
       
-      if (mimetype && extname) {
+      // Accept images, PDFs, and text files - be more permissive
+      const allowedMimes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'application/pdf',
+        'text/plain',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      
+      if (allowedMimes.includes(file.mimetype) || file.mimetype.startsWith('image/')) {
+        console.log('[File Upload] File accepted:', file.originalname);
         return cb(null, true);
       } else {
-        cb(new Error('Only images, PDFs, and documents are allowed'));
+        console.log('[File Upload] File rejected:', file.originalname, 'MIME:', file.mimetype);
+        cb(new Error(`File type not supported: ${file.mimetype}. Supported: images, PDFs, text files`));
       }
     }
   });
@@ -300,25 +308,33 @@ export function registerAutonomousChat(app: Express) {
     }
   });
 
-  // Send message with optional file uploads
-  app.post('/api/chat/:sessionId', upload.array('file0', 5), async (req, res) => {
-    try {
-      const message = req.body.message || '';
-      const files = req.files as Express.Multer.File[];
-      
-      if (!message && (!files || files.length === 0)) {
-        return res.status(400).json({ error: 'Message or files required' });
+  // Send message with optional file uploads  
+  app.post('/api/chat/:sessionId', (req, res) => {
+    upload.any()(req, res, async (err) => {
+      if (err) {
+        console.error('[File Upload] Error:', err.message);
+        return res.status(400).json({ error: `Upload failed: ${err.message}` });
       }
 
-      let finalMessage = message;
-      if (files && files.length > 0) {
-        finalMessage = message + `\n\n[User uploaded ${files.length} file(s): ${files.map(f => f.originalname).join(', ')}]`;
-      }
+      try {
+        const message = req.body.message || '';
+        const files = req.files as Express.Multer.File[] || [];
+        
+        console.log('[Chat] Received message:', message.substring(0, 100), 'Files:', files.length);
+        
+        if (!message && files.length === 0) {
+          return res.status(400).json({ error: 'Message or files required' });
+        }
 
-      const response = await autonomousChat.processMessage(req.params.sessionId, finalMessage, files);
-      
-      // Clean up uploaded files
-      if (files) {
+        let finalMessage = message;
+        if (files.length > 0) {
+          finalMessage = message + `\n\n[User uploaded ${files.length} file(s): ${files.map(f => f.originalname).join(', ')}]`;
+          console.log('[Chat] Processing files:', files.map(f => `${f.originalname} (${f.mimetype})`));
+        }
+
+        const response = await autonomousChat.processMessage(req.params.sessionId, finalMessage, files);
+        
+        // Clean up uploaded files
         files.forEach(file => {
           try {
             fs.unlinkSync(file.path);
@@ -326,13 +342,13 @@ export function registerAutonomousChat(app: Express) {
             console.error('Failed to delete uploaded file:', error);
           }
         });
+        
+        res.json({ message: response });
+      } catch (error) {
+        console.error('[Autonomous Chat] Send message failed:', error);
+        res.status(500).json({ error: 'Failed to process message' });
       }
-      
-      res.json({ message: response });
-    } catch (error) {
-      console.error('[Autonomous Chat] Send message failed:', error);
-      res.status(500).json({ error: 'Failed to process message' });
-    }
+    });
   });
 
   // Get diary/memory
