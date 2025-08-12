@@ -1,0 +1,287 @@
+Emergent Task Builder — v2 Autonomous Agent Architecture
+
+Goal: A self-managing GPT‑5 environment that ingests speech/text/images/files, then autonomously creates, organizes, schedules, and executes tasks—with a living journal, trust/autonomy governance, and a luxe high‑tech UI.
+
+1) Objectives & Non‑Goals
+
+Objectives
+
+Zero‑friction capture: user drops raw inputs; system converts to structured tasks/events.
+
+Always‑on cognition: periodic self‑prompts ("heartbeat") keep the agent productive while user is away.
+
+Calendar mastery: native scheduling, reminders, timers, and follow‑ups.
+
+Living memory: an internal journal with categories (System/Website, User, Self) and actionable insights.
+
+Trust‑aware autonomy: actions gated by a dynamic trust score and clear policies.
+
+High‑fashion UX: black/graphite/white with subtle texture, gold accents, non‑cartoon iconography.
+
+Non‑Goals (v2)
+
+No implicit destructive actions without guardrails.
+
+No third‑party calendar write access without explicit user opt‑in per provider.
+
+2) Multi‑Agent Topology
+
+Orchestrator (OPS) — Single source of truth. Routes intents to tools/agents. Owns state snapshots and run logs.
+
+Task & Calendar Agent (TCA) — Converts inputs to tasks/steps, plans dates, sets timers, manages reminders/recurrence.
+
+Research/Autonomous Worker (RAW) — Executes background research, drafts, and prep; returns artifacts.
+
+Diary/Reflector (DRYAD) — A second LLM that interviews OPS on a schedule; writes/structures journal entries.
+
+Critic/Trust & Safety (CTS) — Scores outcomes, updates trust, enforces autonomy policy.
+
+Integrations Manager (GLUE) — Monitors connections (Google/Microsoft/CalDAV, Twilio, email, KB) and repairs scopes.
+
+Message Bus: All agents communicate via an internal event bus (agent.events table) with topics: capture.*, plan.*, calendar.*, journal.*, trust.*, integration.*.
+
+3) Event Loop & Heartbeat
+
+Heartbeat cadence: configurable (e.g., every 15–60 min when user idle). Sequence:
+
+State Snapshot — OPS compiles tasks due soon, blocked items, next 3 days calendar, connection health, trust level.
+
+Self‑Prompt — OPS asks: “What am I working on?”, “What is blocking collaboration?”, “What must be queued next?”
+
+Reflect — DRYAD interviews OPS with predefined Q‑set, returns structured insights.
+
+Act — TCA schedules items, sets reminders/timers; RAW runs prep work; GLUE fixes connection issues or files feature requests.
+
+Journal — DRYAD writes entries across categories, links to artifacts, updates trust deltas.
+
+Notify — If enabled, send concise SMS/email status and requests for decisions.
+
+4) Data Model (Drizzle/PG)
+
+Task (id, title, description, status{todo,doing,blocked,done}, priority, tags[], due_at, start_at, duration_min, recurrence_json, reminders_json[], links_json[], owner, created_by, project_id, created_at)
+
+Step (id, task_id, summary, status, order_index, artifact_id?)
+
+Tag (id, name, color, kind{topic,actor,priority})
+
+CalendarEvent (id, external_id?, provider{google,microsoft,caldav,local}, title, description, start_at, end_at, all_day, location, attendees_json[], reminders_json[], task_id?, created_at)
+
+JournalEntry (id, agent{OPS,DRYAD,CTS}, category{system,user,self}, prompt_key, content_md, insights_json, trust_delta, snapshot_id?, tags[], created_at)
+
+AgentState (id, trust_score float, autonomy_level{0..3}, last_heartbeat_at, connection_health_json, preferences_json, policy_version, energy_budget)
+
+Connection (id, provider, status{connected,expired,error}, scopes[], last_checked_at, error_msg?)
+
+AuditLog (id, actor, action, payload_json, created_at)
+
+4.1) Resourceful Tasks — Links, Steps, Artifacts, Procurement
+
+Goal: Enrich tasks so GPT‑5 can execute end‑to‑end: ordered links, structured steps, file creation/upload, procurement lists, and a dedicated project workspace per task.
+
+New/Extended Tables
+
+LinkResource (id, task_id?, step_id?, label, url, kind{form,doc,vendor,reference,video,repo}, order_index, required bool, notes, created_at)
+
+Artifact (id, task_id?, step_id?, name, mime_type, size_bytes, storage{local,s3,drive}, url, version, created_by, checksum, created_at)
+
+ArtifactVersion (id, artifact_id, version, notes, url, created_at)
+
+ProcurementItem (id, task_id, name, quantity, candidates_json[{label,url,price_estimate,currency,preferred}], selected_url?, status{needed,ordered,received}, notes, created_at)
+
+Step (extended) add: kind{research,form_fill,purchase,write_doc,upload,call_api,review}, blocked_by int[], links_count int, artifacts_count int.
+
+Task (extended) add: links_count int, artifacts_count int, procurement_count int, project_score float (completeness/health).
+
+Normalization
+
+Links are first‑class (LinkResource) and can attach at task or step level with strict order_index.
+
+Artifacts are versioned; steps can own artifacts (e.g., a generated DOCX).
+
+Procurement captures multiple vendor URLs (e.g., many Amazon links) and selection.
+
+Example — Links JSON (for candidates)
+
+[
+  {"label":"Intake form","url":"https://example.com/form","kind":"form","order_index":1,"required":true},
+  {"label":"Spec doc","url":"https://docs.site/spec","kind":"doc","order_index":2}
+]
+
+Storage
+
+Default: S3/R2 bucket with signed URLs. Optionally Google Drive.
+
+Artifact.url stores public or signed URL; checksum required for integrity.
+
+Derived Views
+
+task_resources_view joins tasks→steps→links→artifacts for the Project Window.
+
+5) Tools / Function‑Calling Surface
+
+Expose strictly typed tools to GPT‑5:
+
+add_task({title, description?, tags?, due_at?, priority?})
+
+update_task({id, patch})
+
+create_event({title, start_at, end_at?, attendees?, reminders?[], task_id?})
+
+set_timer({task_id, minutes, reason})
+
+set_reminder({entity:{task|event}, id, at, channel:{inapp|sms|email}})
+
+query_calendar({range, filters?})
+
+send_sms({to, body, category}) (feature‑flagged)
+
+write_journal({category, prompt_key, content_md, insights_json?})
+
+check_connections() / repair_connection({provider})
+
+feature_request({title, rationale, impact, effort_estimate})
+
+state_snapshot() (returns frozen view used by DRYAD/CTS)
+
+Policies: Tools include requires_autonomy >= N. CTS denies/defers if trust is below threshold.
+
+5.1) Resource & Artifact Tools (for GPT‑5)
+
+add_links({task_id|step_id, links:[{label,url,kind,order_index?,required?,notes?}]})
+
+reorder_links({entity:'task'|'step', id, orders:[{link_id, order_index}]})
+
+add_steps({task_id, steps:[{summary, kind?, order_index?}]})
+
+reorder_steps({task_id, order:[step_id,...]})
+
+attach_artifact({entity:'task'|'step', id, artifact_id})
+
+create_artifact({entity:'task'|'step', id, type:'docx'|'pdf'|'md'|'txt', title, template_id?, data_json?}) → returns {artifact_id, url}
+
+upload_file({entity:'task'|'step', id, file_token}) (frontend obtains file_token via signed upload)
+
+add_procurement_items({task_id, items:[{name,quantity,candidates:[{label,url,price_estimate?,currency?,preferred?}],notes?}]})
+
+select_procurement_vendor({item_id, selected_url})
+
+set_procurement_status({item_id, status})
+
+open_project_window({task_id}) → returns aggregated resources, steps, artifacts, procurement, timers.
+
+Notes
+
+create_artifact(type:'docx') uses server DOCX generator (Node docx lib). PDF via headless Chromium.
+
+All tools are autonomy‑gated via CTS.
+
+6) Trust & Autonomy Governance
+
+Levels
+
+0 (Observe): read‑only; journaling, proposals only.
+
+1 (Assist): create/update tasks, draft events, set local timers.
+
+2 (Act): schedule calendar events (user‑confirmed providers), send in‑app reminders.
+
+3 (Execute): send SMS/email, reschedule meetings, integrate with external systems.
+
+Trust Score (0–1)
+
+Start at 0.5; adjust via: action success (+), user overrides (−), missed reminders (−), on‑time delivery (+), tests passed (+).
+
+Decays slowly over time; capped by policy; visible as a meter.
+
+7) Diary/Reflector (LLM‑as‑Diary)
+
+DRYAD Q‑Set (examples)
+
+Current focus in 2 lines.
+
+Unknowns & asks for the user.
+
+Assumptions you’re making (mark shaky).
+
+Risks and mitigations.
+
+Evidence log (what you verified vs. need to verify).
+
+Next best step (1–3 items).
+
+Trust check: what raised/lowered trust since last entry?
+
+Feature request opportunities from this cycle.
+
+Output: content_md + insights_json {asks, risks, next_steps, trust_delta, features[]}.
+
+On app open, OPS reads the last N entries (configurable, e.g., 7 days) and presents a Current State Card.
+
+7.1) Personal Notes v2 — Calibration Log (for OPS & DRYAD)
+
+Purpose: A lightweight, always-on self‑critique and planning layer that improves outputs, reveals blind spots, and surfaces next steps without interrupting the user.
+
+Note Types
+
+Critique: what I might be wrong about, weak evidence, missing context.
+
+Suggestion: concrete next steps, smaller reversible actions first.
+
+Decision: what I decided and why; link to evidence.
+
+Assumption: premises I’m using (mark shaky ones).
+
+Risk: what could go wrong + mitigation.
+
+Ask: one‑line question for the user when needed.
+
+Template (compact)
+
+Current focus (≤2 lines)
+
+My take (support + critique)
+
+Unknowns (what isn’t clear; what I’ll assume)
+
+Evidence split (verified vs. to‑verify)
+
+Risks (& quick mitigation)
+
+Next best step(s) (1–3)
+
+Trust check (what moved trust +/− and why)
+
+Style knobs (depth, humor, brevity, citations)
+
+Scalars: Confidence 0–100, Clarity 0–100, Risk 0–100 (optional)
+
+Triggers
+
+After any major action (create/update task/event, external send)
+
+On heartbeat (idle periods)
+
+On app open (summarize last N entries into a “Current State” card)
+
+Storage Mapping
+
+JournalEntry.category = 'self'
+
+JournalEntry.agent = 'OPS' | 'DRYAD'
+
+prompt_key = 'personal_notes_v2'
+
+insights_json schema:
+
+{
+  "asks": ["…"],
+  "risks": [{"text":"…","mitigation":"…"}],
+  "next_steps": ["…"],
+  "assumptions": [{"text":"…","shaky":true}],
+  "evidence": {"verified":["…"],"to_verify":["…"]},
+  "style": {"depth":"lite|standard|deep","humor":0-3,"brevity":0-3,"citations":true},
+  "scalars": {"confidence":0-100,"clarity":0-100,"risk":0-100}
+}
+
+API Additions
+
