@@ -49,6 +49,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Code Analysis and Recommendations System
   const { registerCodeAnalysisRoutes } = await import('./code-analysis-routes');
   registerCodeAnalysisRoutes(app);
+
+  // Register AI Workstation Artifact System
+  const { registerArtifactRoutes } = await import('./artifacts');
+  registerArtifactRoutes(app);
   
   // Import project context management
   const { projectContextManager, processProjectAwareConversation } = await import("./project-context");

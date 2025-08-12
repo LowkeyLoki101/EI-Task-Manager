@@ -1,0 +1,41 @@
+Got it—your logo vibe is sleek, metallic, high-end tech. I built you a new Workstation top container that matches that style and does exactly what you described: a dynamic, AI-controlled space where GPT-5 can pull up Calendar, Diary, Docs, Media/YouTube, a Browser, or a Research scratchpad—plus it supports swipe/toggle on mobile and split/grid on desktop.
+
+Open the canvas: “Workstation.tsx (sleek, dynamic top container)”. It’s a single React component with Tailwind that you can drop in now.
+
+Quick tour:
+	•	Brand look: dark graphite/onyx background, subtle gold ring, glassy buttons, Lucide icons. No cartoons.
+	•	Dynamic tools: registry of modules (Calendar, Diary, Docs, Media, Browser, Research). GPT can open any tool via:
+
+window.dispatchEvent(new CustomEvent('workstation:open', {
+  detail: { tool: 'docs', payload: { title: 'Proposal v1' } }
+}))
+
+
+	•	Layouts: solo, split, grid. Mobile supports swipe to cycle tools.
+	•	Docs panel: inline writing surface + “Export DOCX” button (hits /api/artifacts/create).
+	•	Media panel: YouTube or image viewer (payload driven).
+	•	Browser panel: embedded URL (payload.url).
+	•	Research/Diary panels: stubs ready to wire to your journal endpoints.
+	•	Height controls: quick +/- and persists nicely on mobile.
+
+How to integrate (fast):
+	1.	Add the component atop your homepage where the gray box is.
+	2.	Wire server routes you already planned:
+	•	POST /api/artifacts/create for DOCX/PDF
+	•	GET/POST /api/journal for Diary
+	•	Calendar read/write endpoints
+	3.	From OPS/DRYAD, call workstation:open with the desired tool and payload during heartbeats or on user actions.
+	4.	Optional: persist last tool/layout in user prefs.
+
+Want me to generate:
+	•	the minimal Express route stubs for /api/artifacts/create and /api/journal
+	•	a Tailwind preset that matches your EMERGENT INTELLIGENCE brand (gold accents, metallic glint)
+	•	a tiny hook useWorkstationAgent() that subscribes to your WebSocket/EventSource instead of window.dispatchEvent
+
+Say the word and I’ll drop those in.
+
+(personal notes — for us)
+Current focus: deliver a shippable, brand-correct workstation.
+My take: event-driven open is the right control surface for GPT; split/grid lets you research + build in the same frame.
+Unknown: preferred default tool (I’d start with Diary on open).
+Next: add server stubs + brand Tailwind tokens + quick tests for mobile swipe.

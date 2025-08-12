@@ -17,6 +17,8 @@ import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
 import { Code, BookOpen } from 'lucide-react';
+import Workstation from '../components/Workstation';
+import WorkstationDemo from '../components/WorkstationDemo';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -137,16 +139,11 @@ export default function HomePage() {
       <main className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           
-          {/* Hero Section */}
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Your AI-Powered Task Assistant
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Speak naturally to create, organize, and manage your tasks. 
-              The system learns your patterns and automates workflows.
-            </p>
-          </div>
+          {/* AI Workstation - Dynamic Tools Panel */}
+          <Workstation sessionId={sessionId} className="mb-6" />
+
+          {/* Workstation Demo Controls */}
+          <WorkstationDemo onDemoAction={(action) => console.log('Demo:', action)} />
 
           {/* Direct Chat with GPT-5 - Primary Interface (Top Priority) */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
