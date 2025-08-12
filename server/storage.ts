@@ -685,3 +685,54 @@ export class MemStorage implements IStorage {
 }
 
 export const storage = new MemStorage();
+
+// Add conversation transcript storage methods
+interface IConversationStorage {
+  saveTranscript(transcript: any): Promise<any>;
+  getTranscripts(sessionId?: string, agentId?: string): Promise<any[]>;
+  searchTranscripts(query: string): Promise<any[]>;
+}
+
+class ConversationStorage implements IConversationStorage {
+  private transcripts: Map<string, any[]> = new Map();
+
+  async saveTranscript(transcript: any): Promise<any> {
+    const id = `transcript_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const timestampedTranscript = {
+      id,
+      ...transcript,
+      timestamp: new Date().toISOString()
+    };
+    
+    const sessionKey = transcript.sessionId || 'default';
+    const existing = this.transcripts.get(sessionKey) || [];
+    existing.push(timestampedTranscript);
+    this.transcripts.set(sessionKey, existing);
+    
+    console.log(`[Transcript] Saved: ${transcript.role} - ${transcript.content?.slice(0, 50)}...`);
+    return timestampedTranscript;
+  }
+
+  async getTranscripts(sessionId?: string, agentId?: string): Promise<any[]> {
+    if (sessionId) {
+      return this.transcripts.get(sessionId) || [];
+    }
+    
+    // Return all transcripts, optionally filtered by agentId
+    const allTranscripts = Array.from(this.transcripts.values()).flat();
+    if (agentId) {
+      return allTranscripts.filter(t => t.agentId === agentId);
+    }
+    return allTranscripts;
+  }
+
+  async searchTranscripts(query: string): Promise<any[]> {
+    const allTranscripts = Array.from(this.transcripts.values()).flat();
+    return allTranscripts.filter(t => 
+      t.content?.toLowerCase().includes(query.toLowerCase()) ||
+      t.transcript?.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+}
+
+export const conversationStorage = new ConversationStorage();

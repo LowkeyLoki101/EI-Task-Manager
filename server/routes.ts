@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, conversationStorage } from "./storage";
 import { registerElevenLabsActions, OpsManager } from "./elevenlabs-actions";
 import { registerEnhancedActions } from "./enhanced-actions";
 import { 
@@ -845,6 +845,19 @@ If they're just greeting you or making conversation, respond naturally. If they 
         case 'message.user':
         case 'message.agent':
           if (session_id && data?.content) {
+            // Save to conversation storage
+            await conversationStorage.saveTranscript({
+              agentId: agent_id || 'agent_7401k28d3x9kfdntv7cjrj6t43be',
+              sessionId: session_id,
+              role: event_type === 'message.user' ? 'user' : 'assistant',
+              content: data.content,
+              transcript: data.transcript,
+              conversationId: data.conversation_id,
+              duration: data.duration,
+              metadata: data.metadata || {}
+            });
+            
+            // Also save to existing message storage
             await storage.createMessage({
               sessionId: session_id,
               role: event_type === 'message.user' ? 'user' : 'assistant',
@@ -923,6 +936,43 @@ If they're just greeting you or making conversation, respond naturally. If they 
       res.json({ messages });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Conversation Transcripts API
+  app.get("/api/transcripts", async (req, res) => {
+    try {
+      const { sessionId, agentId } = req.query;
+      const transcripts = await conversationStorage.getTranscripts(
+        sessionId as string, 
+        agentId as string
+      );
+      res.json({ transcripts });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transcripts" });
+    }
+  });
+
+  app.get("/api/transcripts/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ error: "Query parameter 'q' is required" });
+      }
+      
+      const transcripts = await conversationStorage.searchTranscripts(q);
+      res.json({ transcripts, query: q });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to search transcripts" });
+    }
+  });
+
+  app.post("/api/transcripts", async (req, res) => {
+    try {
+      const transcript = await conversationStorage.saveTranscript(req.body);
+      res.json({ success: true, transcript });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save transcript" });
     }
   });
 
@@ -1261,7 +1311,7 @@ If they're just greeting you or making conversation, respond naturally. If they 
           'Switched to global view'
       });
     } catch (error) {
-      res.status(500).json({ error: error.message || "Failed to switch project context" });
+      res.status(500).json({ error: (error as Error).message || "Failed to switch project context" });
     }
   });
 

@@ -312,3 +312,24 @@ export type UpdateStepStatusAction = z.infer<typeof updateStepStatusActionSchema
 export type GetTodoListAction = z.infer<typeof getTodoListActionSchema>;
 export type KbAttachDocAction = z.infer<typeof kbAttachDocActionSchema>;
 export type PostOpsUpdateAction = z.infer<typeof postOpsUpdateActionSchema>;
+
+// Conversation transcription storage
+export const conversationTranscripts = pgTable("conversation_transcripts", {
+  id: text("id").primaryKey(),
+  agentId: text("agent_id").notNull(),
+  sessionId: text("session_id").notNull(),
+  role: text("role").notNull(), // 'user' | 'assistant' 
+  content: text("content").notNull(),
+  transcript: text("transcript"), // Full ASR transcript if available
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  conversationId: text("conversation_id"), // ElevenLabs conversation ID
+  duration: integer("duration"), // Audio duration in seconds
+  metadata: json("metadata"), // Additional data (emotion, intent, etc.)
+});
+
+export const insertConversationTranscriptSchema = createInsertSchema(conversationTranscripts).omit({
+  timestamp: true,
+});
+
+export type InsertConversationTranscript = z.infer<typeof insertConversationTranscriptSchema>;
+export type SelectConversationTranscript = typeof conversationTranscripts.$inferSelect;
