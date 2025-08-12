@@ -15,6 +15,17 @@ const openai = new OpenAI({
 
 export function registerElevenLabsActions(app: Express) {
   
+  // Simple test webhook to verify connectivity
+  app.post("/api/actions/test", async (req, res) => {
+    console.log('[ElevenLabs] TEST webhook called:', JSON.stringify(req.body, null, 2));
+    console.log('[ElevenLabs] Headers:', JSON.stringify(req.headers, null, 2));
+    res.json({ 
+      success: true, 
+      message: "Test webhook working!",
+      receivedData: req.body 
+    });
+  });
+  
   // Actions (Agent → Replit)
   
   // add_task{ title, context?, time_window?, steps? }
