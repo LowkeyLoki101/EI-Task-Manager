@@ -9,7 +9,7 @@
 
 Go to ElevenLabs Dashboard → Your Agent → Tools → Add Tool
 
-**COPY THIS EXACT JSON:**
+**COPY THIS EXACT JSON (GET - No Body Parameters Needed):**
 
 ```json
 {
@@ -17,8 +17,8 @@ Go to ElevenLabs Dashboard → Your Agent → Tools → Add Tool
   "name": "test", 
   "description": "Test webhook connectivity to verify integration is working",
   "api_schema": {
-    "url": "https://Emergent-Assistant.replit.app/api/actions/test",
-    "method": "POST",
+    "url": "https://Emergent-Assistant.replit.app/webhook/test",
+    "method": "GET",
     "path_params_schema": [],
     "query_params_schema": [],
     "request_body_schema": null,
