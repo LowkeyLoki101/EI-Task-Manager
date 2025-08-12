@@ -133,8 +133,8 @@ export class AdaptiveSession {
     }
   }
 
-  private async buildAdaptivePrompt(context?: any): string {
-    const basePrompt = `You are an adaptive AI assistant that maintains persistent conversations and continuously organizes tasks. You learn from each interaction and improve your understanding of the user's preferences and patterns.
+  private async buildAdaptivePrompt(context?: any): Promise<string> {
+    let basePrompt = `You are an adaptive AI assistant that maintains persistent conversations and continuously organizes tasks. You learn from each interaction and improve your understanding of the user's preferences and patterns.
 
 ## Current Session Context:
 - Session ID: ${this.sessionId}
