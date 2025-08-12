@@ -15,6 +15,7 @@ Emergent Intelligence is a comprehensive AI-powered project management platform 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Interface design: Clean, mobile-first interface without technical backend details exposed to users. Single voice interface only.
+Chat behavior: No disruptive auto-scrolling when user is typing - allow natural interaction without forcing scroll position changes.
 
 ## System Architecture
 

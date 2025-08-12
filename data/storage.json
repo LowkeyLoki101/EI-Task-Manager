@@ -56,6 +56,34 @@
         "createdAt": "2025-08-12T07:10:29.145Z",
         "updatedAt": "2025-08-12T07:10:29.145Z"
       }
+    ],
+    [
+      "afdcf245-e59e-4189-8e76-2d7b459b4058",
+      {
+        "title": "title=Design a New Logo",
+        "context": "context=Create different variations for team review",
+        "timeWindow": "timeWindow=Next Week",
+        "status": "today",
+        "sessionId": "s_y439m78bw1",
+        "id": "afdcf245-e59e-4189-8e76-2d7b459b4058",
+        "description": null,
+        "createdAt": "2025-08-12T07:52:38.500Z",
+        "updatedAt": "2025-08-12T07:52:38.500Z"
+      }
+    ],
+    [
+      "d828c323-2a13-42b2-b00a-7d919e280c7e",
+      {
+        "title": "title=Improve Client Onboarding",
+        "context": "context=Streamline process steps",
+        "timeWindow": "timeWindow=Next Month",
+        "status": "today",
+        "sessionId": "s_y439m78bw1",
+        "id": "d828c323-2a13-42b2-b00a-7d919e280c7e",
+        "description": null,
+        "createdAt": "2025-08-12T07:52:38.500Z",
+        "updatedAt": "2025-08-12T07:52:38.500Z"
+      }
     ]
   ],
   "steps": [],

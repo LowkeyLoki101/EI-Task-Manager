@@ -41,7 +41,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDiary, setShowDiary] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isUserTyping, setIsUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
@@ -119,29 +121,47 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const successfulPatterns = insightsData?.patterns || [];
   const userPreferences = insightsData?.preferences || [];
 
-  // Auto-scroll to bottom with improved behavior
+  // Smart auto-scroll - only scroll if user is near bottom and not actively typing
   useEffect(() => {
-    if (messages.length > 0) {
-      // Small delay to ensure the message is rendered before scrolling
+    if (messages.length > 0 && !isUserTyping) {
       const timer = setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'end',
-          inline: 'nearest'
-        });
+        const scrollArea = scrollAreaRef.current;
+        if (scrollArea) {
+          // Check if user is near the bottom (within 100px)
+          const { scrollTop, scrollHeight, clientHeight } = scrollArea;
+          const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
+          
+          // Only auto-scroll if user is near bottom
+          if (isNearBottom) {
+            messagesEndRef.current?.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'end',
+              inline: 'nearest'
+            });
+          }
+        }
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [messages]);
+  }, [messages, isUserTyping]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if ((message.trim() || uploadedFiles.length > 0) && !sendMessageMutation.isPending) {
+      setIsUserTyping(false); // User finished typing, allow auto-scroll
       sendMessageMutation.mutate({ 
         messageText: message.trim(), 
         files: uploadedFiles.length > 0 ? uploadedFiles : undefined 
       });
     }
+  };
+
+  // Handle input focus/blur and typing to prevent unwanted scrolling
+  const handleInputFocus = () => setIsUserTyping(true);
+  const handleInputBlur = () => setIsUserTyping(false);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+    setIsUserTyping(true);
   };
 
   // File upload handlers
@@ -357,7 +377,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         )}
 
         {/* Chat Messages */}
-        <ScrollArea className="h-96 w-full pr-4">
+        <ScrollArea className="h-96 w-full pr-4" ref={scrollAreaRef}>
           <div className="space-y-3">
             {isLoading ? (
               <div className="text-center text-sm text-gray-500 py-8">Loading conversation...</div>
@@ -436,7 +456,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
           <div className="flex gap-2">
             <Input
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
               placeholder="Ask Colby to help with tasks, research, automation..."
               disabled={sendMessageMutation.isPending}
               className="flex-1"
