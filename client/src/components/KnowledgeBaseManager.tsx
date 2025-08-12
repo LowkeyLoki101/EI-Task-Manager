@@ -1,450 +1,431 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Search, RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Search, Download, Upload, Plus, FileText, MessageSquare, Code, BookOpen, Zap, BarChart3 } from "lucide-react";
 
-declare global {
-  interface FormData {
-    append(name: string, value: string | Blob, fileName?: string): void;
-  }
-}
-
-interface KnowledgeBaseDocument {
+interface KnowledgeBaseEntry {
   id: string;
-  sessionId: string;
-  projectId?: string;
   title: string;
   content: string;
-  format: 'text' | 'pdf' | 'docx' | 'html' | 'epub';
-  source: 'gpt5' | 'user_upload' | 'manual_entry';
-  elevenlabsDocId?: string;
-  synced: boolean;
-  tags: string[];
-  metadata: any;
+  type: 'task' | 'conversation' | 'document' | 'code' | 'research' | 'file' | 'workflow' | 'project';
+  sessionId: string;
+  metadata: {
+    tags: string[];
+    category: string;
+    priority?: 'low' | 'medium' | 'high' | 'critical';
+    status?: string;
+    source?: string;
+  };
   createdAt: string;
   updatedAt: string;
-}
-
-interface SyncStatus {
-  total: number;
-  synced: number;
-  pending: number;
-  failed: number;
+  version: number;
 }
 
 interface KnowledgeBaseManagerProps {
   sessionId: string;
-  projectId?: string;
 }
 
-export function KnowledgeBaseManager({ sessionId, projectId }: KnowledgeBaseManagerProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isTextDialogOpen, setIsTextDialogOpen] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [newDocTitle, setNewDocTitle] = useState('');
-  const [newDocContent, setNewDocContent] = useState('');
-  const [newDocTags, setNewDocTags] = useState('');
+const typeIcons = {
+  task: FileText,
+  conversation: MessageSquare,
+  document: BookOpen,
+  code: Code,
+  research: Search,
+  file: FileText,
+  workflow: Zap,
+  project: BookOpen,
+};
 
+export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newEntry, setNewEntry] = useState({
+    title: "",
+    content: "",
+    type: "document" as KnowledgeBaseEntry['type'],
+    tags: "",
+    category: "",
+    priority: "medium" as const
+  });
+
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch documents
-  const { data: documents = [], isLoading: documentsLoading } = useQuery<KnowledgeBaseDocument[]>({
-    queryKey: ['/api/knowledge-base/documents', sessionId, projectId],
-    queryFn: async () => {
-      const params = new URLSearchParams({ sessionId });
-      if (projectId) params.append('projectId', projectId);
-      const response = await fetch(`/api/knowledge-base/documents?${params}`);
-      const data = await response.json();
-      return data.documents || [];
-    }
+  // Search knowledge base
+  const { data: searchResults, isLoading: searchLoading } = useQuery({
+    queryKey: ['/api/knowledge-base/search', sessionId, searchQuery, selectedType],
+    enabled: !!sessionId,
   });
 
-  // Fetch sync status
-  const { data: syncStatus } = useQuery<SyncStatus>({
-    queryKey: ['/api/knowledge-base/sync-status', sessionId],
-    queryFn: async () => {
-      const response = await fetch(`/api/knowledge-base/sync-status/${sessionId}`);
-      return response.json();
-    }
+  // Get statistics
+  const { data: statistics } = useQuery({
+    queryKey: ['/api/knowledge-base/statistics', sessionId],
+    enabled: !!sessionId,
   });
 
-  // Search documents
-  const { data: searchResults = [], isLoading: searchLoading } = useQuery<KnowledgeBaseDocument[]>({
-    queryKey: ['/api/knowledge-base/search', sessionId, searchQuery, projectId],
-    queryFn: async () => {
-      if (!searchQuery.trim()) return [];
-      const params = new URLSearchParams({ sessionId, query: searchQuery });
-      if (projectId) params.append('projectId', projectId);
-      const response = await fetch(`/api/knowledge-base/search?${params}`);
-      const data = await response.json();
-      return data.documents || [];
-    },
-    enabled: searchQuery.trim().length > 0
+  // Get available exports
+  const { data: exports } = useQuery({
+    queryKey: ['/api/knowledge-base/exports'],
   });
 
-  // Upload file mutation
-  const uploadFileMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await fetch('/api/knowledge-base/upload', {
+  // Add new entry mutation
+  const addEntryMutation = useMutation({
+    mutationFn: async (entry: any) => {
+      const response = await fetch('/api/knowledge-base/entries', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry),
       });
+      if (!response.ok) throw new Error('Failed to add entry');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/documents'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/sync-status'] });
-      setIsUploadDialogOpen(false);
-      setUploadFile(null);
-      setNewDocTitle('');
-    }
+      toast({
+        title: "Success",
+        description: "Entry added to knowledge base",
+      });
+      setShowAddDialog(false);
+      setNewEntry({
+        title: "",
+        content: "",
+        type: "document",
+        tags: "",
+        category: "",
+        priority: "medium"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/search'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/statistics'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add entry",
+        variant: "destructive",
+      });
+    },
   });
 
-  // Add text document mutation
-  const addTextMutation = useMutation({
-    mutationFn: async (data: { sessionId: string; title: string; content: string; projectId?: string; tags: string[] }) => {
-      const response = await fetch('/api/knowledge-base/add-text', {
+  // Export mutation
+  const exportMutation = useMutation({
+    mutationFn: async ({ description }: { description?: string }) => {
+      const response = await fetch('/api/knowledge-base/export', {
         method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, description }),
       });
+      if (!response.ok) throw new Error('Failed to export');
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/documents'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/sync-status'] });
-      setIsTextDialogOpen(false);
-      setNewDocTitle('');
-      setNewDocContent('');
-      setNewDocTags('');
-    }
-  });
-
-  // Retry sync mutation
-  const retrySyncMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/knowledge-base/retry-sync', {
-        method: 'POST',
-        body: JSON.stringify({ sessionId }),
-        headers: { 'Content-Type': 'application/json' }
+    onSuccess: (data) => {
+      toast({
+        title: "Export Complete",
+        description: `Knowledge base exported as ${data.filename}`,
       });
-      return response.json();
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/exports'] });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/documents'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/sync-status'] });
-    }
-  });
-
-  // Delete document mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await fetch(`/api/knowledge-base/documents/${id}`, {
-        method: 'DELETE'
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to export knowledge base",
+        variant: "destructive",
       });
-      return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/documents'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/sync-status'] });
-    }
   });
 
-  const handleFileUpload = () => {
-    if (!uploadFile) return;
+  const handleAddEntry = () => {
+    if (!newEntry.title || !newEntry.content) {
+      toast({
+        title: "Error",
+        description: "Title and content are required",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const formData = new FormData();
-    formData.append('file', uploadFile);
-    formData.append('sessionId', sessionId);
-    formData.append('title', newDocTitle || uploadFile.name);
-    if (projectId) formData.append('projectId', projectId);
-
-    uploadFileMutation.mutate(formData);
-  };
-
-  const handleTextSubmit = () => {
-    if (!newDocTitle.trim() || !newDocContent.trim()) return;
-
-    const tags = newDocTags.split(',').map(tag => tag.trim()).filter(Boolean);
-
-    addTextMutation.mutate({
+    addEntryMutation.mutate({
+      ...newEntry,
       sessionId,
-      title: newDocTitle,
-      content: newDocContent,
-      projectId,
-      tags
+      metadata: {
+        tags: newEntry.tags.split(',').map(t => t.trim()).filter(Boolean),
+        category: newEntry.category || 'General',
+        priority: newEntry.priority,
+        source: 'manual'
+      }
     });
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  const handleExport = () => {
+    exportMutation.mutate({ description: `Knowledge base export - ${new Date().toLocaleDateString()}` });
   };
 
-  const getSyncStatusIcon = (doc: KnowledgeBaseDocument) => {
-    if (doc.synced) return <CheckCircle className="w-4 h-4 text-green-500" />;
-    if (doc.elevenlabsDocId && !doc.synced) return <AlertCircle className="w-4 h-4 text-red-500" />;
-    return <Clock className="w-4 h-4 text-yellow-500" />;
-  };
-
-  const displayDocuments = searchQuery.trim() ? searchResults : documents;
+  const entries = searchResults?.results || [];
+  const stats = statistics || {};
 
   return (
     <div className="space-y-6" data-testid="knowledge-base-manager">
-      {/* Header and Stats */}
+      {/* Header with Actions */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Shared Knowledge Base</h2>
-          <p className="text-gray-600">Documents accessible by GPT-5, users, and ElevenLabs agents</p>
+          <h2 className="text-2xl font-bold">Knowledge Base</h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Organize and search all your tasks, conversations, and documents
+          </p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button data-testid="button-upload-document">
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Document
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Upload Document to Knowledge Base</DialogTitle>
-                <DialogDescription>
-                  Upload PDF, TXT, DOCX, HTML, or EPUB files. Documents will be synced with ElevenLabs.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="file-upload">Select File</Label>
-                  <Input
-                    id="file-upload"
-                    type="file"
-                    accept=".pdf,.txt,.docx,.html,.epub"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                    data-testid="input-file-upload"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="title">Title (optional)</Label>
-                  <Input
-                    id="title"
-                    value={newDocTitle}
-                    onChange={(e) => setNewDocTitle(e.target.value)}
-                    placeholder="Auto-filled from filename"
-                    data-testid="input-document-title"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleFileUpload} 
-                    disabled={!uploadFile || uploadFileMutation.isPending}
-                    data-testid="button-submit-upload"
-                  >
-                    {uploadFileMutation.isPending ? 'Uploading...' : 'Upload & Sync'}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={isTextDialogOpen} onOpenChange={setIsTextDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" data-testid="button-add-text">
-                <FileText className="w-4 h-4 mr-2" />
-                Add Text
+              <Button data-testid="button-add-entry">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Entry
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Add Text Document</DialogTitle>
-                <DialogDescription>
-                  Create a text document that will be added to the shared knowledge base.
-                </DialogDescription>
+                <DialogTitle>Add Knowledge Base Entry</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="doc-title">Title</Label>
+                  <Label htmlFor="title">Title</Label>
                   <Input
-                    id="doc-title"
-                    value={newDocTitle}
-                    onChange={(e) => setNewDocTitle(e.target.value)}
-                    placeholder="Document title"
-                    data-testid="input-text-title"
+                    id="title"
+                    value={newEntry.title}
+                    onChange={(e) => setNewEntry(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Entry title"
+                    data-testid="input-entry-title"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="doc-content">Content</Label>
-                  <Textarea
-                    id="doc-content"
-                    value={newDocContent}
-                    onChange={(e) => setNewDocContent(e.target.value)}
-                    placeholder="Document content"
-                    rows={8}
-                    data-testid="textarea-content"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="doc-tags">Tags (comma-separated)</Label>
-                  <Input
-                    id="doc-tags"
-                    value={newDocTags}
-                    onChange={(e) => setNewDocTags(e.target.value)}
-                    placeholder="tag1, tag2, tag3"
-                    data-testid="input-tags"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsTextDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleTextSubmit} 
-                    disabled={!newDocTitle.trim() || !newDocContent.trim() || addTextMutation.isPending}
-                    data-testid="button-submit-text"
+                  <Label htmlFor="type">Type</Label>
+                  <Select
+                    value={newEntry.type}
+                    onValueChange={(value: KnowledgeBaseEntry['type']) => 
+                      setNewEntry(prev => ({ ...prev, type: value }))
+                    }
                   >
-                    {addTextMutation.isPending ? 'Adding...' : 'Add to Knowledge Base'}
+                    <SelectTrigger data-testid="select-entry-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="document">Document</SelectItem>
+                      <SelectItem value="task">Task</SelectItem>
+                      <SelectItem value="conversation">Conversation</SelectItem>
+                      <SelectItem value="code">Code</SelectItem>
+                      <SelectItem value="research">Research</SelectItem>
+                      <SelectItem value="workflow">Workflow</SelectItem>
+                      <SelectItem value="project">Project</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    value={newEntry.category}
+                    onChange={(e) => setNewEntry(prev => ({ ...prev, category: e.target.value }))}
+                    placeholder="e.g., Development, Research, Personal"
+                    data-testid="input-entry-category"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="tags">Tags (comma-separated)</Label>
+                  <Input
+                    id="tags"
+                    value={newEntry.tags}
+                    onChange={(e) => setNewEntry(prev => ({ ...prev, tags: e.target.value }))}
+                    placeholder="tag1, tag2, tag3"
+                    data-testid="input-entry-tags"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="content">Content</Label>
+                  <Textarea
+                    id="content"
+                    value={newEntry.content}
+                    onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder="Enter the content..."
+                    className="min-h-[200px]"
+                    data-testid="textarea-entry-content"
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    onClick={handleAddEntry} 
+                    disabled={addEntryMutation.isPending}
+                    data-testid="button-save-entry"
+                  >
+                    {addEntryMutation.isPending ? 'Adding...' : 'Add Entry'}
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+                    Cancel
                   </Button>
                 </div>
               </div>
             </DialogContent>
           </Dialog>
+          
+          <Button onClick={handleExport} disabled={exportMutation.isPending} data-testid="button-export-kb">
+            <Download className="w-4 h-4 mr-2" />
+            {exportMutation.isPending ? 'Exporting...' : 'Export'}
+          </Button>
         </div>
       </div>
 
-      {/* Sync Status */}
-      {syncStatus && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">ElevenLabs Sync Status</CardTitle>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => retrySyncMutation.mutate()}
-                disabled={retrySyncMutation.isPending}
-                data-testid="button-retry-sync"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {retrySyncMutation.isPending ? 'Syncing...' : 'Retry Failed'}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Sync Progress</span>
-                <span>{syncStatus.synced}/{syncStatus.total} documents</span>
+      {/* Statistics Cards */}
+      {stats.totalEntries !== undefined && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Entries</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalEntries}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Categories</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {Object.keys(stats.entriesByCategory || {}).length}
               </div>
-              <Progress 
-                value={(syncStatus.synced / Math.max(syncStatus.total, 1)) * 100} 
-                className="h-2"
-              />
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>{syncStatus.synced} Synced</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-yellow-500" />
-                  <span>{syncStatus.pending} Pending</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500" />
-                  <span>{syncStatus.failed} Failed</span>
-                </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Tags</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {Object.keys(stats.entriesByTag || {}).length}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Types</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {Object.keys(stats.entriesByType || {}).length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
-      {/* Search */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search knowledge base..."
-            className="pl-10"
-            data-testid="input-search"
-          />
-        </div>
-        {searchQuery && (
-          <Button variant="outline" onClick={() => setSearchQuery('')}>
-            Clear
-          </Button>
-        )}
-      </div>
-
-      {/* Documents List */}
-      <div className="space-y-4">
-        {documentsLoading || searchLoading ? (
-          <div className="text-center py-8">Loading documents...</div>
-        ) : displayDocuments.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            {searchQuery ? 'No documents found matching your search.' : 'No documents in knowledge base yet.'}
+      {/* Search Interface */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Search Knowledge Base</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search entries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                data-testid="input-search-query"
+              />
+            </div>
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="w-48" data-testid="select-search-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="task">Tasks</SelectItem>
+                <SelectItem value="conversation">Conversations</SelectItem>
+                <SelectItem value="document">Documents</SelectItem>
+                <SelectItem value="code">Code</SelectItem>
+                <SelectItem value="research">Research</SelectItem>
+                <SelectItem value="workflow">Workflows</SelectItem>
+                <SelectItem value="project">Projects</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        ) : (
-          displayDocuments.map((doc) => (
-            <Card key={doc.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CardTitle className="text-lg">{doc.title}</CardTitle>
-                      {getSyncStatusIcon(doc)}
+        </CardContent>
+      </Card>
+
+      {/* Search Results */}
+      <div className="space-y-4">
+        {searchLoading && (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Searching knowledge base...</div>
+          </div>
+        )}
+        
+        {entries.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-semibold">
+              {entries.length} {entries.length === 1 ? 'entry' : 'entries'} found
+            </h3>
+            {entries.map((entry: KnowledgeBaseEntry) => {
+              const IconComponent = typeIcons[entry.type];
+              return (
+                <Card key={entry.id} data-testid={`entry-${entry.id}`}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <IconComponent className="w-5 h-5 mt-1 text-gray-500" />
+                        <div>
+                          <CardTitle className="text-lg">{entry.title}</CardTitle>
+                          <CardDescription className="text-sm">
+                            {entry.metadata.category} • {new Date(entry.createdAt).toLocaleDateString()}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Badge variant="secondary">{entry.type}</Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <Badge variant="outline">{doc.format.toUpperCase()}</Badge>
-                      <Badge variant="secondary">{doc.source.replace('_', ' ')}</Badge>
-                      <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 line-clamp-3">
+                      {entry.content}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {entry.metadata.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => deleteMutation.mutate(doc.id)}
-                    disabled={deleteMutation.isPending}
-                    data-testid={`button-delete-${doc.id}`}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 mb-3 line-clamp-3">
-                  {doc.metadata?.summary || doc.content.slice(0, 200) + '...'}
-                </p>
-                {doc.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {doc.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+        
+        {!searchLoading && entries.length === 0 && searchQuery && (
+          <div className="text-center py-8">
+            <div className="text-gray-500">No entries found for "{searchQuery}"</div>
+          </div>
+        )}
+        
+        {!searchLoading && entries.length === 0 && !searchQuery && (
+          <div className="text-center py-8">
+            <div className="text-gray-500">
+              No entries yet. Add your first entry or let the system automatically capture tasks and conversations.
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 }
+
+export default KnowledgeBaseManager;

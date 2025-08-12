@@ -1,0 +1,32 @@
+{
+  "entries": [
+    {
+      "title": "Test Knowledge Base Integration",
+      "content": "Task: Test Knowledge Base Integration\nDescription: No description\nStatus: today\nContext: computer",
+      "type": "task",
+      "sessionId": "s_njlk7hja5y9",
+      "metadata": {
+        "tags": [
+          "today",
+          "computer",
+          "any"
+        ],
+        "category": "Task Management",
+        "status": "today",
+        "source": "task_manager",
+        "customFields": {
+          "taskId": "21b1c72d-1f3b-4a1b-a5d3-29f233ae8a7c",
+          "timeWindow": "any",
+          "context": "computer"
+        }
+      },
+      "id": "eebe79ce-a4ae-418f-9701-4e5d9ccdd10f",
+      "createdAt": "2025-08-12T16:17:58.760Z",
+      "updatedAt": "2025-08-12T16:17:58.760Z",
+      "version": 1,
+      "searchableContent": "test knowledge base integration task: test knowledge base integration\ndescription: no description\nstatus: today\ncontext: computer task today computer any task management {\"taskid\":\"21b1c72d-1f3b-4a1b-a5d3-29f233ae8a7c\",\"timewindow\":\"any\",\"context\":\"computer\"}",
+      "contentHash": "somqh0"
+    }
+  ],
+  "lastUpdated": "2025-08-12T16:17:58.760Z"
+}

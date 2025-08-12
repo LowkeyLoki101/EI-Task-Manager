@@ -16,7 +16,7 @@ import CompactTaskManager from '../components/CompactTaskManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
-import { Code } from 'lucide-react';
+import { Code, BookOpen } from 'lucide-react';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -98,6 +98,16 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
+              <a 
+                href="/knowledge-base" 
+                target="_blank"
+                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 transition-colors"
+                title="Comprehensive knowledge base with metadata, search, export/import"
+              >
+                <BookOpen className="h-3 w-3 mr-1" />
+                <span className="hidden sm:inline">Knowledge Base</span>
+                <span className="sm:hidden">KB</span>
+              </a>
               <a 
                 href="/code-analysis" 
                 target="_blank"

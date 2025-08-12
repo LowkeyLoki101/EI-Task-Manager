@@ -81,6 +81,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn('[Routes] Failed to load n8n integration:', error);
   }
 
+  // Register Knowledge Base routes
+  const { registerKnowledgeBaseRoutes } = await import("./knowledge-base-routes");
+  registerKnowledgeBaseRoutes(app);
+
   // Register System Modifier for advanced GPT-5 capabilities
   const { registerSystemModifier } = await import("./system-modifier");
   registerSystemModifier(app);
@@ -943,7 +947,6 @@ If they're just greeting you or making conversation, respond naturally. If they 
       }
 
       const task = await storage.createTask({
-        id: randomUUID(),
         sessionId,
         title,
         context: context || 'computer',
@@ -951,6 +954,14 @@ If they're just greeting you or making conversation, respond naturally. If they 
         status: 'today',
         description: null
       });
+
+      // Auto-capture to knowledge base
+      try {
+        const { knowledgeBaseManager } = await import("./knowledge-base-manager");
+        await knowledgeBaseManager.captureTask(task, sessionId);
+      } catch (error) {
+        console.error("Failed to capture task to knowledge base:", error);
+      }
 
       res.json({ success: true, task });
     } catch (error) {
