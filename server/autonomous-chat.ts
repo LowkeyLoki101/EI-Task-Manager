@@ -2,6 +2,9 @@ import { Express } from 'express';
 import OpenAI from 'openai';
 import { gptDiary } from './gpt-diary';
 import { storage } from './storage';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -69,8 +72,8 @@ I can see we have some tasks to work on. I'm ready to research, create automatio
     return this.conversations.get(sessionId) || [];
   }
 
-  // Process user message with autonomous actions
-  async processMessage(sessionId: string, userMessage: string): Promise<ChatMessage> {
+  // Process user message with autonomous actions, including file analysis
+  async processMessage(sessionId: string, userMessage: string, files?: Express.Multer.File[]): Promise<ChatMessage> {
     const conversation = await this.initializeChat(sessionId);
     
     // Add user message
@@ -88,13 +91,11 @@ I can see we have some tasks to work on. I'm ready to research, create automatio
       const tasks = await storage.getTasksBySessionId(sessionId);
       const memory = gptDiary.getMemory();
       
-      // Process with GPT-4 and enable autonomous actions
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: `You are Colby, an autonomous AI assistant with these capabilities:
+      // Prepare messages for GPT, including image analysis if files are provided
+      const messages: any[] = [
+        {
+          role: "system",
+          content: `You are Colby, an autonomous AI assistant with these capabilities:
 
 AUTONOMOUS ACTIONS YOU CAN TAKE:
 1. CREATE_TASK(title, context, timeWindow) - Create new tasks
@@ -110,17 +111,48 @@ CURRENT CONTEXT:
 - Tasks: ${JSON.stringify(tasks, null, 2)}
 - Memory: ${JSON.stringify(memory.personalityProfile, null, 2)}
 
+When images are uploaded, analyze them for text content, context, and actionable items.
+Extract text from screenshots, identify tasks from messages/documents, and proactively create tasks.
+
 Take autonomous actions when appropriate. Format actions as:
 ACTION: ACTION_NAME(parameters)
 Then explain what you did and why.
 
 Be proactive, helpful, and build on our relationship.`
-          },
-          ...conversation.slice(-10).map(msg => ({
-            role: msg.role as any,
-            content: msg.content
-          }))
-        ]
+        },
+        ...conversation.slice(-10).map(msg => ({
+          role: msg.role as any,
+          content: msg.content
+        }))
+      ];
+
+      // If files are provided, add them to the last user message with image analysis
+      if (files && files.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.role === 'user') {
+          const content = [{ type: 'text', text: lastMessage.content }];
+          
+          for (const file of files) {
+            if (file.mimetype.startsWith('image/')) {
+              const imageBuffer = fs.readFileSync(file.path);
+              const base64Image = imageBuffer.toString('base64');
+              content.push({
+                type: 'image_url',
+                image_url: {
+                  url: `data:${file.mimetype};base64,${base64Image}`
+                }
+              });
+            }
+          }
+          
+          lastMessage.content = content;
+        }
+      }
+      
+      // Process with GPT-4 and enable autonomous actions
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages
       });
 
       const assistantResponse = response.choices[0].message.content || '';
@@ -180,7 +212,7 @@ Be proactive, helpful, and build on our relationship.`
             await storage.createTask({
               title,
               context: (context as 'computer' | 'phone' | 'physical') || 'computer',
-              timeWindow: timeWindow || 'any',
+              timeWindow: (timeWindow as 'morning' | 'midday' | 'evening' | 'any') || 'any',
               status: 'today',
               sessionId
             });
@@ -226,9 +258,9 @@ Be proactive, helpful, and build on our relationship.`
   // Get all conversations for diary/memory
   getAllConversations(): ChatMessage[] {
     const allMessages: ChatMessage[] = [];
-    for (const messages of this.conversations.values()) {
+    Array.from(this.conversations.values()).forEach(messages => {
       allMessages.push(...messages.filter((msg: ChatMessage) => msg.role !== 'system'));
-    }
+    });
     return allMessages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 }
@@ -236,6 +268,24 @@ Be proactive, helpful, and build on our relationship.`
 export const autonomousChat = new AutonomousChatService();
 
 export function registerAutonomousChat(app: Express) {
+  // Configure multer for file uploads
+  const upload = multer({
+    dest: 'uploads/',
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+      // Accept images, PDFs, and text files
+      const allowedTypes = /jpeg|jpg|png|gif|pdf|txt|doc|docx/;
+      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = allowedTypes.test(file.mimetype);
+      
+      if (mimetype && extname) {
+        return cb(null, true);
+      } else {
+        cb(new Error('Only images, PDFs, and documents are allowed'));
+      }
+    }
+  });
+
   // Get conversation history
   app.get('/api/chat/:sessionId', async (req, res) => {
     try {
@@ -250,11 +300,34 @@ export function registerAutonomousChat(app: Express) {
     }
   });
 
-  // Send message
-  app.post('/api/chat/:sessionId', async (req, res) => {
+  // Send message with optional file uploads
+  app.post('/api/chat/:sessionId', upload.array('file0', 5), async (req, res) => {
     try {
-      const { message } = req.body;
-      const response = await autonomousChat.processMessage(req.params.sessionId, message);
+      const message = req.body.message || '';
+      const files = req.files as Express.Multer.File[];
+      
+      if (!message && (!files || files.length === 0)) {
+        return res.status(400).json({ error: 'Message or files required' });
+      }
+
+      let finalMessage = message;
+      if (files && files.length > 0) {
+        finalMessage = message + `\n\n[User uploaded ${files.length} file(s): ${files.map(f => f.originalname).join(', ')}]`;
+      }
+
+      const response = await autonomousChat.processMessage(req.params.sessionId, finalMessage, files);
+      
+      // Clean up uploaded files
+      if (files) {
+        files.forEach(file => {
+          try {
+            fs.unlinkSync(file.path);
+          } catch (error) {
+            console.error('Failed to delete uploaded file:', error);
+          }
+        });
+      }
+      
       res.json({ message: response });
     } catch (error) {
       console.error('[Autonomous Chat] Send message failed:', error);

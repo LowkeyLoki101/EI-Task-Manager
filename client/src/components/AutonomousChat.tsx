@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb } from 'lucide-react';
+import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb, Upload, X } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -40,7 +40,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const [message, setMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDiary, setShowDiary] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   // Get conversation history
@@ -66,11 +68,19 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (messageText: string) => {
+    mutationFn: async ({ messageText, files }: { messageText: string; files?: File[] }) => {
+      const formData = new FormData();
+      formData.append('message', messageText);
+      
+      if (files && files.length > 0) {
+        files.forEach((file, index) => {
+          formData.append(`file${index}`, file);
+        });
+      }
+
       const response = await fetch(`/api/chat/${sessionId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: messageText })
+        body: formData
       });
       return response.json();
     },
@@ -78,6 +88,10 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] }); // Chat can modify tasks
       setMessage('');
+      setUploadedFiles([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   });
 
@@ -117,8 +131,24 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(message.trim());
+    if ((message.trim() || uploadedFiles.length > 0) && !sendMessageMutation.isPending) {
+      sendMessageMutation.mutate({ 
+        messageText: message.trim(), 
+        files: uploadedFiles.length > 0 ? uploadedFiles : undefined 
+      });
+    }
+  };
+
+  // File upload handlers
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setUploadedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -338,23 +368,73 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
           </div>
         </ScrollArea>
 
+        {/* File Upload Preview */}
+        {uploadedFiles.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-blue-700 dark:text-blue-300">
+              Files to upload:
+            </div>
+            <div className="space-y-1">
+              {uploadedFiles.map((file, index) => (
+                <div key={index} className="flex items-center justify-between bg-blue-100 dark:bg-blue-900 p-2 rounded text-xs">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-3 w-3" />
+                    <span>{file.name}</span>
+                    <span className="text-gray-500">({Math.round(file.size / 1024)}KB)</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(index)}
+                    className="h-6 w-6 p-0"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Message Input */}
-        <form onSubmit={handleSendMessage} className="flex gap-2">
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Ask Colby to help with tasks, research, automation..."
-            disabled={sendMessageMutation.isPending}
-            className="flex-1"
-            data-testid="chat-input"
-          />
-          <Button 
-            type="submit" 
-            disabled={!message.trim() || sendMessageMutation.isPending}
-            data-testid="send-message"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+        <form onSubmit={handleSendMessage} className="space-y-2">
+          <div className="flex gap-2">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Ask Colby to help with tasks, research, automation..."
+              disabled={sendMessageMutation.isPending}
+              className="flex-1"
+              data-testid="chat-input"
+            />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              multiple
+              accept="image/*,.pdf,.txt,.doc,.docx"
+              className="hidden"
+            />
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={sendMessageMutation.isPending}
+              data-testid="upload-file"
+            >
+              <Upload className="h-4 w-4" />
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={(!message.trim() && uploadedFiles.length === 0) || sendMessageMutation.isPending}
+              data-testid="send-message"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="text-xs text-blue-600 dark:text-blue-400">
+            💡 Upload screenshots, documents, or images. Colby can extract text, analyze content, and create tasks based on what's found.
+          </div>
         </form>
 
         <div className="text-xs text-blue-600 dark:text-blue-400">
