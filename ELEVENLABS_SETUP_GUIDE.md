@@ -12,12 +12,14 @@ Go to ElevenLabs Dashboard → Your Agent → Tools → Add Tool
 **Tool Configuration:**
 ```json
 {
+  "type": "webhook",
   "name": "test",
   "description": "Test webhook connectivity to verify integration is working",
-  "type": "webhook",
   "api_schema": {
     "url": "https://Emergent-Assistant.replit.app/api/actions/test",
     "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
     "request_body_schema": {
       "type": "object",
       "properties": [
@@ -36,8 +38,16 @@ Go to ElevenLabs Dashboard → Your Agent → Tools → Add Tool
         "name": "Content-Type", 
         "value": "application/json"
       }
-    ]
-  }
+    ],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto"
 }
 ```
 
@@ -83,12 +93,14 @@ Once test works, add this tool:
 
 ```json
 {
+  "type": "webhook",
   "name": "add_task", 
   "description": "Create a new task with title, context, and optional steps",
-  "type": "webhook",
   "api_schema": {
     "url": "https://Emergent-Assistant.replit.app/api/actions/add_task",
     "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
     "request_body_schema": {
       "type": "object",
       "properties": [
@@ -121,8 +133,16 @@ Once test works, add this tool:
         "name": "Content-Type",
         "value": "application/json" 
       }
-    ]
-  }
+    ],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto"
 }
 ```
 
