@@ -3,8 +3,8 @@ import OpenAI from 'openai';
 import { gptDiary } from './gpt-diary';
 import { storage } from './storage';
 import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
+import fs, { existsSync, readFileSync, writeFileSync } from 'fs';
+import path, { join } from 'path';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -24,6 +24,43 @@ export interface ChatMessage {
 
 class AutonomousChatService {
   private conversations: Map<string, ChatMessage[]> = new Map();
+  private conversationsFile = join(process.cwd(), 'data', 'conversations.json');
+  
+  constructor() {
+    this.loadConversations();
+  }
+  
+  // Load conversations from disk
+  private loadConversations() {
+    try {
+      if (existsSync(this.conversationsFile)) {
+        const data = JSON.parse(readFileSync(this.conversationsFile, 'utf8'));
+        Object.entries(data).forEach(([sessionId, messages]: [string, any[]]) => {
+          const parsedMessages = messages.map(msg => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          this.conversations.set(sessionId, parsedMessages);
+        });
+        console.log('[AutonomousChat] Loaded', Object.keys(data).length, 'conversation(s) from disk');
+      }
+    } catch (error) {
+      console.error('[AutonomousChat] Failed to load conversations:', error);
+    }
+  }
+  
+  // Save conversations to disk
+  private saveConversations() {
+    try {
+      const data: Record<string, ChatMessage[]> = {};
+      this.conversations.forEach((messages, sessionId) => {
+        data[sessionId] = messages;
+      });
+      writeFileSync(this.conversationsFile, JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error('[AutonomousChat] Failed to save conversations:', error);
+    }
+  }
 
   // Initialize chat for session
   async initializeChat(sessionId: string): Promise<ChatMessage[]> {
@@ -67,6 +104,7 @@ I can see we have some tasks to work on. I'm ready to research, create automatio
       };
 
       this.conversations.set(sessionId, [systemMessage, welcomeMessage]);
+      this.saveConversations();
     }
 
     return this.conversations.get(sessionId) || [];
@@ -85,6 +123,7 @@ I can see we have some tasks to work on. I'm ready to research, create automatio
       timestamp: new Date()
     };
     conversation.push(userMsg);
+    this.saveConversations();
 
     try {
       // Get current context
@@ -174,6 +213,7 @@ Be proactive, helpful, and build on our relationship.`
       };
       
       conversation.push(assistantMsg);
+      this.saveConversations();
       
       // Reflect on the interaction
       await gptDiary.reflect(sessionId, `User: ${userMessage}\nAssistant: ${assistantResponse}`);
@@ -192,6 +232,7 @@ Be proactive, helpful, and build on our relationship.`
       };
       
       conversation.push(errorMsg);
+      this.saveConversations();
       return errorMsg;
     }
   }
@@ -298,13 +339,40 @@ export function registerAutonomousChat(app: Express) {
   app.get('/api/chat/:sessionId', async (req, res) => {
     try {
       const conversation = await autonomousChat.initializeChat(req.params.sessionId);
+      const memory = gptDiary.getMemory();
+      const recentInsights = gptDiary.getRecentInsights(7);
       res.json({ 
         messages: conversation.filter(msg => msg.role !== 'system'),
-        memory: gptDiary.getMemory() 
+        memory,
+        insights: recentInsights,
+        trustLevel: memory.relationships.trustLevel
       });
     } catch (error) {
       console.error('[Autonomous Chat] Get conversation failed:', error);
       res.status(500).json({ error: 'Failed to get conversation' });
+    }
+  });
+
+  // Get diary insights
+  app.get('/api/diary/insights/:sessionId?', (req, res) => {
+    try {
+      const memory = gptDiary.getMemory();
+      const insights = gptDiary.getRecentInsights(14); // Last 2 weeks
+      res.json({
+        trustLevel: memory.relationships.trustLevel,
+        insights: insights.map(entry => ({
+          id: entry.id,
+          type: entry.type,
+          content: entry.content,
+          tags: entry.tags,
+          timestamp: entry.timestamp
+        })),
+        patterns: memory.relationships.successfulPatterns,
+        preferences: memory.personalityProfile.userPreferences
+      });
+    } catch (error) {
+      console.error('[Diary] Get insights failed:', error);
+      res.status(500).json({ error: 'Failed to get insights' });
     }
   });
 

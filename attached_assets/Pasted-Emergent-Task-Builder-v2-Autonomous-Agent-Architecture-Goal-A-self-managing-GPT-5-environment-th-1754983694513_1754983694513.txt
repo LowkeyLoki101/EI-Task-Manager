@@ -1,0 +1,265 @@
+Emergent Task Builder — v2 Autonomous Agent Architecture
+
+Goal: A self-managing GPT‑5 environment that ingests speech/text/images/files, then autonomously creates, organizes, schedules, and executes tasks—with a living journal, trust/autonomy governance, and a luxe high‑tech UI.
+
+⸻
+
+1) Objectives & Non‑Goals
+
+Objectives
+	•	Zero‑friction capture: user drops raw inputs; system converts to structured tasks/events.
+	•	Always‑on cognition: periodic self‑prompts (“heartbeat”) keep the agent productive while user is away.
+	•	Calendar mastery: native scheduling, reminders, timers, and follow‑ups.
+	•	Living memory: an internal journal with categories (System/Website, User, Self) and actionable insights.
+	•	Trust‑aware autonomy: actions gated by a dynamic trust score and clear policies.
+	•	High‑fashion UX: black/graphite/white with subtle texture, gold accents, non‑cartoon iconography.
+
+Non‑Goals (v2)
+	•	No implicit destructive actions without guardrails.
+	•	No third‑party calendar write access without explicit user opt‑in per provider.
+
+⸻
+
+2) Multi‑Agent Topology
+	•	Orchestrator (OPS) — Single source of truth. Routes intents to tools/agents. Owns state snapshots and run logs.
+	•	Task & Calendar Agent (TCA) — Converts inputs to tasks/steps, plans dates, sets timers, manages reminders/recurrence.
+	•	Research/Autonomous Worker (RAW) — Executes background research, drafts, and prep; returns artifacts.
+	•	Diary/Reflector (DRYAD) — A second LLM that interviews OPS on a schedule; writes/structures journal entries.
+	•	Critic/Trust & Safety (CTS) — Scores outcomes, updates trust, enforces autonomy policy.
+	•	Integrations Manager (GLUE) — Monitors connections (Google/Microsoft/CalDAV, Twilio, email, KB) and repairs scopes.
+
+Message Bus: All agents communicate via an internal event bus (agent.events table) with topics: capture.*, plan.*, calendar.*, journal.*, trust.*, integration.*.
+
+⸻
+
+3) Event Loop & Heartbeat
+
+Heartbeat cadence: configurable (e.g., every 15–60 min when user idle). Sequence:
+	1.	State Snapshot — OPS compiles tasks due soon, blocked items, next 3 days calendar, connection health, trust level.
+	2.	Self‑Prompt — OPS asks: “What am I working on?”, “What is blocking collaboration?”, “What must be queued next?”
+	3.	Reflect — DRYAD interviews OPS with predefined Q‑set, returns structured insights.
+	4.	Act — TCA schedules items, sets reminders/timers; RAW runs prep work; GLUE fixes connection issues or files feature requests.
+	5.	Journal — DRYAD writes entries across categories, links to artifacts, updates trust deltas.
+	6.	Notify — If enabled, send concise SMS/email status and requests for decisions.
+
+⸻
+
+4) Data Model (Drizzle/PG)
+
+Task (id, title, description, status{todo,doing,blocked,done}, priority, tags[], due_at, start_at, duration_min, recurrence_json, reminders_json[], links_json[], owner, created_by, project_id, created_at)
+
+Step (id, task_id, summary, status, order_index, artifact_id?)
+
+Tag (id, name, color, kind{topic,actor,priority})
+
+CalendarEvent (id, external_id?, provider{google,microsoft,caldav,local}, title, description, start_at, end_at, all_day, location, attendees_json[], reminders_json[], task_id?, created_at)
+
+JournalEntry (id, agent{OPS,DRYAD,CTS}, category{system,user,self}, prompt_key, content_md, insights_json, trust_delta, snapshot_id?, tags[], created_at)
+
+AgentState (id, trust_score float, autonomy_level{0..3}, last_heartbeat_at, connection_health_json, preferences_json, policy_version, energy_budget)
+
+Connection (id, provider, status{connected,expired,error}, scopes[], last_checked_at, error_msg?)
+
+AuditLog (id, actor, action, payload_json, created_at)
+
+⸻
+
+5) Tools / Function‑Calling Surface
+
+Expose strictly typed tools to GPT‑5:
+	•	add_task({title, description?, tags?, due_at?, priority?})
+	•	update_task({id, patch})
+	•	create_event({title, start_at, end_at?, attendees?, reminders?[], task_id?})
+	•	set_timer({task_id, minutes, reason})
+	•	set_reminder({entity:{task|event}, id, at, channel:{inapp|sms|email}})
+	•	query_calendar({range, filters?})
+	•	send_sms({to, body, category}) (feature‑flagged)
+	•	write_journal({category, prompt_key, content_md, insights_json?})
+	•	check_connections() / repair_connection({provider})
+	•	feature_request({title, rationale, impact, effort_estimate})
+	•	state_snapshot() (returns frozen view used by DRYAD/CTS)
+
+Policies: Tools include requires_autonomy >= N. CTS denies/defers if trust is below threshold.
+
+⸻
+
+6) Trust & Autonomy Governance
+
+Levels
+	•	0 (Observe): read‑only; journaling, proposals only.
+	•	1 (Assist): create/update tasks, draft events, set local timers.
+	•	2 (Act): schedule calendar events (user‑confirmed providers), send in‑app reminders.
+	•	3 (Execute): send SMS/email, reschedule meetings, integrate with external systems.
+
+Trust Score (0–1)
+	•	Start at 0.5; adjust via: action success (+), user overrides (−), missed reminders (−), on‑time delivery (+), tests passed (+).
+	•	Decays slowly over time; capped by policy; visible as a meter.
+
+⸻
+
+7) Diary/Reflector (LLM‑as‑Diary)
+
+DRYAD Q‑Set (examples)
+	1.	Current focus in 2 lines.
+	2.	Unknowns & asks for the user.
+	3.	Assumptions you’re making (mark shaky).
+	4.	Risks and mitigations.
+	5.	Evidence log (what you verified vs. need to verify).
+	6.	Next best step (1–3 items).
+	7.	Trust check: what raised/lowered trust since last entry?
+	8.	Feature request opportunities from this cycle.
+
+Output: content_md + insights_json {asks, risks, next_steps, trust_delta, features[]}.
+
+On app open, OPS reads the last N entries (configurable, e.g., 7 days) and presents a Current State Card.
+
+⸻
+
+8) Calendar & Notifications
+	•	Providers: Google, Microsoft, CalDAV/ICS, Local.
+	•	Features: conflict detection, auto‑buffers around meetings, travel time estimates (optional), smart reminder ladders (e.g., T‑48h/24h/2h/15m), task‑to‑event conversion, daily rolling plan.
+	•	Notifications: in‑app, email, SMS (toggle & per‑category frequency controls).
+
+⸻
+
+9) UX / Visual Design System
+
+Theme: Onyx/graphite backgrounds with subtle noise texture; soft shadows; gold (#C9A75E) accents; crisp white typography; rounded‑2xl cards; minimal line icons (Lucide).
+
+Key Surfaces
+	•	Command Center: trust meter, autonomy dial, heartbeat ticker, connections health, today’s plan, inbox.
+	•	Tasks: Kanban + timeline; tag chips; quick‑schedule; SLA/urgency badges.
+	•	Calendar: week and agenda views; task‑to‑event drag‑drop; reminder ladders.
+	•	Diary: journal timeline, filters (System/User/Self), insights facets, export.
+	•	Connections: provider tiles with status, scopes, repair buttons.
+
+Micro‑interactions: success toasts, subtle hover lift, progress rings on timers.
+
+⸻
+
+10) Implementation Plan (Phased)
+
+P0: Foundations (1–2 wks)
+	•	Migrate storage to Postgres via Drizzle; add tables above.
+	•	Add job queue & scheduler (pg‑boss or BullMQ+Redis). Implement heartbeat worker.
+	•	Implement state_snapshot() and JournalEntry writes.
+
+P1: Task & Calendar (1–2 wks)
+	•	Ship TCA: parsing, scheduling, reminders, timers.
+	•	Calendar provider OAuth + local ICS fallback. Read/write guarded by autonomy.
+	•	UI: Command Center v1, Tasks v2, Calendar v1.
+
+P2: DRYAD & Trust (1–2 wks)
+	•	DRYAD agent with Q‑set; insights extraction pipeline.
+	•	CTS policies; trust meter & autonomy gates; activity/audit log.
+
+P3: Notifications & Feature Requests (1 wk)
+	•	SMS/email toggles; digest settings; feature‑request backlog and triage view.
+
+⸻
+
+11) API Surface (Express)
+
+POST /api/agent/heartbeat → triggers heartbeat run
+GET /api/agent/state → returns state snapshot
+POST /api/journal → write journal entry
+GET /api/journal?since=… → list entries
+POST /api/tasks / PATCH /api/tasks/:id
+POST /api/calendar/events / PATCH /api/calendar/events/:id
+POST /api/notify/sms (feature‑flag)
+GET /api/integrations/status / POST /api/integrations/repair
+POST /api/feature-requests
+
+⸻
+
+12) Prompting (Initial)
+
+OPS System Prompt (excerpt)
+	•	You are the Orchestrator. Maintain a clean, prioritized task graph and a truthful state snapshot. Prefer small, reversible actions. Ask DRYAD for reflection each heartbeat. Obey CTS autonomy gates. Always link actions to tasks/events and journal your reasoning succinctly.
+
+DRYAD System Prompt (excerpt)
+	•	You are the Reflector. Interview the Orchestrator. Output Markdown journal + insights_json. Be blunt, concise, and useful. Track trust deltas with justifications.
+
+CTS System Prompt (excerpt)
+	•	You gate actions by autonomy level and trust. Where blocked, propose alternatives that meet current policy.
+
+⸻
+
+13) Security & Privacy
+	•	Encrypted token storage; least‑privilege scopes per provider.
+	•	Redaction layer on journal entries (PII, secrets) with vault links.
+	•	Dry‑run mode for external actions; explicit approval queues; audit trail.
+
+⸻
+
+14) Testing & Telemetry
+	•	Simulated “day in the life” runs; assertion on scheduled reminders and calendar conflicts.
+	•	Metrics: actions attempted/succeeded, overrides, SLA misses, trust trend, user NPS per digest.
+
+⸻
+
+15) Open Questions
+	•	Do we allow RAW to start long‑running background research beyond the budgeted energy?
+	•	How aggressive should CTS be with first‑time provider writes?
+	•	Which frequency defaults (heartbeat 30m? digest daily 5pm?)
+
+⸻
+
+Appendix A — Minimal Table DDL (Drizzle flavor, pseudocode)
+
+JournalEntry = pgTable('journal_entries', {
+  id: serial('id').primaryKey(),
+  agent: text('agent'), // OPS | DRYAD | CTS
+  category: text('category'), // system | user | self
+  promptKey: text('prompt_key'),
+  contentMd: text('content_md'),
+  insightsJson: jsonb('insights_json'),
+  trustDelta: numeric('trust_delta'),
+  snapshotId: integer('snapshot_id'),
+  tags: text('tags').array(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+AgentState = pgTable('agent_state', {
+  id: serial('id').primaryKey(),
+  trustScore: numeric('trust_score'),
+  autonomyLevel: integer('autonomy_level'),
+  lastHeartbeatAt: timestamp('last_heartbeat_at'),
+  connectionHealthJson: jsonb('connection_health_json'),
+  preferencesJson: jsonb('preferences_json'),
+  policyVersion: text('policy_version'),
+  energyBudget: integer('energy_budget'),
+});
+
+Appendix B — Example Self‑Prompt Config
+
+{
+  "heartbeat_minutes": 30,
+  "journal_days_to_review_on_open": 7,
+  "questions": [
+    "Current focus in 2 lines?",
+    "Unknowns & asks for user?",
+    "Assumptions (mark shaky)?",
+    "Risks & mitigations?",
+    "Evidence log: verified vs. to‑verify?",
+    "Next best 1–3 steps?",
+    "Trust check: changes & why?",
+    "Feature requests from this cycle?"
+  ],
+  "autonomy_gates": {
+    "send_sms": 3,
+    "create_event": 2,
+    "set_reminder": 1
+  }
+}
+
+Appendix C — Tailwind Tokens (theme sketch)
+
+export const theme = {
+  colors: {
+    onyx: '#0B0B0F', graphite: '#111318', slate: '#1A1D24',
+    gold: '#C9A75E', silver: '#D0D4D8', white: '#FFFFFF'
+  },
+  radius: { card: '1.25rem' },
+  shadow: { card: '0 10px 30px rgba(0,0,0,0.35)' }
+};

@@ -97,6 +97,7 @@ class GPTDiaryService {
   private saveMemory() {
     try {
       writeFileSync(this.memoryFile, JSON.stringify(this.memory, null, 2));
+      console.log('[GPT Diary] Memory saved with', this.memory.diary.length, 'diary entries');
     } catch (error) {
       console.error('[GPT Diary] Failed to save memory:', error);
     }

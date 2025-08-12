@@ -56,14 +56,15 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
     refetchInterval: 3000
   });
 
-  // Get diary/memory data
-  const { data: diaryData } = useQuery({
-    queryKey: ['/api/diary'],
+  // Get diary/memory insights data
+  const { data: insightsData } = useQuery({
+    queryKey: ['/api/diary/insights', sessionId],
     queryFn: async () => {
-      const response = await fetch('/api/diary');
+      const response = await fetch(`/api/diary/insights/${sessionId}`);
       return response.json();
     },
-    enabled: showDiary
+    enabled: showDiary,
+    refetchInterval: 30000 // Refresh insights every 30 seconds
   });
 
   // Send message mutation
@@ -106,13 +107,17 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary/insights', sessionId] });
     }
   });
 
   const messages = conversationData?.messages || [];
   const memory = conversationData?.memory;
-  const recentIdeas = diaryData?.memory?.diary?.filter((entry: DiaryEntry) => entry.type === 'idea').slice(0, 3) || [];
+  const insights = conversationData?.insights || [];
+  const trustLevel = conversationData?.trustLevel || 0.5;
+  const allInsights = insightsData?.insights || [];
+  const successfulPatterns = insightsData?.patterns || [];
+  const userPreferences = insightsData?.preferences || [];
 
   // Auto-scroll to bottom with improved behavior
   useEffect(() => {
@@ -223,9 +228,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
           <p className="text-sm text-blue-700 dark:text-blue-300">
             AI assistant with persistent memory. Click to chat and get autonomous help with tasks, research, and automation.
           </p>
-          {recentIdeas.length > 0 && (
+          {insights.length > 0 && (
             <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-              Recent ideas: {recentIdeas.map((idea: DiaryEntry) => idea.content.slice(0, 30)).join(', ')}...
+              Recent insights: {insights.slice(0, 2).map((insight: DiaryEntry) => insight.content.slice(0, 30)).join(', ')}...
             </div>
           )}
         </CardContent>
@@ -288,14 +293,39 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
           </div>
         )}
 
-        {showDiary && diaryData && (
+        {showDiary && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-blue-800 dark:text-blue-200">
               <FileText className="h-4 w-4" />
-              Recent Insights
+              AI Memory & Insights
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                Trust: {Math.round(trustLevel * 100)}%
+              </Badge>
             </div>
+            
+            {/* User Preferences */}
+            {userPreferences.length > 0 && (
+              <div className="text-xs space-y-1">
+                <div className="font-medium text-blue-700">Learned Preferences:</div>
+                <div className="text-blue-600">
+                  {userPreferences.slice(0, 3).join(' • ')}
+                </div>
+              </div>
+            )}
+            
+            {/* Successful Patterns */}
+            {successfulPatterns.length > 0 && (
+              <div className="text-xs space-y-1">
+                <div className="font-medium text-green-700">Successful Patterns:</div>
+                <div className="text-green-600">
+                  {successfulPatterns.slice(0, 2).join(' • ')}
+                </div>
+              </div>
+            )}
+            
+            {/* Recent Insights */}
             <div className="space-y-1 max-h-32 overflow-y-auto">
-              {diaryData.memory.diary.slice(0, 5).map((entry: DiaryEntry) => (
+              {allInsights.slice(0, 5).map((entry: DiaryEntry) => (
                 <div key={entry.id} className="text-xs p-2 bg-blue-100 dark:bg-blue-900 rounded">
                   <div className="flex items-center gap-1 mb-1">
                     {getTypeIcon(entry.type)}
@@ -316,6 +346,11 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
                   )}
                 </div>
               ))}
+              {allInsights.length === 0 && (
+                <div className="text-xs text-gray-500 p-2">
+                  No insights yet. Start chatting to build relationship memory.
+                </div>
+              )}
             </div>
             <Separator />
           </div>
