@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { writeFileSync, readFileSync, existsSync } from "fs";
 import type { 
   Session, Task, Step, Artifact, Memory, Conversation, Installation,
   Proposal, File, Project, ResearchDoc, CalendarEvent, ProjectFile,
@@ -133,6 +134,86 @@ export class MemStorage implements IStorage {
     this.researchDocs = new Map();
     this.calendarEvents = new Map();
     this.projectFiles = new Map();
+    
+    // Load persisted data on startup
+    this.loadFromFile();
+  }
+
+  private saveToFile() {
+    try {
+      const data = {
+        sessions: Array.from(this.sessions.entries()),
+        tasks: Array.from(this.tasks.entries()),
+        steps: Array.from(this.steps.entries()),
+        artifacts: Array.from(this.artifacts.entries()),
+        memories: Array.from(this.memories.entries()),
+        conversations: Array.from(this.conversations.entries()),
+        installations: Array.from(this.installations.entries()),
+        proposals: Array.from(this.proposals.entries()),
+        files: Array.from(this.files.entries()),
+        projects: Array.from(this.projects.entries()),
+        researchDocs: Array.from(this.researchDocs.entries()),
+        calendarEvents: Array.from(this.calendarEvents.entries()),
+        projectFiles: Array.from(this.projectFiles.entries()),
+      };
+      writeFileSync('data/storage.json', JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.warn('[Storage] Failed to save to file:', error);
+    }
+  }
+
+  private loadFromFile() {
+    try {
+      if (existsSync('data/storage.json')) {
+        const data = JSON.parse(readFileSync('data/storage.json', 'utf8'));
+        
+        // Restore Maps from arrays, converting date strings back to Date objects
+        this.sessions = new Map(data.sessions?.map(([k, v]: [string, any]) => [k, {
+          ...v,
+          createdAt: new Date(v.createdAt),
+          updatedAt: new Date(v.updatedAt)
+        }]) || []);
+        
+        this.tasks = new Map(data.tasks?.map(([k, v]: [string, any]) => [k, {
+          ...v,
+          createdAt: new Date(v.createdAt),
+          updatedAt: new Date(v.updatedAt)
+        }]) || []);
+        
+        this.steps = new Map(data.steps?.map(([k, v]: [string, any]) => [k, {
+          ...v,
+          createdAt: new Date(v.createdAt),
+          updatedAt: new Date(v.updatedAt)
+        }]) || []);
+        
+        this.artifacts = new Map(data.artifacts?.map(([k, v]: [string, any]) => [k, {
+          ...v,
+          createdAt: new Date(v.createdAt),
+          updatedAt: new Date(v.updatedAt)
+        }]) || []);
+        
+        this.memories = new Map(data.memories || []);
+        this.conversations = new Map(data.conversations?.map(([k, v]: [string, any]) => [k, {
+          ...v,
+          timestamp: new Date(v.timestamp)
+        }]) || []);
+        this.installations = new Map(data.installations || []);
+        this.proposals = new Map(data.proposals || []);
+        this.files = new Map(data.files || []);
+        this.projects = new Map(data.projects?.map(([k, v]: [string, any]) => [k, {
+          ...v,
+          createdAt: new Date(v.createdAt),
+          updatedAt: new Date(v.updatedAt)
+        }]) || []);
+        this.researchDocs = new Map(data.researchDocs || []);
+        this.calendarEvents = new Map(data.calendarEvents || []);
+        this.projectFiles = new Map(data.projectFiles || []);
+        
+        console.log('[Storage] Loaded persisted data: tasks=', this.tasks.size, 'steps=', this.steps.size);
+      }
+    } catch (error) {
+      console.warn('[Storage] Failed to load from file:', error);
+    }
   }
 
   // Sessions
@@ -164,6 +245,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.tasks.set(task.id, task);
+    this.saveToFile();
     return task;
   }
 
@@ -231,6 +313,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.steps.set(step.id, step);
+    this.saveToFile();
     return step;
   }
 
