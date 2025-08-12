@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Edit, Plus, CheckCircle, Circle, Clock } from 'lucide-react';
 import type { Task } from '@shared/schema';
 import type { VideoResource } from '@/lib/types';
+import { TaskResources } from './TaskResources';
 
 interface TaskManagerProps {
   sessionId: string;
@@ -256,6 +257,13 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
                     </Button>
                   </div>
                 </div>
+                
+                {/* AI-Discovered Resources for this task */}
+                <TaskResources 
+                  taskId={task.id} 
+                  taskTitle={task.title} 
+                  taskContext={task.context} 
+                />
               </CardContent>
             </Card>
           ))

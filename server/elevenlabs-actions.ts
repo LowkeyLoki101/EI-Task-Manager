@@ -85,11 +85,37 @@ export function registerElevenLabsActions(app: Express) {
         }
       }
 
+      // Automatically discover resources for the new task
+      setTimeout(async () => {
+        try {
+          console.log(`[Auto Resource Discovery] Starting for voice-created task: ${task.title}`);
+          const response = await fetch(`http://localhost:5000/api/gpt-supervisor/discover-resources`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              taskTitle: task.title,
+              taskContext: task.context,
+              taskId: task.id
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log(`[Auto Resource Discovery] Found ${result.resourceCount} resources for voice task: ${task.title}`);
+          } else {
+            console.error(`[Auto Resource Discovery] Failed for task ${task.id}: ${response.status}`);
+          }
+        } catch (error) {
+          console.error(`[Auto Resource Discovery] Error for task ${task.id}:`, error.message);
+        }
+      }, 200); // Small delay to ensure task is fully saved
+
       res.json({ 
         success: true, 
         task,
         steps,
-        message: `Created task "${task.title}" with ${steps.length} steps`
+        message: `Created task "${task.title}" with ${steps.length} steps. AI is discovering helpful resources...`,
+        resourceDiscovery: "Starting automatic resource discovery"
       });
     } catch (error) {
       console.error('Add task action error:', error);

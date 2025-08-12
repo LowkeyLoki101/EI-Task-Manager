@@ -56,6 +56,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { setupGPTSupervisor } = await import("./gpt-supervisor");
   setupGPTSupervisor(app);
 
+  // Register System Modifier for advanced GPT-5 capabilities
+  const { registerSystemModifier } = await import("./system-modifier");
+  registerSystemModifier(app);
+
   // Initialize sharing and tinker framework
   const { initializeTinkerFramework, sharingSystem, tinkerFramework } = await import("./sharing-system");
   await initializeTinkerFramework();
