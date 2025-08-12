@@ -4,11 +4,13 @@ import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Circle, CheckCircle, Clock, Trash2, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Circle, CheckCircle, Clock, Trash2, Plus, Edit3, Calendar, Link, FileText, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TaskEditDialog from './TaskEditDialog';
+import { format } from 'date-fns';
 
 interface Task {
   id: string;
@@ -17,6 +19,12 @@ interface Task {
   context: string;
   status: string;
   timeWindow?: string;
+  tags?: string[];
+  priority?: string;
+  category?: string;
+  dueDate?: string;
+  resources?: Array<{type: string; title: string; url: string}>;
+  notes?: string;
 }
 
 interface CompactTaskManagerProps {
@@ -111,10 +119,13 @@ export default function CompactTaskManager({ sessionId, onVideoSelect }: Compact
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
       const response = await fetch(`/api/tasks/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -222,36 +233,102 @@ export default function CompactTaskManager({ sessionId, onVideoSelect }: Compact
               tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded border"
+                  className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border space-y-2"
                   data-testid={`compact-task-${task.id}`}
                 >
-                  <div className="flex items-center gap-2 flex-1">
-                    <button
-                      onClick={() => handleTaskComplete(task.id, task.status)}
-                      className="hover:scale-110 transition-transform"
-                      data-testid={`compact-task-complete-${task.id}`}
-                    >
-                      {getStatusIcon(task.status)}
-                    </button>
+                  {/* Header Row */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-1">
+                      <button
+                        onClick={() => handleTaskComplete(task.id, task.status)}
+                        className="hover:scale-110 transition-transform"
+                        data-testid={`compact-task-complete-${task.id}`}
+                      >
+                        {getStatusIcon(task.status)}
+                      </button>
+                      
+                      <span className={`font-medium ${task.status === 'done' ? 'line-through text-gray-500' : ''}`}>
+                        {task.title}
+                      </span>
+                      
+                      {task.priority && task.priority !== 'medium' && (
+                        <Badge variant={task.priority === 'urgent' ? 'destructive' : task.priority === 'high' ? 'default' : 'secondary'} className="text-xs">
+                          {task.priority}
+                        </Badge>
+                      )}
+                    </div>
                     
-                    <span className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-gray-500' : ''}`}>
-                      {task.title}
-                    </span>
-                    
-                    <Badge variant="outline" className={`text-xs ${getContextColor(task.context)}`}>
-                      {task.context}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <TaskEditDialog task={task} sessionId={sessionId} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
+                        data-testid={`compact-task-delete-${task.id}`}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteTask(task.id)}
-                    className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
-                    data-testid={`compact-task-delete-${task.id}`}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+
+                  {/* Info Row */}
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <Badge variant="outline" className={`${getContextColor(task.context)}`}>
+                      {task.context === 'computer' ? '💻' : task.context === 'phone' ? '📱' : '🏃'} {task.context}
+                    </Badge>
+                    
+                    {task.category && task.category !== 'general' && (
+                      <span className="flex items-center gap-1">
+                        <Tag className="h-3 w-3" />
+                        {task.category}
+                      </span>
+                    )}
+                    
+                    {task.dueDate && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {format(new Date(task.dueDate), 'MMM dd')}
+                      </span>
+                    )}
+                    
+                    {task.resources && task.resources.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Link className="h-3 w-3" />
+                        {task.resources.length}
+                      </span>
+                    )}
+                    
+                    {task.notes && (
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        notes
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tags */}
+                  {task.tags && task.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {task.tags.slice(0, 3).map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-xs px-1 py-0">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {task.tags.length > 3 && (
+                        <Badge variant="secondary" className="text-xs px-1 py-0">
+                          +{task.tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Description Preview */}
+                  {task.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {task.description}
+                    </p>
+                  )}
                 </div>
               ))
             )}

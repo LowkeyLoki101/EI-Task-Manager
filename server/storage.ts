@@ -221,6 +221,11 @@ export class MemStorage implements IStorage {
         
         this.tasks = new Map(data.tasks?.map(([k, v]: [string, any]) => [k, {
           ...v,
+          tags: v.tags || [],
+          priority: v.priority || 'medium',
+          category: v.category || 'general',
+          resources: v.resources || [],
+          dueDate: v.dueDate ? new Date(v.dueDate) : null,
           createdAt: new Date(v.createdAt),
           updatedAt: new Date(v.updatedAt)
         }]) || []);
@@ -286,6 +291,12 @@ export class MemStorage implements IStorage {
       context: insertTask.context || 'computer',
       timeWindow: insertTask.timeWindow || 'any',
       description: insertTask.description || null,
+      tags: insertTask.tags || [],
+      priority: insertTask.priority || 'medium',
+      category: insertTask.category || 'general',
+      dueDate: insertTask.dueDate || null,
+      resources: insertTask.resources || [],
+      notes: insertTask.notes || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -309,11 +320,24 @@ export class MemStorage implements IStorage {
 
     // Sort by priority and creation date
     return tasks.sort((a, b) => {
-      // Prioritize "today" and "doing" status
+      // First sort by status priority
       const statusPriority = { doing: 4, today: 3, backlog: 2, done: 1 };
-      const aP = statusPriority[a.status] || 0;
-      const bP = statusPriority[b.status] || 0;
-      if (aP !== bP) return bP - aP;
+      const aStatus = statusPriority[a.status] || 0;
+      const bStatus = statusPriority[b.status] || 0;
+      if (aStatus !== bStatus) return bStatus - aStatus;
+      
+      // Then sort by task priority
+      const taskPriority = { urgent: 4, high: 3, medium: 2, low: 1 };
+      const aPriority = taskPriority[a.priority] || 2;
+      const bPriority = taskPriority[b.priority] || 2;
+      if (aPriority !== bPriority) return bPriority - aPriority;
+      
+      // Finally sort by due date (closer dates first) and creation date
+      if (a.dueDate && b.dueDate) {
+        return a.dueDate.getTime() - b.dueDate.getTime();
+      }
+      if (a.dueDate && !b.dueDate) return -1;
+      if (!a.dueDate && b.dueDate) return 1;
       
       return b.createdAt.getTime() - a.createdAt.getTime();
     });

@@ -18,6 +18,12 @@ export const tasks = pgTable("tasks", {
   context: text("context", { enum: ['computer', 'phone', 'physical'] }).default('computer').notNull(),
   timeWindow: text("time_window", { enum: ['morning', 'midday', 'evening', 'any'] }).default('any').notNull(),
   description: text("description"),
+  tags: text("tags").array().default([]),
+  priority: text("priority", { enum: ['low', 'medium', 'high', 'urgent'] }).default('medium').notNull(),
+  category: text("category").default('general'),
+  dueDate: timestamp("due_date"),
+  resources: json("resources").default([]), // URLs, file links, references
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -210,7 +216,7 @@ export const files = pgTable("files", {
 
 // Insert schemas
 export const insertSessionSchema = createInsertSchema(sessions).omit({ createdAt: true, updatedAt: true });
-export const insertTaskSchema = createInsertSchema(tasks).omit({ createdAt: true, updatedAt: true });
+export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertStepSchema = createInsertSchema(steps).omit({ createdAt: true, updatedAt: true });
 export const insertArtifactSchema = createInsertSchema(artifacts).omit({ createdAt: true });
 export const insertMemorySchema = createInsertSchema(memories).omit({ createdAt: true, updatedAt: true });
