@@ -76,6 +76,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Debug middleware to catch all ElevenLabs webhook requests
+app.use('/api/actions', (req, res, next) => {
+  console.log(`[DEBUG] ElevenLabs webhook intercepted: ${req.method} ${req.path}`);
+  console.log(`[DEBUG] Body:`, JSON.stringify(req.body, null, 2));
+  console.log(`[DEBUG] Headers:`, req.headers);
+  next();
+});
+
 // Mount realtime router
 app.use(realtimeRouter);
 
