@@ -769,6 +769,11 @@ export class MemStorage implements IStorage {
       upcomingEvents: upcomingEvents.length,
     };
   }
+
+  async getTasksBySessionId(sessionId: string): Promise<Task[]> {
+    const tasks = Array.from(this.tasks.values()).filter(task => task.sessionId === sessionId);
+    return tasks;
+  }
 }
 
 export const storage = new MemStorage();

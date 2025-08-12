@@ -1,0 +1,321 @@
+import { useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb } from 'lucide-react';
+
+interface ChatMessage {
+  id: string;
+  sessionId: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+  metadata?: {
+    actionsTaken?: string[];
+    filesAccessed?: string[];
+    automationsCreated?: string[];
+    reflections?: string[];
+  };
+}
+
+interface DiaryEntry {
+  id: string;
+  timestamp: string;
+  type: 'reflection' | 'idea' | 'problem' | 'solution' | 'assumption' | 'learning';
+  content: string;
+  tags: string[];
+  sessionId?: string;
+  taskId?: string;
+}
+
+interface AutonomousChatProps {
+  sessionId: string;
+}
+
+export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
+  const [message, setMessage] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showDiary, setShowDiary] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  // Get conversation history
+  const { data: conversationData, isLoading } = useQuery({
+    queryKey: ['/api/chat', sessionId],
+    queryFn: async () => {
+      const response = await fetch(`/api/chat/${sessionId}`);
+      return response.json();
+    },
+    enabled: !!sessionId,
+    refetchInterval: 3000
+  });
+
+  // Get diary/memory data
+  const { data: diaryData } = useQuery({
+    queryKey: ['/api/diary'],
+    queryFn: async () => {
+      const response = await fetch('/api/diary');
+      return response.json();
+    },
+    enabled: showDiary
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageText: string) => {
+      const response = await fetch(`/api/chat/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: messageText })
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] }); // Chat can modify tasks
+      setMessage('');
+    }
+  });
+
+  // Generate ideas mutation
+  const generateIdeasMutation = useMutation({
+    mutationFn: async (context: string) => {
+      const response = await fetch('/api/diary/generate-ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context })
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+    }
+  });
+
+  const messages = conversationData?.messages || [];
+  const memory = conversationData?.memory;
+  const recentIdeas = diaryData?.memory?.diary?.filter((entry: DiaryEntry) => entry.type === 'idea').slice(0, 3) || [];
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim() && !sendMessageMutation.isPending) {
+      sendMessageMutation.mutate(message.trim());
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'idea': return <Lightbulb className="h-3 w-3" />;
+      case 'reflection': return <Brain className="h-3 w-3" />;
+      case 'problem': return <Settings className="h-3 w-3" />;
+      case 'solution': return <Settings className="h-3 w-3" />;
+      default: return <FileText className="h-3 w-3" />;
+    }
+  };
+
+  if (!isExpanded) {
+    return (
+      <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-blue-600" />
+              <span className="text-blue-800 dark:text-blue-200">Colby - AI Assistant</span>
+              {memory?.relationships?.trustLevel && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  Trust: {Math.round(memory.relationships.trustLevel * 100)}%
+                </Badge>
+              )}
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsExpanded(true)}
+              data-testid="expand-chat"
+            >
+              💬 Chat
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            AI assistant with persistent memory. Click to chat and get autonomous help with tasks, research, and automation.
+          </p>
+          {recentIdeas.length > 0 && (
+            <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+              Recent ideas: {recentIdeas.map((idea: DiaryEntry) => idea.content.slice(0, 30)).join(', ')}...
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-blue-600" />
+            <span className="text-blue-800 dark:text-blue-200">Colby - Autonomous AI Assistant</span>
+            {memory?.relationships?.trustLevel && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                Trust: {Math.round(memory.relationships.trustLevel * 100)}%
+              </Badge>
+            )}
+          </div>
+          <div className="flex gap-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowDiary(!showDiary)}
+              data-testid="toggle-diary"
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => generateIdeasMutation.mutate(`Session: ${sessionId}, Current tasks and projects`)}
+              disabled={generateIdeasMutation.isPending}
+              data-testid="generate-ideas"
+            >
+              <Lightbulb className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsExpanded(false)}
+              data-testid="collapse-chat"
+            >
+              ✕
+            </Button>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {/* Memory/Relationship Status */}
+        {memory && (
+          <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+            <div>💭 Communication: {memory.personalityProfile.communicationStyle}</div>
+            <div>🧠 Skills: {memory.knowledgeBase.technicalSkills.slice(0, 3).join(', ')}</div>
+            {memory.knowledgeBase.automationPatterns.length > 0 && (
+              <div>⚡ Automation: {memory.knowledgeBase.automationPatterns.slice(0, 2).join(', ')}</div>
+            )}
+          </div>
+        )}
+
+        {showDiary && diaryData && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-blue-800 dark:text-blue-200">
+              <FileText className="h-4 w-4" />
+              Recent Insights
+            </div>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {diaryData.memory.diary.slice(0, 5).map((entry: DiaryEntry) => (
+                <div key={entry.id} className="text-xs p-2 bg-blue-100 dark:bg-blue-900 rounded">
+                  <div className="flex items-center gap-1 mb-1">
+                    {getTypeIcon(entry.type)}
+                    <span className="font-medium">{entry.type}</span>
+                    <span className="text-gray-500">
+                      {new Date(entry.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div>{entry.content}</div>
+                  {entry.tags.length > 0 && (
+                    <div className="flex gap-1 mt-1">
+                      {entry.tags.map(tag => (
+                        <Badge key={tag} variant="outline" className="text-xs py-0">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <Separator />
+          </div>
+        )}
+
+        {/* Chat Messages */}
+        <ScrollArea className="h-80 w-full">
+          <div className="space-y-2">
+            {isLoading ? (
+              <div className="text-center text-sm text-gray-500">Loading conversation...</div>
+            ) : messages.length === 0 ? (
+              <div className="text-center text-sm text-gray-500">
+                Start a conversation with your AI assistant
+              </div>
+            ) : (
+              messages.map((msg: ChatMessage) => (
+                <div key={msg.id} className={`p-3 rounded-lg ${
+                  msg.role === 'assistant' 
+                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                }`}>
+                  <div className="flex items-start justify-between mb-1">
+                    <span className="text-xs font-medium">
+                      {msg.role === 'assistant' ? 'Colby' : 'You'}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                  
+                  {/* Show actions taken */}
+                  {msg.metadata?.actionsTaken && msg.metadata.actionsTaken.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      <div className="text-xs font-medium text-green-700 dark:text-green-300">Actions Taken:</div>
+                      {msg.metadata.actionsTaken.map((action, idx) => (
+                        <div key={idx} className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                          <Settings className="h-3 w-3" />
+                          {action}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+
+        {/* Message Input */}
+        <form onSubmit={handleSendMessage} className="flex gap-2">
+          <Input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Ask Colby to help with tasks, research, automation..."
+            disabled={sendMessageMutation.isPending}
+            className="flex-1"
+            data-testid="chat-input"
+          />
+          <Button 
+            type="submit" 
+            disabled={!message.trim() || sendMessageMutation.isPending}
+            data-testid="send-message"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+
+        <div className="text-xs text-blue-600 dark:text-blue-400">
+          💡 Colby can autonomously create tasks, research information, suggest automations, and learn from our interactions.
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

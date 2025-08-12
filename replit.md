@@ -1,7 +1,7 @@
-# Emergent Task Builder
+# Emergent Intelligence
 
 ## Overview
-The Emergent Task Builder is a conversational, zoomable project management system. It leverages an ElevenLabs voice agent as the user-facing liaison and a GPT-5 Ops Manager for research, task execution, and learning. The system remembers past workflows to improve efficiency over time, evolving from a simple task system into a comprehensive project workspace. Key capabilities include project context switching, integrated research document management, calendar integration with automated scheduling, and smart organization tools. The business vision is to provide a seamless, AI-powered assistant that adapts to user workflows, automating complex tasks and managing projects efficiently.
+Emergent Intelligence is a comprehensive AI-powered project management platform featuring task management, calendar integration (with iPhone sync), research capabilities, project-focused conversations, and a central knowledge base. The platform implements a complete triple voice system with ElevenLabs Actions, GPT Realtime WebRTC, and Whisper transcription. The system includes full n8n automation integration, autonomous chat system with persistent memory, GPT-5 diary system for relationship building and idea generation, file access capabilities for tool suggestions, knowledge base with markdown RAG retrieval, and iPhone calendar sync. Key capabilities include conversational task creation, automated workflow suggestions, cross-device calendar synchronization, AI-powered research assistance, and persistent memory that builds relationships over time.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -22,19 +22,25 @@ Interface design: Clean, mobile-first interface without technical backend detail
 - **API Design**: RESTful API for tasks, conversations, proposals, files, and AI supervision.
 
 ### Key Components
-- **Voice Widget**: ElevenLabs integration.
-- **Task Manager**: Hierarchical task management with subtasks, priorities, and due dates.
-- **Conversation History**: Real-time chat with AI responses.
+- **Voice Widget**: ElevenLabs integration with conversational AI agent (agent_7401k28d3x9kfdntv7cjrj6t43be).
+- **Task Manager**: Hierarchical task management with subtasks, priorities, due dates, and click-to-complete functionality.
+- **Autonomous Chat**: GPT-5 powered assistant with persistent memory positioned directly under task manager.
+- **Workflow Automation**: Visual workflow suggestions powered by GPT-5 analysis and N8N integration.
+- **iPhone Calendar Sync**: Full CalDAV integration for cross-device task synchronization.
+- **Conversation History**: Real-time chat with AI responses and memory persistence.
 - **File Upload System**: Multi-format handling with cloud storage integration.
 - **Code Proposals**: AI-driven code suggestions and implementation with preview.
 - **Video Integration**: YouTube search and embedding.
 
 ### AI Integration
 - **Supervisor Agent**: GPT-5 processes conversations and manages workflows.
+- **Autonomous Chat**: GPT-5 assistant with persistent memory, trust levels, and relationship building.
+- **GPT Diary System**: Persistent memory system that records reflections, ideas, problems, solutions, and learnings.
 - **Tool Execution**: Extensible system for web search, file processing, and external APIs.
 - **Code Generation**: AI proposes new features and code modifications.
 - **Voice Processing**: ElevenLabs SDK for text-to-speech and audio feedback.
 - **File Intelligence**: AI-powered Excel/CSV processing with natural language import/export.
+- **Workflow Analysis**: Real-time analysis of user patterns to suggest automation opportunities.
 
 ### Data Models
 - **Task**: title, status, context, time_window.

@@ -8,6 +8,9 @@ import TaskManager from '../components/TaskManager';
 import GPTSupervisor from '../components/GPTSupervisor';
 import TranscriptManager from '../components/TranscriptManager';
 import WorkflowVisualizer from '../components/WorkflowVisualizer';
+import AutonomousChat from '../components/AutonomousChat';
+import WorkflowSuggestions from '../components/WorkflowSuggestions';
+import CalendarSync from '../components/CalendarSync';
 
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
@@ -162,6 +165,21 @@ export default function HomePage() {
               sessionId={sessionId} 
               onVideoSelect={(video) => console.log('Video selected:', video)}
             />
+          </div>
+
+          {/* Autonomous Chat - Positioned directly under Task Manager */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <AutonomousChat sessionId={sessionId} />
+          </div>
+
+          {/* Workflow Suggestions - Where the user can see automation features */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <WorkflowSuggestions sessionId={sessionId} />
+          </div>
+
+          {/* iPhone Calendar Integration */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <CalendarSync sessionId={sessionId} />
           </div>
 
           {/* n8n Workflow Automation */}

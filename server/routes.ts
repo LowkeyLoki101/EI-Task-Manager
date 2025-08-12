@@ -38,6 +38,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Enhanced Actions with SDK integration
   registerEnhancedActions(app);
   
+  // Register Autonomous Chat with persistent memory
+  const { registerAutonomousChat } = await import('./autonomous-chat');
+  registerAutonomousChat(app);
+  
+  // Register iPhone Calendar Integration
+  const { registerCalendarRoutes } = await import('./calendar-integration');
+  registerCalendarRoutes(app);
+  
   // Import project context management
   const { projectContextManager, processProjectAwareConversation } = await import("./project-context");
   
