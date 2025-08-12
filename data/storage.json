@@ -1,0 +1,30 @@
+{
+  "sessions": [],
+  "tasks": [
+    [
+      "c035aca0-6df1-4bd5-8814-036f942da680",
+      {
+        "id": "c035aca0-6df1-4bd5-8814-036f942da680",
+        "sessionId": "test-session",
+        "title": "Test Persistence Task",
+        "status": "backlog",
+        "context": "computer",
+        "timeWindow": "any",
+        "description": null,
+        "createdAt": "2025-08-12T02:51:37.658Z",
+        "updatedAt": "2025-08-12T02:51:37.658Z"
+      }
+    ]
+  ],
+  "steps": [],
+  "artifacts": [],
+  "memories": [],
+  "conversations": [],
+  "installations": [],
+  "proposals": [],
+  "files": [],
+  "projects": [],
+  "researchDocs": [],
+  "calendarEvents": [],
+  "projectFiles": []
+}

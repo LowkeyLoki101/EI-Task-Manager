@@ -286,6 +286,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.tasks.set(id, updated);
+    this.saveToFile();
     return updated;
   }
 
@@ -295,6 +296,7 @@ export class MemStorage implements IStorage {
     Array.from(this.steps.values())
       .filter(step => step.taskId === id)
       .forEach(step => this.steps.delete(step.id));
+    this.saveToFile();
   }
 
   // Steps
@@ -339,6 +341,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.steps.set(id, updated);
+    this.saveToFile();
     return updated;
   }
 
@@ -348,6 +351,7 @@ export class MemStorage implements IStorage {
     Array.from(this.artifacts.values())
       .filter(artifact => artifact.stepId === id)
       .forEach(artifact => this.artifacts.delete(artifact.id));
+    this.saveToFile();
   }
 
   // Artifacts

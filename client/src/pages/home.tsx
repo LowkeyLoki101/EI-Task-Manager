@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
 import TaskManager from '../components/TaskManager';
+import GPTSupervisor from '../components/GPTSupervisor';
+import TranscriptManager from '../components/TranscriptManager';
 
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
@@ -158,7 +160,15 @@ export default function HomePage() {
             />
           </div>
 
+          {/* GPT-5 Supervisor - Direct Chat Interface with File Upload */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <GPTSupervisor sessionId={sessionId} />
+          </div>
 
+          {/* Transcript Manager - Manual Edit/Delete Controls */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <TranscriptManager sessionId={sessionId} />
+          </div>
 
           {/* Conversation History */}
           <div className="space-y-6">

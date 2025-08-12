@@ -1,8 +1,15 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Trash2, Edit, Plus, CheckCircle, Circle, Clock } from 'lucide-react';
 import type { Task } from '@shared/schema';
 import type { VideoResource } from '@/lib/types';
 
@@ -13,6 +20,8 @@ interface TaskManagerProps {
 
 export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerProps) {
   const [statusFilter, setStatusFilter] = useState('all');
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [newTaskDialog, setNewTaskDialog] = useState(false);
   const queryClient = useQueryClient();
   
   const { data: tasksResponse = { tasks: [] }, isLoading } = useQuery({
@@ -33,13 +42,71 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
     return task.status === statusFilter;
   });
 
-  const handleTaskComplete = async (taskId: string, completed: boolean) => {
-    await fetch(`/api/tasks/${taskId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: completed ? 'done' : 'todo' })
-    });
-    queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
+  // Task mutations
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
+    }
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: 'DELETE'
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
+    }
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: async (newTask: { title: string; description?: string; context?: string; status?: string }) => {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          ...newTask
+        })
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
+      setNewTaskDialog(false);
+    }
+  });
+
+  const handleTaskComplete = (taskId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'done' ? 'today' : 'done';
+    updateTaskMutation.mutate({ id: taskId, updates: { status: newStatus } });
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+  };
+
+  const handleUpdateTask = (updates: Partial<Task>) => {
+    if (editingTask) {
+      updateTaskMutation.mutate({ id: editingTask.id, updates });
+      setEditingTask(null);
+    }
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      deleteTaskMutation.mutate(taskId);
+    }
   };
 
   const handleFindVideo = async (task: Task) => {
@@ -49,9 +116,6 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
       
       if (data.videos && data.videos.length > 0) {
         onVideoSelect(data.videos[0]);
-        
-        // Note: Video attachment will be handled via artifacts in future version
-        
         queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
       }
     } catch (error) {
@@ -59,232 +123,341 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
     }
   };
 
-  const addNewTask = async () => {
-    const title = prompt('Enter task title:');
-    if (!title || !sessionId) return;
-    
-    await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        title,
-        status: 'todo',
-        priority: 'med'
-      })
-    });
-    
-    queryClient.invalidateQueries({ queryKey: ['/api/tasks', sessionId] });
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-error/10 text-error';
-      case 'med': return 'bg-warning/10 text-warning';
-      case 'low': return 'bg-success/10 text-success';
-      default: return 'bg-slate-100 text-slate-600';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'done': return 'bg-success/10 text-success';
-      case 'doing': return 'bg-primary/10 text-primary';
-      case 'blocked': return 'bg-error/10 text-error';
-      default: return 'bg-slate-100 text-slate-600';
+      case 'done': return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'doing': return <Clock className="h-5 w-5 text-blue-500" />;
+      default: return <Circle className="h-5 w-5 text-gray-400" />;
     }
   };
+
+  const getContextColor = (context: string) => {
+    switch (context) {
+      case 'phone': return 'bg-blue-100 text-blue-800';
+      case 'computer': return 'bg-green-100 text-green-800';
+      case 'physical': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
+    return <div className="p-4">Loading tasks...</div>;
+  }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="border-b border-slate-200 p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Tasks</h2>
-          <div className="flex items-center space-x-2">
-            <Button 
-              onClick={addNewTask}
-              variant="ghost" 
-              className="text-sm text-primary hover:text-blue-700 font-medium"
-              data-testid="button-add-task"
-            >
-              + Add Task
-            </Button>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32 h-8 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tasks</SelectItem>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="doing">In Progress</SelectItem>
-                <SelectItem value="done">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <div className="space-y-4" data-testid="task-manager">
+      {/* Header with controls */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Task Manager</h2>
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32" data-testid="status-filter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="backlog">Backlog</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="doing">Doing</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Dialog open={newTaskDialog} onOpenChange={setNewTaskDialog}>
+            <DialogTrigger asChild>
+              <Button data-testid="add-task-button">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Task</DialogTitle>
+              </DialogHeader>
+              <NewTaskForm onSubmit={(task) => createTaskMutation.mutate(task)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-      
-      <div className="h-96 overflow-y-auto conversation-scroll" data-testid="tasks-container">
-        {isLoading && (
-          <div className="p-4 text-center text-slate-500">
-            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
-            <p className="text-sm">Loading tasks...</p>
-          </div>
-        )}
 
-        {!isLoading && filteredTasks.length === 0 && (
-          <div className="p-8 text-center text-slate-500">
-            <svg className="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <p className="text-sm">No tasks yet. Start by adding a new task or talking to the assistant!</p>
-          </div>
-        )}
-
-        {filteredTasks.map((task: Task) => (
-          <div 
-            key={task.id} 
-            className={`border-b border-slate-100 p-4 hover:bg-slate-50 transition-colors ${
-              task.status === 'done' ? 'bg-green-50/50' : ''
-            }`}
-            data-testid={`task-item-${task.id}`}
-          >
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                checked={task.status === 'done'}
-                onCheckedChange={(checked) => handleTaskComplete(task.id, !!checked)}
-                className="mt-1"
-                data-testid={`checkbox-task-${task.id}`}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 
-                    className={`text-sm font-medium ${
-                      task.status === 'done' 
-                        ? 'text-slate-600 line-through' 
-                        : 'text-slate-900'
-                    }`}
-                    data-testid={`text-task-title-${task.id}`}
-                  >
-                    {task.title}
-                  </h3>
-                  <span 
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPriorityColor(task.priority)}`}
-                    data-testid={`text-task-priority-${task.id}`}
-                  >
-                    {task.priority}
-                  </span>
-                  {task.status !== 'todo' && (
-                    <span 
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(task.status)}`}
-                      data-testid={`text-task-status-${task.id}`}
+      {/* Task List */}
+      <div className="space-y-2">
+        {filteredTasks.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center text-gray-500">
+              {statusFilter === 'all' 
+                ? "No tasks yet. Try saying 'Create a task to buy groceries'" 
+                : `No ${statusFilter} tasks found`}
+            </CardContent>
+          </Card>
+        ) : (
+          filteredTasks.map((task: Task) => (
+            <Card key={task.id} className="hover:shadow-md transition-shadow" data-testid={`task-card-${task.id}`}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-3 flex-1">
+                    <button
+                      onClick={() => handleTaskComplete(task.id, task.status)}
+                      className="mt-1 hover:scale-110 transition-transform"
+                      data-testid={`task-complete-${task.id}`}
                     >
-                      {task.status}
-                    </span>
-                  )}
-                </div>
-                {task.due && (
-                  <p className="text-xs text-slate-500 mb-2" data-testid={`text-task-due-${task.id}`}>
-                    Due: {new Date(task.due).toLocaleDateString()}
-                  </p>
-                )}
-                
-                {task.status !== 'done' && (
-                  <div className="flex items-center space-x-3 text-xs mb-3">
+                      {getStatusIcon(task.status)}
+                    </button>
+                    
+                    <div className="flex-1">
+                      <h3 className={`font-medium ${task.status === 'done' ? 'line-through text-gray-500' : ''}`}>
+                        {task.title}
+                      </h3>
+                      {task.description && (
+                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                      )}
+                      
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="outline" className={getContextColor(task.context)}>
+                          {task.context}
+                        </Badge>
+                        <Badge variant="outline">
+                          {task.status}
+                        </Badge>
+                        {task.timeWindow !== 'any' && (
+                          <Badge variant="outline">
+                            {task.timeWindow}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-1 ml-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleFindVideo(task)}
-                      className="h-6 px-2 text-primary hover:text-blue-700"
-                      data-testid={`button-find-video-${task.id}`}
+                      data-testid={`task-video-${task.id}`}
                     >
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      Find Video
+                      📹
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditTask(task)}
+                      data-testid={`task-edit-${task.id}`}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="text-red-500 hover:text-red-700"
+                      data-testid={`task-delete-${task.id}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                )}
-                
-                {/* Subtasks */}
-                {task.subtasks && task.subtasks.length > 0 && (
-                  <div className="mt-3 space-y-1">
-                    {task.subtasks.map((subtask: any, index: number) => (
-                      <div key={index} className="flex items-center space-x-2 ml-4">
-                        <Checkbox 
-                          checked={subtask.status === 'done'}
-                          className="w-3 h-3"
-                          data-testid={`checkbox-subtask-${task.id}-${index}`}
-                        />
-                        <span 
-                          className={`text-xs ${
-                            subtask.status === 'done' 
-                              ? 'text-slate-600 line-through' 
-                              : 'text-slate-600'
-                          }`}
-                          data-testid={`text-subtask-${task.id}-${index}`}
-                        >
-                          {subtask.title}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Attachments */}
-                {task.attachments && task.attachments.length > 0 && (
-                  <div className="mt-2 flex items-center space-x-2">
-                    {task.attachments.map((attachment: any, index: number) => (
-                      <div 
-                        key={index}
-                        className="flex items-center space-x-1 bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs cursor-pointer hover:bg-blue-100"
-                        onClick={() => {
-                          if (attachment.type === 'video') {
-                            onVideoSelect({
-                              id: '',
-                              title: attachment.name,
-                              description: '',
-                              thumbnail: '',
-                              url: attachment.url,
-                              embedUrl: attachment.url
-                            });
-                          }
-                        }}
-                        data-testid={`attachment-${task.id}-${index}`}
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {attachment.type === 'video' && (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          )}
-                          {attachment.type === 'document' && (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          )}
-                        </svg>
-                        <span>{attachment.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Edit Task Dialog */}
+      {editingTask && (
+        <Dialog open={!!editingTask} onOpenChange={() => setEditingTask(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Task</DialogTitle>
+            </DialogHeader>
+            <EditTaskForm
+              task={editingTask}
+              onSubmit={handleUpdateTask}
+              onCancel={() => setEditingTask(null)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
+// New Task Form Component
+function NewTaskForm({ onSubmit }: { onSubmit: (task: any) => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    context: 'computer',
+    status: 'today'
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.title.trim()) {
+      onSubmit(formData);
+      setFormData({ title: '', description: '', context: 'computer', status: 'today' });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="title">Title *</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          placeholder="Enter task title..."
+          required
+          data-testid="new-task-title"
+        />
       </div>
       
-      <div className="border-t border-slate-200 p-4 bg-slate-50">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-600">
-            <span className="font-medium text-slate-900" data-testid="text-active-tasks">
-              {filteredTasks.filter((t: TaskWithSubtasks) => t.status !== 'done').length}
-            </span> active tasks
-          </span>
-          <span className="text-slate-600">
-            <span className="font-medium text-success" data-testid="text-completed-tasks">
-              {filteredTasks.filter((t: TaskWithSubtasks) => t.status === 'done').length}
-            </span> completed
-          </span>
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Optional description..."
+          data-testid="new-task-description"
+        />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="context">Context</Label>
+          <Select value={formData.context} onValueChange={(value) => setFormData({ ...formData, context: value })}>
+            <SelectTrigger data-testid="new-task-context">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="computer">Computer</SelectItem>
+              <SelectItem value="phone">Phone</SelectItem>
+              <SelectItem value="physical">Physical</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <Label htmlFor="status">Status</Label>
+          <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+            <SelectTrigger data-testid="new-task-status">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="backlog">Backlog</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="doing">Doing</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
-    </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button type="submit" data-testid="new-task-submit">
+          Create Task
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// Edit Task Form Component
+function EditTaskForm({ task, onSubmit, onCancel }: { 
+  task: Task; 
+  onSubmit: (updates: Partial<Task>) => void;
+  onCancel: () => void;
+}) {
+  const [formData, setFormData] = useState({
+    title: task.title,
+    description: task.description || '',
+    context: task.context,
+    status: task.status,
+    timeWindow: task.timeWindow
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="edit-title">Title *</Label>
+        <Input
+          id="edit-title"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          required
+          data-testid="edit-task-title"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="edit-description">Description</Label>
+        <Textarea
+          id="edit-description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          data-testid="edit-task-description"
+        />
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="edit-context">Context</Label>
+          <Select value={formData.context} onValueChange={(value) => setFormData({ ...formData, context: value as any })}>
+            <SelectTrigger data-testid="edit-task-context">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="computer">Computer</SelectItem>
+              <SelectItem value="phone">Phone</SelectItem>
+              <SelectItem value="physical">Physical</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <Label htmlFor="edit-status">Status</Label>
+          <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as any })}>
+            <SelectTrigger data-testid="edit-task-status">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="backlog">Backlog</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="doing">Doing</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <Label htmlFor="edit-timeWindow">Time Window</Label>
+          <Select value={formData.timeWindow} onValueChange={(value) => setFormData({ ...formData, timeWindow: value as any })}>
+            <SelectTrigger data-testid="edit-task-timewindow">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any Time</SelectItem>
+              <SelectItem value="morning">Morning</SelectItem>
+              <SelectItem value="midday">Midday</SelectItem>
+              <SelectItem value="evening">Evening</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel} data-testid="edit-task-cancel">
+          Cancel
+        </Button>
+        <Button type="submit" data-testid="edit-task-submit">
+          Update Task
+        </Button>
+      </div>
+    </form>
   );
 }

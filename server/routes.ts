@@ -51,6 +51,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register audio transcription routes
   const { registerTranscriptionRoutes } = await import("./transcription");
   registerTranscriptionRoutes(app);
+  
+  // Register GPT-5 supervisor routes
+  const { setupGPTSupervisor } = await import("./gpt-supervisor");
+  setupGPTSupervisor(app);
 
   // Initialize sharing and tinker framework
   const { initializeTinkerFramework, sharingSystem, tinkerFramework } = await import("./sharing-system");

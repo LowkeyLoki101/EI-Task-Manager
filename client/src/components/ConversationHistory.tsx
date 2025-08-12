@@ -28,7 +28,7 @@ export function ConversationHistory({ sessionId }: ConversationHistoryProps) {
   const [showAllSessions, setShowAllSessions] = useState(false);
 
   // Fetch transcripts for current session or all sessions
-  const { data: transcripts = [], isLoading } = useQuery({
+  const { data = [], isLoading } = useQuery({
     queryKey: ['/api/transcripts', showAllSessions ? null : sessionId],
     queryFn: async () => {
       const url = showAllSessions 
@@ -41,6 +41,9 @@ export function ConversationHistory({ sessionId }: ConversationHistoryProps) {
     refetchInterval: 3000, // Refresh every 3 seconds
     refetchOnWindowFocus: true
   });
+
+  // Ensure transcripts is always an array
+  const transcripts = Array.isArray(data) ? data : [];
 
   // Filter transcripts based on search query
   const filteredTranscripts = transcripts.filter((transcript: Transcript) =>
