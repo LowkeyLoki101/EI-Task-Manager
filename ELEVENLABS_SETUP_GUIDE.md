@@ -7,33 +7,46 @@
 
 ## Step 1: Add Test Webhook
 
-Go to ElevenLabs Dashboard → Your Agent → Tools → Add Tool
+Go to ElevenLabs Dashboard → Your Agent → Tools → **Add webhook tool**
 
-**COPY THIS EXACT JSON (GET - No Body Parameters Needed):**
+Fill out the form exactly as follows:
 
-```json
-{
-  "type": "webhook",
-  "name": "test", 
-  "description": "Test webhook connectivity to verify integration is working",
-  "api_schema": {
-    "url": "https://Emergent-Assistant.replit.app/webhook/test",
-    "method": "GET",
-    "path_params_schema": [],
-    "query_params_schema": [],
-    "request_body_schema": null,
-    "request_headers": [],
-    "auth_connection": null
-  },
-  "response_timeout_secs": 20,
-  "dynamic_variables": {
-    "dynamic_variable_placeholders": {}
-  },
-  "assignments": [],
-  "disable_interruptions": false,
-  "force_pre_tool_speech": "auto"
-}
-```
+### Configuration
+- **Name:** `test`
+- **Description:** `Test webhook connectivity to verify integration is working`
+
+### Method & URL
+- **Method:** `POST` (select from dropdown)
+- **URL:** `https://Emergent-Assistant.replit.app/api/actions/test`
+
+### Settings
+- **Response timeout (seconds):** `20`
+- **Disable interruptions:** Leave unchecked
+- **Pre-tool speech:** Select `Automatic` (or leave default)
+
+### Authentication
+- **Authentication:** Leave as "Workspace has no auth connections"
+
+### Headers
+- Leave empty (don't add any headers)
+
+### Path parameters
+- Leave empty (don't add any path parameters)
+
+### Query parameters  
+- Leave empty (don't add any query parameters)
+
+### Body parameters
+- **Description:** `Parameters for testing webhook connectivity`
+- **Properties:** Leave empty for now (don't add any properties)
+
+### Dynamic Variables
+- Leave empty (don't add any dynamic variables)
+
+### Dynamic Variable Assignments
+- Leave empty (don't add any assignments)
+
+**Save the webhook tool**
 
 ## Step 2: Update Agent Instructions
 
@@ -76,62 +89,68 @@ CRITICAL: If you don't use tools, the system won't work. The user expects action
 
 ## Step 4: Add Task Creation Tool
 
-Once test works, add this tool:
+Once test works, add this tool using the ElevenLabs form interface:
 
-```json
-{
-  "type": "webhook",
-  "name": "add_task", 
-  "description": "Create a new task with title, context, and optional steps",
-  "api_schema": {
-    "url": "https://Emergent-Assistant.replit.app/api/actions/add_task",
-    "method": "POST",
-    "path_params_schema": [],
-    "query_params_schema": [],
-    "request_body_schema": {
-      "type": "object",
-      "properties": [
-        {
-          "id": "title",
-          "type": "string", 
-          "value_type": "llm_prompt",
-          "description": "Task title or main objective",
-          "required": true
-        },
-        {
-          "id": "context",
-          "type": "string",
-          "value_type": "llm_prompt", 
-          "description": "Context: computer, phone, or physical",
-          "required": false
-        },
-        {
-          "id": "steps",
-          "type": "array",
-          "value_type": "llm_prompt",
-          "description": "Array of step titles for the task",
-          "required": false
-        }
-      ]
-    },
-    "request_headers": [
-      {
-        "type": "value",
-        "name": "Content-Type",
-        "value": "application/json" 
-      }
-    ],
-    "auth_connection": null
-  },
-  "response_timeout_secs": 20,
-  "dynamic_variables": {
-    "dynamic_variable_placeholders": {}
-  },
-  "assignments": [],
-  "disable_interruptions": false,
-  "force_pre_tool_speech": "auto"
-}
-```
+Go to ElevenLabs Dashboard → Your Agent → Tools → **Add webhook tool**
+
+### Configuration
+- **Name:** `add_task`
+- **Description:** `Create a new task with title, context, and optional steps`
+
+### Method & URL
+- **Method:** `POST`
+- **URL:** `https://Emergent-Assistant.replit.app/api/actions/add_task`
+
+### Settings
+- **Response timeout (seconds):** `20`
+- **Disable interruptions:** Leave unchecked
+- **Pre-tool speech:** Select `Automatic`
+
+### Authentication
+- **Authentication:** Leave as "Workspace has no auth connections"
+
+### Headers
+- Leave empty
+
+### Path parameters
+- Leave empty
+
+### Query parameters  
+- Leave empty
+
+### Body parameters
+- **Description:** `Task creation parameters extracted from user's request`
+
+**Properties (click "Add property" for each):**
+
+**Property 1:**
+- **Data type:** String
+- **Identifier:** `title`
+- **Required:** ✓ (check this box)
+- **Value Type:** LLM Prompt
+- **Description:** `Task title or main objective extracted from user's request`
+
+**Property 2:**
+- **Data type:** String
+- **Identifier:** `context`
+- **Required:** Leave unchecked
+- **Value Type:** LLM Prompt
+- **Description:** `Context where task should be done: computer, phone, or physical`
+
+**Property 3:**
+- **Data type:** String
+- **Identifier:** `steps`
+- **Required:** Leave unchecked
+- **Value Type:** LLM Prompt
+- **Description:** `Optional comma-separated list of steps to complete the task`
+
+### Dynamic Variables
+- Leave empty
+
+### Dynamic Variable Assignments
+- Leave empty
+
+**Save the webhook tool**
 
 ## Expected Behavior
 
