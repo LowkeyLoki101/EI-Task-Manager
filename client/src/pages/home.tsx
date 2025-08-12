@@ -8,6 +8,7 @@ import SimpleTaskManager from '../components/SimpleTaskManager';
 
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
+import { ConversationHistory } from '../components/ConversationHistory';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -155,6 +156,11 @@ export default function HomePage() {
           </div>
 
 
+
+          {/* Conversation History */}
+          <div className="space-y-6">
+            <ConversationHistory sessionId={sessionId} />
+          </div>
 
           {/* Simple Call to Action */}
           <div className="text-center py-8">
