@@ -17,6 +17,15 @@ export function VoiceWidget({ agentId = 'agent_7401k28d3x9kfdntv7cjrj6t43be' }: 
   const scriptLoaded = useRef(false);
 
   useEffect(() => {
+    // Clean up any existing widgets first
+    const existingWidgets = document.querySelectorAll('elevenlabs-convai');
+    existingWidgets.forEach((widget, index) => {
+      if (index > 0) { // Keep only the first one
+        widget.remove();
+        console.log('[ElevenLabs] Removed duplicate widget');
+      }
+    });
+
     // Load ElevenLabs SDK if not already loaded
     if (!scriptLoaded.current && !document.querySelector('script[src*="elevenlabs"]')) {
       const script = document.createElement('script');
@@ -46,7 +55,10 @@ export function VoiceWidget({ agentId = 'agent_7401k28d3x9kfdntv7cjrj6t43be' }: 
 
     // Cleanup function
     return () => {
-      // Widget cleanup is handled by the browser when component unmounts
+      if (widgetRef.current) {
+        widgetRef.current.remove();
+        console.log('[ElevenLabs] Widget cleaned up');
+      }
     };
   }, []);
 
@@ -56,6 +68,7 @@ export function VoiceWidget({ agentId = 'agent_7401k28d3x9kfdntv7cjrj6t43be' }: 
         ref={widgetRef}
         agent-id={agentId}
         data-testid="elevenlabs-widget"
+        key="single-voice-widget"
       />
     </div>
   );
