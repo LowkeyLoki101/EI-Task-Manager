@@ -1,0 +1,20 @@
+{
+  "name": "elevenlabs-provisioner",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Replit-ready mini server + provisioner to auto-create ElevenLabs tools and attach to an agent.",
+  "scripts": {
+    "start": "node server.js",
+    "provision": "node provision.js",
+    "provision:calcom": "node provision-calcom.js",
+    "test:post": "bash scripts/post_test.sh"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

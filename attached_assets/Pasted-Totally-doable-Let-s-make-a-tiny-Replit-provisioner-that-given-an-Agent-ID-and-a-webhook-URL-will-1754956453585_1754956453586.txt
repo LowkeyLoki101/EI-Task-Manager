@@ -1,0 +1,227 @@
+Totally doable. Let’s make a tiny Replit “provisioner” that—given an Agent ID and a webhook URL—will:
+	1.	create any needed secrets in ElevenLabs,
+	2.	create a Tool (webhook) that points to your Replit endpoint, and
+	3.	attach that tool to your agent automatically.
+
+(then you can say “add email & notes to Agent X”, paste the Agent ID, and boom—wired.)
+
+Below is a copy-paste, step-by-step. I’ll show Node/JS since Replit loves it. I’ll also link each step to the official docs so you know we’re not inventing magic.
+
+⸻
+
+Step 0 — One decision + two env vars
+	•	Pick the webhook URL your agent will call (e.g., your Replit app’s https://…/voice-action).
+	•	Create a shared token your server will expect: ELEVEN_SHARED_TOKEN.
+
+In your Replit project, open Tools → Secrets and add:
+	•	ELEVENLABS_API_KEY = your ElevenLabs key (used for their API; header name is xi-api-key)  ￼
+	•	ELEVEN_SHARED_TOKEN = any long random string (your server will check it)
+
+(You can absolutely reuse the single /voice-action endpoint you already built; the tool just sends JSON to it.)
+
+⸻
+
+Step 1 — Make the Replit server endpoint (the thing the tool will call)
+
+If you already have it, keep it. Otherwise:
+
+// server.js
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+const SHARED = process.env.ELEVEN_SHARED_TOKEN;
+
+app.post("/voice-action", async (req, res) => {
+  if ((req.headers.authorization || "") !== `Bearer ${SHARED}`) {
+    return res.status(401).json({ ok: false, error: "Unauthorized" });
+  }
+  const { action, details, userEmail } = req.body || {};
+  // TODO: perform the action (DB, email, CRM, etc.)
+  console.log({ action, details, userEmail });
+  return res.json({ ok: true, message: `Handled: ${action}` });
+});
+
+app.listen(process.env.PORT || 3000, () =>
+  console.log("Server running"),
+);
+
+Hit “Run” and note your public Replit URL; your webhook URL is that + /voice-action.
+
+⸻
+
+Step 2 — Drop in the provisioner that programs ElevenLabs for you
+
+Create provision.js:
+
+// provision.js
+// Usage: node provision.js --agent <AGENT_ID> --url <WEBHOOK_URL> --tool run_action
+// Optionally: --secret-name shared_token --secret-value <same as ELEVEN_SHARED_TOKEN>
+
+import { argv } from "node:process";
+
+const API = "https://api.elevenlabs.io/v1";
+const XI_KEY = process.env.ELEVENLABS_API_KEY;
+if (!XI_KEY) throw new Error("Set ELEVENLABS_API_KEY secret.");
+
+function arg(name, fallback=null) {
+  const i = argv.indexOf(`--${name}`);
+  return i !== -1 ? argv[i+1] : fallback;
+}
+const AGENT_ID = arg("agent");
+const WEBHOOK_URL = arg("url");
+const TOOL_NAME = arg("tool", "run_action");
+const SECRET_NAME = arg("secret-name", "shared_token");
+const SECRET_VALUE = arg("secret-value", process.env.ELEVEN_SHARED_TOKEN);
+
+if (!AGENT_ID || !WEBHOOK_URL || !SECRET_VALUE) {
+  console.log("Usage: node provision.js --agent <AGENT_ID> --url <WEBHOOK_URL> --tool run_action --secret-name shared_token --secret-value <token>");
+  process.exit(1);
+}
+
+async function api(path, method="GET", body) {
+  const res = await fetch(`${API}${path}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "xi-api-key": XI_KEY, // ElevenLabs auth header
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`${method} ${path} ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+// 1) Ensure secret exists (used in Authorization header of the tool)
+async function ensureSecret(name, value) {
+  const listed = await api(`/convai/secrets`);
+  const existing = (listed.secrets || []).find(s => s.name === name);
+  if (existing) return existing;
+  return api(`/convai/secrets`, "POST", { name, value, type: "new" });
+}
+
+// 2) Create webhook Tool (or reuse if same name/url)
+async function ensureTool({ name, description, url, secret_id }) {
+  // (You could list & find by name; here we always create for simplicity)
+  const toolBody = {
+    tool_config: {
+      type: "webhook",
+      name,
+      description,
+      api_schema: {
+        url,
+        method: "POST",
+        // Use secret in header (API supports typed headers with secret_id)
+        request_headers: [
+          { type: "secret", name: "Authorization", secret_id },
+          { type: "value",  name: "Content-Type", value: "application/json" },
+        ],
+        // Shape the JSON the agent should send
+        request_body_schema: {
+          type: "object",
+          required: ["action"],
+          properties: {
+            action:     { type: "string", description: "Short verb like create_note, send_email" },
+            details:    { type: "string", description: "Free text or JSON details" },
+            userEmail:  { type: "string", description: "Optional email address" }
+          }
+        }
+      }
+    }
+  };
+  return api(`/convai/tools`, "POST", toolBody);
+}
+
+// 3) Attach tool to the agent (append tool_id to prompt.tool_ids)
+async function attachToolToAgent(agent_id, tool_id) {
+  const agent = await api(`/convai/agents/${agent_id}`);
+  const current = agent?.conversation_config?.agent?.prompt?.tool_ids || [];
+  if (current.includes(tool_id)) return agent;
+
+  const updated = await api(`/convai/agents/${agent_id}`, "PATCH", {
+    conversation_config: {
+      agent: {
+        prompt: {
+          tool_ids: [...current, tool_id],
+          // Pro tip: add (or update) your guiding rules here
+          // prompt: "If the user asks to DO something, call run_action with action+details..."
+        }
+      }
+    }
+  });
+  return updated;
+}
+
+(async () => {
+  console.log("Ensuring secret…");
+  const sec = await ensureSecret(SECRET_NAME, SECRET_VALUE);
+  console.log("Secret:", sec.secret_id);
+
+  console.log("Creating tool…");
+  const tool = await ensureTool({
+    name: TOOL_NAME,
+    description: "Send an action to my server and read the result.",
+    url: WEBHOOK_URL,
+    secret_id: sec.secret_id
+  });
+  console.log("Tool ID:", tool.id);
+
+  console.log("Attaching tool to agent…");
+  const updated = await attachToolToAgent(AGENT_ID, tool.id);
+  console.log("Done. Agent now has tool_ids:", updated.conversation_config.agent.prompt.tool_ids);
+})();
+
+Run it:
+
+node provision.js \
+  --agent AGENT_ID_HERE \
+  --url https://<your-repl>.repl.co/voice-action \
+  --tool run_action \
+  --secret-name shared_token \
+  --secret-value "$ELEVEN_SHARED_TOKEN"
+
+What this script does (automatically):
+	•	Creates a workspace Secret (so headers can reference it) via POST /v1/convai/secrets  ￼
+	•	Creates a Tool (type: webhook) via POST /v1/convai/tools using your webhook URL and a header that pulls the secret (Authorization: Bearer <secret>)  ￼
+	•	Note the header format with typed request_headers and secret_id—this is exactly how ElevenLabs shows it in their integration examples (Zendesk page)  ￼
+	•	Attaches the tool to your agent by PATCHing the agent’s conversation_config.agent.prompt.tool_ids array (this is the new way to wire tools as of July 2025)  ￼
+
+If you prefer cURL over Node, the same three calls exist in the API docs; all use the xi-api-key header for auth  ￼.
+
+⸻
+
+Tell the agent when to use the tool (one-time prompt tweak)
+
+In your agent’s System Prompt, add something like:
+
+If the user asks you to do something, call run_action.
+Use action as a short verb (e.g., create_note, send_email) and put details in details.
+After the tool returns, summarize the result.
+
+(Without this, the LLM may not know when to call the tool.)
+
+⸻
+
+Sanity check (90-second test)
+	1.	Speak in your site widget: “Make a note that Lauren called about the roof estimate and email me the details.”
+	2.	You should see your Replit logs print the JSON.
+	3.	The agent should read back the response { ok: true, message: "Handled: create_note" }.
+
+If it doesn’t call the tool, sharpen the system prompt (be explicit about when to call run_action).
+
+⸻
+
+TL;DR
+	•	You supply: AGENT_ID, your Replit webhook URL, and a shared token.
+	•	The provisioner does: secret → tool → attach-to-agent, using ElevenLabs’ official APIs:
+	•	Create Tool: /v1/convai/tools  ￼
+	•	Update Agent (prompt.tool_ids): /v1/convai/agents/:agent_id (PATCH)  ￼
+	•	Create Secret: /v1/convai/secrets  ￼
+	•	Headers can reference a secret_id in request_headers  ￼
+	•	All calls use xi-api-key auth  ￼
+
+Want me to turn this into a ready-to-fork Replit repo for you (server + provisioner + README)? I can also add a second one-click “add Cal.com tools” preset if that’s on your roadmap.
