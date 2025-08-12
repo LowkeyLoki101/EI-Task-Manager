@@ -3,6 +3,7 @@ import type { Express } from "express";
 import { storage } from "./storage";
 import multer from "multer";
 import { randomUUID } from "crypto";
+import { gptDiary } from "./gpt-diary";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -732,6 +733,42 @@ Provide analysis in JSON format.`
 
       analysis.lastUpdated = now;
       analysisCache.set(sessionKey, analysis);
+
+      // Save rich insights to diary system for historical library
+      try {
+        if (analysis.suggestions || analysis.patterns || analysis.nextActions) {
+          // Create diary entries for the valuable insights
+          if (analysis.suggestions && analysis.suggestions !== 'Continue working on your current tasks!') {
+            gptDiary.addEntry({
+              type: 'reflection',
+              content: `Productivity Analysis: ${analysis.suggestions}`,
+              tags: ['productivity', 'analysis', 'suggestions'],
+              sessionId: sessionKey
+            });
+          }
+          
+          if (analysis.patterns && analysis.patterns !== 'Building good task management habits') {
+            gptDiary.addEntry({
+              type: 'learning',
+              content: `Pattern Detected: ${analysis.patterns}`,
+              tags: ['patterns', 'behavior', 'analysis'],
+              sessionId: sessionKey
+            });
+          }
+          
+          if (analysis.nextActions && analysis.nextActions !== 'Focus on completing in-progress items') {
+            gptDiary.addEntry({
+              type: 'solution',
+              content: `Recommended Actions: ${analysis.nextActions}`,
+              tags: ['actions', 'recommendations', 'productivity'],
+              sessionId: sessionKey
+            });
+          }
+        }
+      } catch (diaryError) {
+        console.error('[GPT Supervisor] Failed to save insights to diary:', diaryError);
+        // Don't fail the main response if diary save fails
+      }
 
       res.json(analysis);
     } catch (error) {
