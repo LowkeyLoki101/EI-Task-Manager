@@ -127,16 +127,11 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Direct Chat with GPT-5 - Primary Interface */}
+          {/* Direct Chat with GPT-5 - Primary Interface (Top Priority) */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Direct Chat with GPT-5
-              </h3>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Session: {sessionId.slice(0, 8)}...
-              </div>
-            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Direct Chat with GPT-5
+            </h3>
             <AutonomousChat sessionId={sessionId} />
           </div>
 
@@ -163,7 +158,7 @@ export default function HomePage() {
             />
           </div>
 
-          {/* GPT-5 Supervisor - Direct Chat Interface with File Upload */}
+          {/* GPT-5 Supervisor - Analysis & Insights Only */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <GPTSupervisor sessionId={sessionId} />
           </div>
