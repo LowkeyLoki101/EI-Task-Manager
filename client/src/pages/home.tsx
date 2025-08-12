@@ -4,7 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import EmergentLogo from '../components/EmergentLogo';
 import ThemeToggle from '../components/ThemeToggle';
-import SimpleTaskManager from '../components/SimpleTaskManager';
+import TaskManager from '../components/TaskManager';
 
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
@@ -152,7 +152,10 @@ export default function HomePage() {
                 Test Voice Task
               </button>
             </div>
-            <SimpleTaskManager sessionId={sessionId} />
+            <TaskManager 
+              sessionId={sessionId} 
+              onVideoSelect={(video) => console.log('Video selected:', video)}
+            />
           </div>
 
 
