@@ -9,7 +9,7 @@
 
 Go to ElevenLabs Dashboard → Your Agent → Tools → Add Tool
 
-**Tool Configuration:**
+**Tool Configuration (Working POST Version):**
 ```json
 {
   "type": "webhook",
@@ -27,15 +27,15 @@ Go to ElevenLabs Dashboard → Your Agent → Tools → Add Tool
           "id": "message",
           "type": "string",
           "value_type": "llm_prompt",
-          "description": "Test message to send",
-          "required": true
+          "description": "Test message",
+          "required": false
         }
       ]
     },
     "request_headers": [
       {
         "type": "value",
-        "name": "Content-Type", 
+        "name": "Content-Type",
         "value": "application/json"
       }
     ],
