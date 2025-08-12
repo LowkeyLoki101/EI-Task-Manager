@@ -100,9 +100,19 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const memory = conversationData?.memory;
   const recentIdeas = diaryData?.memory?.diary?.filter((entry: DiaryEntry) => entry.type === 'idea').slice(0, 3) || [];
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom with improved behavior
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 0) {
+      // Small delay to ensure the message is rendered before scrolling
+      const timer = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end',
+          inline: 'nearest'
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
   }, [messages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -120,6 +130,39 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
       case 'solution': return <Settings className="h-3 w-3" />;
       default: return <FileText className="h-3 w-3" />;
     }
+  };
+
+  // Render markdown-style text formatting (bold, italic, etc.)
+  const renderFormattedText = (text: string) => {
+    // Handle **bold** text
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    // Handle *italic* text
+    const italicRegex = /\*(.*?)\*/g;
+    
+    let formatted = text;
+    
+    // Convert **bold** to JSX
+    const parts = formatted.split(boldRegex);
+    const elements: (string | JSX.Element)[] = [];
+    
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 2 === 0) {
+        // Regular text, check for italics
+        const italicParts = parts[i].split(italicRegex);
+        for (let j = 0; j < italicParts.length; j++) {
+          if (j % 2 === 0) {
+            if (italicParts[j]) elements.push(italicParts[j]);
+          } else {
+            elements.push(<em key={`italic-${i}-${j}`}>{italicParts[j]}</em>);
+          }
+        }
+      } else {
+        // Bold text
+        elements.push(<strong key={`bold-${i}`}>{parts[i]}</strong>);
+      }
+    }
+    
+    return elements.length > 0 ? elements : text;
   };
 
   if (!isExpanded) {
@@ -249,34 +292,36 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         )}
 
         {/* Chat Messages */}
-        <ScrollArea className="h-80 w-full">
-          <div className="space-y-2">
+        <ScrollArea className="h-96 w-full pr-4">
+          <div className="space-y-3">
             {isLoading ? (
-              <div className="text-center text-sm text-gray-500">Loading conversation...</div>
+              <div className="text-center text-sm text-gray-500 py-8">Loading conversation...</div>
             ) : messages.length === 0 ? (
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-gray-500 py-8">
                 Start a conversation with your AI assistant
               </div>
             ) : (
               messages.map((msg: ChatMessage) => (
-                <div key={msg.id} className={`p-3 rounded-lg ${
+                <div key={msg.id} className={`p-3 rounded-lg shadow-sm ${
                   msg.role === 'assistant' 
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100' 
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 ml-2' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 mr-2'
                 }`}>
-                  <div className="flex items-start justify-between mb-1">
+                  <div className="flex items-start justify-between mb-2">
                     <span className="text-xs font-medium">
-                      {msg.role === 'assistant' ? 'Colby' : 'You'}
+                      {msg.role === 'assistant' ? '🤖 Colby' : '👤 You'}
                     </span>
                     <span className="text-xs text-gray-500">
                       {new Date(msg.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
-                  <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                  <div className="text-sm whitespace-pre-wrap leading-relaxed">
+                    {renderFormattedText(msg.content)}
+                  </div>
                   
                   {/* Show actions taken */}
                   {msg.metadata?.actionsTaken && msg.metadata.actionsTaken.length > 0 && (
-                    <div className="mt-2 space-y-1">
+                    <div className="mt-3 space-y-1 border-t border-opacity-20 pt-2">
                       <div className="text-xs font-medium text-green-700 dark:text-green-300">Actions Taken:</div>
                       {msg.metadata.actionsTaken.map((action, idx) => (
                         <div key={idx} className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
