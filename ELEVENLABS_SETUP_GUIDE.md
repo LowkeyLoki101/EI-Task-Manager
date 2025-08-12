@@ -9,36 +9,20 @@
 
 Go to ElevenLabs Dashboard → Your Agent → Tools → Add Tool
 
-**Tool Configuration (Working POST Version):**
+**COPY THIS EXACT JSON:**
+
 ```json
 {
   "type": "webhook",
-  "name": "test",
+  "name": "test", 
   "description": "Test webhook connectivity to verify integration is working",
   "api_schema": {
     "url": "https://Emergent-Assistant.replit.app/api/actions/test",
     "method": "POST",
     "path_params_schema": [],
     "query_params_schema": [],
-    "request_body_schema": {
-      "type": "object",
-      "properties": [
-        {
-          "id": "message",
-          "type": "string",
-          "value_type": "llm_prompt",
-          "description": "Test message",
-          "required": false
-        }
-      ]
-    },
-    "request_headers": [
-      {
-        "type": "value",
-        "name": "Content-Type",
-        "value": "application/json"
-      }
-    ],
+    "request_body_schema": null,
+    "request_headers": [],
     "auth_connection": null
   },
   "response_timeout_secs": 20,

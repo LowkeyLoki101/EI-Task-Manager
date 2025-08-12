@@ -16,7 +16,7 @@ const openai = new OpenAI({
 export function registerElevenLabsActions(app: Express) {
   
   // Simple test webhook to verify connectivity (GET request)
-  app.get("/api/actions/test", async (req, res) => {
+  app.get("/api/actions/test-get", async (req, res) => {
     console.log('[ElevenLabs] TEST webhook called (GET)');
     console.log('[ElevenLabs] Query params:', req.query);
     console.log('[ElevenLabs] Headers:', req.headers['user-agent']);
