@@ -3,6 +3,15 @@
 ## Overview
 Emergent Intelligence is a comprehensive AI-powered project management platform featuring task management, calendar integration (with iPhone sync), research capabilities, project-focused conversations, and a central knowledge base. The platform implements a complete triple voice system with ElevenLabs Actions, GPT Realtime WebRTC, and Whisper transcription. The system includes full n8n automation integration, autonomous chat system with persistent memory, GPT-5 diary system for relationship building and idea generation, file access capabilities for tool suggestions, knowledge base with markdown RAG retrieval, and iPhone calendar sync. Key capabilities include conversational task creation, automated workflow suggestions, cross-device calendar synchronization, AI-powered research assistance, and persistent memory that builds relationships over time.
 
+## Recent Changes
+**Date: August 12, 2025**
+- ✅ **Complete file upload system implemented** - GPT-5 chat now supports image, PDF, and document uploads with automatic task extraction
+- ✅ **Fixed file validation issues** - Resolved restrictive MIME type validation that was rejecting screenshots
+- ✅ **Enhanced error handling** - Added comprehensive logging and error recovery for file upload process
+- ✅ **Documentation organization** - Created comprehensive docs/ folder structure for developer handover
+- ✅ **ElevenLabs integration consolidated** - All voice AI documentation moved to docs/elevenlabs/
+- ✅ **Troubleshooting guide created** - Documented all technical issues encountered and solutions implemented
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Interface design: Clean, mobile-first interface without technical backend details exposed to users. Single voice interface only.
@@ -25,12 +34,20 @@ Interface design: Clean, mobile-first interface without technical backend detail
 - **Voice Widget**: ElevenLabs integration with conversational AI agent (agent_7401k28d3x9kfdntv7cjrj6t43be).
 - **Task Manager**: Hierarchical task management with subtasks, priorities, due dates, and click-to-complete functionality.
 - **Autonomous Chat**: GPT-5 powered assistant with persistent memory positioned directly under task manager.
+- **File Upload System**: Multi-format handling (images, PDFs, documents) with GPT-4o vision analysis and automatic task extraction from screenshots.
 - **Workflow Automation**: Visual workflow suggestions powered by GPT-5 analysis and N8N integration.
 - **iPhone Calendar Sync**: Full CalDAV integration for cross-device task synchronization.
 - **Conversation History**: Real-time chat with AI responses and memory persistence.
-- **File Upload System**: Multi-format handling with cloud storage integration.
 - **Code Proposals**: AI-driven code suggestions and implementation with preview.
 - **Video Integration**: YouTube search and embedding.
+
+### Documentation Structure
+- **docs/**: Comprehensive developer documentation
+  - **DEVELOPER_HANDOVER.md**: Complete setup and architecture guide
+  - **TROUBLESHOOTING.md**: Technical issues and solutions
+  - **elevenlabs/**: All ElevenLabs integration documentation
+  - **architecture/**: System architecture documentation
+  - **notes/**: Development logs and research
 
 ### AI Integration
 - **Supervisor Agent**: GPT-5 processes conversations and manages workflows.
