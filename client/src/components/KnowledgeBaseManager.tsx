@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Download, Upload, Plus, FileText, MessageSquare, Code, BookOpen, Zap, BarChart3 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Search, Download, Upload, Plus, FileText, MessageSquare, Code, BookOpen, Zap, BarChart3, File, X, CheckCircle } from "lucide-react";
 
 interface KnowledgeBaseEntry {
   id: string;
@@ -34,6 +35,28 @@ interface KnowledgeBaseManagerProps {
   sessionId: string;
 }
 
+interface SearchResults {
+  results: KnowledgeBaseEntry[];
+  total: number;
+}
+
+interface Statistics {
+  totalEntries: number;
+  entriesByType: Record<string, number>;
+  entriesByTag: Record<string, number>;
+  entriesByCategory: Record<string, number>;
+  lastUpdated: string;
+}
+
+interface UploadFile {
+  file: File;
+  id: string;
+  progress: number;
+  status: 'pending' | 'uploading' | 'processing' | 'completed' | 'error';
+  error?: string;
+  result?: KnowledgeBaseEntry;
+}
+
 const typeIcons = {
   task: FileText,
   conversation: MessageSquare,
@@ -49,6 +72,9 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [newEntry, setNewEntry] = useState({
     title: "",
     content: "",
@@ -62,13 +88,13 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
   const queryClient = useQueryClient();
 
   // Search knowledge base
-  const { data: searchResults, isLoading: searchLoading } = useQuery({
+  const { data: searchResults, isLoading: searchLoading } = useQuery<SearchResults>({
     queryKey: ['/api/knowledge-base/search', sessionId, searchQuery, selectedType],
     enabled: !!sessionId,
   });
 
   // Get statistics
-  const { data: statistics } = useQuery({
+  const { data: statistics } = useQuery<Statistics>({
     queryKey: ['/api/knowledge-base/statistics', sessionId],
     enabled: !!sessionId,
   });
@@ -168,8 +194,119 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
     exportMutation.mutate({ description: `Knowledge base export - ${new Date().toLocaleDateString()}` });
   };
 
+  // File upload functions
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFiles(Array.from(e.dataTransfer.files));
+    }
+  }, []);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFiles(Array.from(e.target.files));
+    }
+  }, []);
+
+  const handleFiles = useCallback((files: File[]) => {
+    const newUploadFiles: UploadFile[] = files.map(file => ({
+      file,
+      id: Math.random().toString(36).substring(7),
+      progress: 0,
+      status: 'pending'
+    }));
+    
+    setUploadFiles(prev => [...prev, ...newUploadFiles]);
+    setShowUploadDialog(true);
+    
+    // Start uploading files
+    newUploadFiles.forEach(uploadFile => {
+      uploadSingleFile(uploadFile);
+    });
+  }, []);
+
+  const uploadSingleFile = async (uploadFile: UploadFile) => {
+    try {
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { ...f, status: 'uploading', progress: 10 } : f
+      ));
+
+      const formData = new FormData();
+      formData.append('file', uploadFile.file);
+      formData.append('sessionId', sessionId);
+
+      const response = await fetch('/api/knowledge-base/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { ...f, progress: 50, status: 'processing' } : f
+      ));
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          progress: 100, 
+          status: 'completed', 
+          result 
+        } : f
+      ));
+
+      // Refresh the knowledge base
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/search'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/statistics'] });
+
+      toast({
+        title: "Upload Complete",
+        description: `"${uploadFile.file.name}" has been added to your knowledge base`,
+      });
+
+    } catch (error) {
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          status: 'error', 
+          error: error instanceof Error ? error.message : 'Upload failed' 
+        } : f
+      ));
+
+      toast({
+        title: "Upload Failed",
+        description: `Failed to upload "${uploadFile.file.name}"`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const removeUploadFile = (id: string) => {
+    setUploadFiles(prev => prev.filter(f => f.id !== id));
+  };
+
+  const clearCompletedUploads = () => {
+    setUploadFiles(prev => prev.filter(f => f.status !== 'completed'));
+  };
+
   const entries = searchResults?.results || [];
-  const stats = statistics || {};
+  const stats = statistics || { totalEntries: 0, entriesByType: {}, entriesByTag: {}, entriesByCategory: {} };
 
   return (
     <div className="space-y-6" data-testid="knowledge-base-manager">
@@ -269,6 +406,122 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
                     Cancel
                   </Button>
                 </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-upload-files">
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Files
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Upload Documents & Code</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                {/* Drag & Drop Zone */}
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    dragActive 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                  data-testid="file-drop-zone"
+                >
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg mb-2">Drag & drop files here</p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Supports: PDF, DOC, DOCX, TXT, MD, JS, TS, PY, and more
+                  </p>
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    id="file-upload"
+                    onChange={handleFileSelect}
+                    accept=".pdf,.doc,.docx,.txt,.md,.js,.ts,.py,.jsx,.tsx,.json,.xml,.html,.css,.sql"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                    data-testid="button-select-files"
+                  >
+                    <File className="w-4 h-4 mr-2" />
+                    Select Files
+                  </Button>
+                </div>
+
+                {/* Upload Progress */}
+                {uploadFiles.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Upload Progress</h3>
+                      {uploadFiles.some(f => f.status === 'completed') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearCompletedUploads}
+                          data-testid="button-clear-completed"
+                        >
+                          Clear Completed
+                        </Button>
+                      )}
+                    </div>
+                    {uploadFiles.map(uploadFile => (
+                      <div key={uploadFile.id} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <File className="w-4 h-4" />
+                            <span className="font-medium truncate max-w-xs">
+                              {uploadFile.file.name}
+                            </span>
+                            <Badge 
+                              variant={
+                                uploadFile.status === 'completed' ? 'default' :
+                                uploadFile.status === 'error' ? 'destructive' :
+                                'secondary'
+                              }
+                            >
+                              {uploadFile.status}
+                            </Badge>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeUploadFile(uploadFile.id)}
+                            data-testid={`button-remove-${uploadFile.id}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        
+                        {uploadFile.status === 'uploading' || uploadFile.status === 'processing' ? (
+                          <Progress value={uploadFile.progress} className="mb-2" />
+                        ) : null}
+                        
+                        {uploadFile.status === 'completed' && uploadFile.result && (
+                          <div className="text-sm text-green-600 flex items-center gap-1">
+                            <CheckCircle className="w-4 h-4" />
+                            Added to knowledge base as "{uploadFile.result.title}"
+                          </div>
+                        )}
+                        
+                        {uploadFile.status === 'error' && (
+                          <div className="text-sm text-red-600">
+                            Error: {uploadFile.error}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>

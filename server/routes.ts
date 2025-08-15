@@ -54,6 +54,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerArtifactRoutes } = await import('./artifacts');
   registerArtifactRoutes(app);
 
+  // Register Knowledge Base with File Upload
+  const knowledgeBaseRoutes = await import('./knowledge-base-routes');
+  app.use('/api/knowledge-base', knowledgeBaseRoutes.default);
+
   // Register AI Autonomous Workstation Controller
   const { registerAiWorkstationRoutes } = await import('./ai-workstation');
   registerAiWorkstationRoutes(app);
@@ -89,9 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn('[Routes] Failed to load n8n integration:', error);
   }
 
-  // Register Knowledge Base routes
-  const { registerKnowledgeBaseRoutes } = await import("./knowledge-base-routes");
-  registerKnowledgeBaseRoutes(app);
+
 
   // Initialize Microservice Integration
   const { MicroserviceConnector, listNetworkServices } = await import("./microservice-connector");
