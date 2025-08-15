@@ -93,6 +93,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerKnowledgeBaseRoutes } = await import("./knowledge-base-routes");
   registerKnowledgeBaseRoutes(app);
 
+  // Initialize Microservice Integration
+  const { MicroserviceConnector, listNetworkServices } = await import("./microservice-connector");
+  const SERVICE_NAME = 'Emergent-Intelligence';
+  const SERVICE_URL = process.env.REPL_URL || 'http://localhost:5000';
+  const microserviceConnector = new MicroserviceConnector(SERVICE_NAME, SERVICE_URL);
+  
+  // Register with Integration Hub on startup
+  microserviceConnector.registerWithHub().then(() => {
+    console.log('🌐 Microservice connector initialized');
+  });
+
+  // Register microservice health endpoint
+  app.get('/api/health', (req, res) => {
+    res.json(microserviceConnector.getHealthData());
+  });
+
+  // Register microservice network endpoints
+  app.get('/api/microservices', async (req, res) => {
+    try {
+      const services = await listNetworkServices(microserviceConnector);
+      res.json({ services });
+    } catch (error: any) {
+      res.status(500).json({ error: error?.message || 'Failed to fetch services' });
+    }
+  });
+
+  // Register API endpoints for discovery
+  microserviceConnector.registerEndpoint('GET', '/api/health', 'Health check and service discovery');
+  microserviceConnector.registerEndpoint('GET', '/api/tasks', 'Task management system');
+  microserviceConnector.registerEndpoint('POST', '/api/tasks', 'Create new tasks');
+  microserviceConnector.registerEndpoint('GET', '/api/chat/{sessionId}', 'AI chat conversations');
+  microserviceConnector.registerEndpoint('POST', '/api/chat/{sessionId}', 'Send chat messages');
+  microserviceConnector.registerEndpoint('GET', '/api/knowledge-base', 'Knowledge base search');
+  microserviceConnector.registerEndpoint('POST', '/api/knowledge-base', 'Store knowledge');
+  microserviceConnector.registerEndpoint('GET', '/api/workstation/ai-action/{sessionId}', 'AI autonomous actions');
+  microserviceConnector.registerEndpoint('GET', '/api/code-analysis', 'Code analysis and recommendations');
+
+  // Register microservice integration routes
+  const { registerMicroserviceRoutes } = await import("./microservice-routes");
+  registerMicroserviceRoutes(app, microserviceConnector);
+
   // Register System Modifier for advanced GPT-5 capabilities
   const { registerSystemModifier } = await import("./system-modifier");
   registerSystemModifier(app);
