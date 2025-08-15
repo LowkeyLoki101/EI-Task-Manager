@@ -48,7 +48,25 @@ export function registerElevenLabsActions(app: Express) {
       console.log('[ElevenLabs] add_task webhook called:', JSON.stringify(req.body, null, 2));
       
       let { sessionId, ...actionData } = req.body;
-      const parsedAction = addTaskActionSchema.parse(actionData);
+      
+      // Clean up parameter names from ElevenLabs agent data
+      const cleanField = (value: any, prefix: string) => {
+        if (typeof value === 'string' && value.startsWith(prefix)) {
+          return value.replace(prefix, '');
+        }
+        return value;
+      };
+
+      const cleanedData = {
+        title: cleanField(actionData.title, 'title='),
+        context: cleanField(actionData.context, 'context='),
+        timeWindow: cleanField(actionData.timeWindow || actionData.time_window, 'timeWindow=') || 
+                   cleanField(actionData.timeWindow || actionData.time_window, 'time_window='),
+        steps: actionData.steps
+      };
+      
+      console.log('[ElevenLabs] Cleaned action data:', cleanedData);
+      const parsedAction = addTaskActionSchema.parse(cleanedData);
       
       // If no sessionId provided, generate a default one that the frontend can use
       if (!sessionId) {
@@ -60,13 +78,11 @@ export function registerElevenLabsActions(app: Express) {
 
       // Create the task
       const task = await storage.createTask({
-        id: randomUUID(),
         sessionId,
         title: parsedAction.title,
         context: parsedAction.context || 'computer',
         timeWindow: parsedAction.timeWindow || 'any',
         status: 'today', // New tasks from voice should be priority
-        description: null,
       });
 
       // Create steps if provided
@@ -74,10 +90,8 @@ export function registerElevenLabsActions(app: Express) {
       if (parsedAction.steps) {
         for (const stepTitle of parsedAction.steps) {
           const step = await storage.createStep({
-            id: randomUUID(),
             taskId: task.id,
             title: stepTitle,
-            description: null,
             context: task.context,
             timeWindow: task.timeWindow,
           });
@@ -106,7 +120,7 @@ export function registerElevenLabsActions(app: Express) {
             console.error(`[Auto Resource Discovery] Failed for task ${task.id}: ${response.status}`);
           }
         } catch (error) {
-          console.error(`[Auto Resource Discovery] Error for task ${task.id}:`, error.message);
+          console.error(`[Auto Resource Discovery] Error for task ${task.id}:`, (error as Error).message || error);
         }
       }, 200); // Small delay to ensure task is fully saved
 
@@ -400,26 +414,22 @@ Respond in JSON format: { "tasks": [{ "title": string, "context": string, "timeW
       const createdTasks = [];
       for (const taskData of result.tasks) {
         const task = await storage.createTask({
-          id: randomUUID(),
           sessionId: this.sessionId,
           title: taskData.title,
           context: taskData.context || 'computer',
           timeWindow: taskData.timeWindow || 'any',
           status: 'today',
-          description: null,
         });
 
         const steps = [];
         for (const stepData of taskData.steps || []) {
           const step = await storage.createStep({
-            id: randomUUID(),
             taskId: task.id,
             title: stepData.title,
             canAuto: stepData.canAuto || false,
             toolHint: stepData.toolHint || null,
             context: stepData.context || task.context,
             timeWindow: stepData.timeWindow || task.timeWindow,
-            description: null,
           });
           steps.push(step);
         }
