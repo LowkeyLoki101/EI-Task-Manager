@@ -469,15 +469,66 @@ function CalendarPanel({ payload, onUpdate }: { payload?: any; onUpdate?: (data:
 }
 
 function MediaPanel({ payload, onUpdate }: { payload?: any; onUpdate?: (data: any) => void }) {
-  if (payload?.youtubeId) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+
+  // Handle search
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const response = await fetch('/api/workstation/search-videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: searchQuery })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.videos || []);
+      } else {
+        console.error('Search failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle video selection
+  const handleVideoSelect = (video: any) => {
+    setSelectedVideo(video);
+    onUpdate?.({ 
+      youtubeId: video.videoId, 
+      title: video.title, 
+      description: video.description 
+    });
+  };
+
+  // If there's a video from AI or manual selection, display it
+  const currentVideo = payload?.youtubeId ? payload : selectedVideo;
+  
+  if (currentVideo?.youtubeId) {
     return (
-      <div className="h-full bg-black">
-        <iframe
-          src={`https://www.youtube.com/embed/${payload.youtubeId}`}
-          className="w-full h-full"
-          frameBorder="0"
-          allowFullScreen
-        />
+      <div className="h-full flex flex-col bg-black">
+        <div className="flex-1">
+          <iframe
+            src={`https://www.youtube.com/embed/${currentVideo.youtubeId}`}
+            className="w-full h-full"
+            frameBorder="0"
+            allowFullScreen
+          />
+        </div>
+        <div className="p-2 bg-slate-900/90 text-xs text-amber-200">
+          <p className="font-medium truncate">{currentVideo.title}</p>
+          {currentVideo.channelTitle && (
+            <p className="text-amber-300/60">{currentVideo.channelTitle}</p>
+          )}
+        </div>
       </div>
     );
   }
@@ -495,11 +546,69 @@ function MediaPanel({ payload, onUpdate }: { payload?: any; onUpdate?: (data: an
   }
 
   return (
-    <div className="h-full p-4 bg-gradient-to-b from-slate-800/20 to-gray-900/20">
-      <div className="text-center text-amber-200/80 text-sm">
-        <Youtube className="h-8 w-8 mx-auto mb-2 opacity-60" />
-        <p>Media viewer ready</p>
-        <p className="text-xs text-amber-300/60 mt-2">AI can display YouTube videos or images here</p>
+    <div className="h-full flex flex-col bg-gradient-to-b from-slate-800/20 to-gray-900/20">
+      {/* Search Interface */}
+      <div className="p-3 border-b border-amber-500/10">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Search YouTube videos..."
+            className="flex-1 bg-slate-700/20 border border-amber-500/20 rounded text-amber-100 text-sm px-3 py-1 focus:outline-none focus:border-amber-400/40 placeholder-amber-300/40"
+            data-testid="input-video-search"
+          />
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleSearch}
+            disabled={isSearching || !searchQuery.trim()}
+            className="text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 text-xs px-2"
+            data-testid="button-search-videos"
+          >
+            <Search className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Search Results */}
+      <div className="flex-1 overflow-y-auto p-2">
+        {isSearching ? (
+          <div className="text-center text-amber-200/80 text-sm py-4">
+            <Search className="h-6 w-6 mx-auto mb-2 opacity-60 animate-pulse" />
+            <p>Searching...</p>
+          </div>
+        ) : searchResults.length > 0 ? (
+          <div className="space-y-2">
+            {searchResults.map((video, index) => (
+              <div
+                key={video.videoId}
+                onClick={() => handleVideoSelect(video)}
+                className="bg-slate-700/20 border border-amber-500/10 rounded p-2 cursor-pointer hover:bg-amber-900/10 hover:border-amber-500/20 transition-colors"
+                data-testid={`video-result-${index}`}
+              >
+                <div className="flex gap-2">
+                  <img
+                    src={video.thumbnails?.default?.url}
+                    alt={video.title}
+                    className="w-16 h-12 object-cover rounded bg-slate-600"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-amber-100 text-xs font-medium leading-tight line-clamp-2">{video.title}</h4>
+                    <p className="text-amber-300/60 text-xs mt-1">{video.channelTitle}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-amber-200/80 text-sm">
+            <Youtube className="h-8 w-8 mx-auto mb-2 opacity-60" />
+            <p>Search for videos or let AI suggest content</p>
+            <p className="text-xs text-amber-300/60 mt-2">Enter a search term above to find YouTube videos</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -146,6 +146,25 @@ Respond in JSON format only.`;
     }
   });
 
+  // Manual YouTube search endpoint
+  app.post('/api/workstation/search-videos', async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query) {
+        return res.status(400).json({ error: 'Search query required' });
+      }
+
+      console.log(`[Workstation] Manual YouTube search: ${query}`);
+      
+      const videos = await searchYouTubeVideos(query);
+      res.json({ videos });
+    } catch (error) {
+      console.error('YouTube search error:', error);
+      res.status(500).json({ error: 'Failed to search videos' });
+    }
+  });
+
   // Set workstation media content (for testing YouTube feature)
   app.post('/api/workstation/set-media', async (req, res) => {
     try {
@@ -245,5 +264,37 @@ async function storeTaskLearnings(sessionId: string, taskId: string, learnings: 
     // Implement your knowledge base storage logic here
   } catch (error) {
     console.error('Failed to store task learnings:', error);
+  }
+}
+
+async function searchYouTubeVideos(query: string) {
+  const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+  
+  if (!YOUTUBE_API_KEY) {
+    console.log('[YouTube] API key not available');
+    return [];
+  }
+  
+  try {
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=6&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`;
+    const response = await fetch(searchUrl);
+    
+    if (!response.ok) {
+      throw new Error(`YouTube API error: ${response.status}`);
+    }
+    
+    const data = await response.json() as any;
+    
+    return (data.items || []).map((video: any) => ({
+      videoId: video.id.videoId,
+      title: video.snippet.title,
+      description: video.snippet.description.slice(0, 200) + '...',
+      channelTitle: video.snippet.channelTitle,
+      publishedAt: video.snippet.publishedAt,
+      thumbnails: video.snippet.thumbnails
+    }));
+  } catch (error) {
+    console.error(`YouTube search error for "${query}":`, error);
+    return [];
   }
 }
