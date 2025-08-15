@@ -145,6 +145,42 @@ Respond in JSON format only.`;
       res.status(500).json({ error: 'Failed to store task learnings' });
     }
   });
+
+  // Set workstation media content (for testing YouTube feature)
+  app.post('/api/workstation/set-media', async (req, res) => {
+    try {
+      const { sessionId, youtubeId, title, description } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ error: 'sessionId required' });
+      }
+
+      console.log(`[Workstation Media] Setting YouTube video ${youtubeId} for session ${sessionId}`);
+      
+      // Create media action for workstation
+      const mediaAction = {
+        tool: 'media',
+        thinking: 'Displaying YouTube video as requested',
+        payload: {
+          youtubeId,
+          title: title || 'YouTube Video',
+          description: description || 'Video content'
+        }
+      };
+
+      // Store the action for the frontend to pick up
+      await storeAiAction(sessionId, mediaAction);
+      
+      res.json({ 
+        success: true, 
+        action: mediaAction,
+        message: `YouTube video "${title}" ready to display in Media tool`
+      });
+    } catch (error) {
+      console.error('Media setting error:', error);
+      res.status(500).json({ error: 'Failed to set media content' });
+    }
+  });
 }
 
 // Helper functions (integrate with your existing storage)
