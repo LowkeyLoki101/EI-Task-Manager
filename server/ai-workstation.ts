@@ -5,6 +5,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-fake-key-for-development" 
 });
 
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+
 interface AiAction {
   tool: string;
   thinking: string;
@@ -42,6 +44,12 @@ Your autonomous behavior patterns:
 4. Check calendar and plan ahead
 5. Save important information to knowledge base
 6. Follow up on incomplete tasks
+7. **Search for instructional videos when tasks require learning or tutorials**
+
+When using the MEDIA tool, you can:
+- Search for YouTube videos with: {"searchQuery": "topic tutorial guide"}
+- Display specific videos with: {"youtubeId": "video_id"}
+- Show images with: {"imageUrl": "url"}
 
 Choose your next action and provide:
 - tool: one of [diary, docs, calendar, media, browser, research]
@@ -67,6 +75,24 @@ Respond in JSON format only.`;
         
         // Log AI action
         console.log(`[AI Workstation] Session ${sessionId}: ${action.thinking}`);
+        
+        // Process media tool actions (YouTube search)
+        if (action.tool === 'media' && action.payload?.searchQuery) {
+          try {
+            const videoResults = await searchYouTubeVideos(action.payload.searchQuery);
+            if (videoResults.length > 0) {
+              // Use the first video result
+              action.payload = {
+                youtubeId: videoResults[0].videoId,
+                title: videoResults[0].title,
+                description: videoResults[0].description,
+                channelTitle: videoResults[0].channelTitle
+              };
+            }
+          } catch (error) {
+            console.error('[AI Workstation] YouTube search failed:', error);
+          }
+        }
         
         // Store AI action for learning
         await storeAiAction(sessionId, action);
