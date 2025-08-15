@@ -75,6 +75,69 @@ export function VoiceWidget({
     }
   }, [sessionId]);
 
+  // Listen for ElevenLabs transcript events
+  useEffect(() => {
+    const handleTranscript = async (event: any) => {
+      const { speaker, text, timestamp } = event.detail || {};
+      
+      if (text && sessionId) {
+        console.log('[ElevenLabs] Transcript captured:', { speaker, text, timestamp });
+        
+        try {
+          await fetch('/api/transcripts/elevenlabs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId,
+              speaker: speaker || 'user',
+              content: text,
+              timestamp: timestamp || new Date().toISOString(),
+              source: 'elevenlabs'
+            })
+          });
+        } catch (error) {
+          console.error('[ElevenLabs] Failed to store transcript:', error);
+        }
+      }
+    };
+
+    const handleConversation = async (event: any) => {
+      const { type, text, speaker } = event.detail || {};
+      
+      if (text && sessionId) {
+        console.log('[ElevenLabs] Conversation event:', { type, speaker, text });
+        
+        try {
+          await fetch('/api/transcripts/elevenlabs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId,
+              speaker: speaker || (type === 'user_message' ? 'user' : 'assistant'),
+              content: text,
+              timestamp: new Date().toISOString(),
+              source: 'elevenlabs',
+              metadata: { type }
+            })
+          });
+        } catch (error) {
+          console.error('[ElevenLabs] Failed to store conversation:', error);
+        }
+      }
+    };
+
+    // Listen for various ElevenLabs events
+    document.addEventListener('convai-transcript', handleTranscript);
+    document.addEventListener('convai-message', handleConversation);
+    document.addEventListener('convai-response', handleConversation);
+    
+    return () => {
+      document.removeEventListener('convai-transcript', handleTranscript);
+      document.removeEventListener('convai-message', handleConversation);
+      document.removeEventListener('convai-response', handleConversation);
+    };
+  }, [sessionId]);
+
   return (
     <div className="fixed bottom-4 right-4 z-50">
       <elevenlabs-convai

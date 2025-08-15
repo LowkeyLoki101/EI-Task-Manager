@@ -206,6 +206,38 @@ export function registerTranscriptionRoutes(app: Express) {
     }
   });
 
+  // Store ElevenLabs transcripts
+  app.post('/api/transcripts/elevenlabs', async (req, res) => {
+    try {
+      const { sessionId, speaker, content, timestamp, source, metadata } = req.body;
+      
+      if (!sessionId || !content) {
+        return res.status(400).json({ error: 'sessionId and content required' });
+      }
+
+      console.log(`[ElevenLabs Transcript] Session ${sessionId}: ${speaker} - ${content}`);
+      
+      // Store transcript (you'll need to implement actual storage)
+      const transcript = {
+        id: Date.now().toString(),
+        sessionId,
+        speaker: speaker || 'user',
+        content,
+        timestamp: timestamp || new Date().toISOString(),
+        source: source || 'elevenlabs',
+        metadata: metadata || {}
+      };
+      
+      // Here you would store to your actual storage system
+      // For now, just log it - you can implement actual storage later
+      
+      res.json({ success: true, transcript });
+    } catch (error) {
+      console.error('ElevenLabs transcript storage error:', error);
+      res.status(500).json({ error: 'Failed to store transcript' });
+    }
+  });
+
   // Health check for transcription service
   app.get('/api/transcribe/status', (req, res) => {
     res.json({

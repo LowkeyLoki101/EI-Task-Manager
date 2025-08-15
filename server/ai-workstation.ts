@@ -270,25 +270,40 @@ async function storeTaskLearnings(sessionId: string, taskId: string, learnings: 
 async function searchYouTubeVideos(query: string) {
   const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
   
-  if (!YOUTUBE_API_KEY) {
-    console.log('[YouTube] API key not available');
+  if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'your-youtube-api-key') {
+    console.log('[YouTube] API key not available or invalid');
     return [];
   }
   
   try {
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=6&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`;
+    console.log('[YouTube] Making request to:', searchUrl.replace(YOUTUBE_API_KEY, '[API_KEY]'));
+    
     const response = await fetch(searchUrl);
     
     if (!response.ok) {
-      throw new Error(`YouTube API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('[YouTube] API Error Details:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      throw new Error(`YouTube API error: ${response.status} - ${errorText}`);
     }
     
     const data = await response.json() as any;
     
+    if (data.error) {
+      console.error('[YouTube] API returned error:', data.error);
+      throw new Error(`YouTube API error: ${data.error.message}`);
+    }
+    
+    console.log(`[YouTube] Found ${data.items?.length || 0} videos for query: ${query}`);
+    
     return (data.items || []).map((video: any) => ({
       videoId: video.id.videoId,
       title: video.snippet.title,
-      description: video.snippet.description.slice(0, 200) + '...',
+      description: (video.snippet.description || '').slice(0, 200) + '...',
       channelTitle: video.snippet.channelTitle,
       publishedAt: video.snippet.publishedAt,
       thumbnails: video.snippet.thumbnails
