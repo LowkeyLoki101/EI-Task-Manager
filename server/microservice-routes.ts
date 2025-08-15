@@ -162,11 +162,11 @@ export function registerMicroserviceRoutes(app: Express, connector: Microservice
       const capabilities = await Promise.all(
         services.map(async (service: any) => {
           try {
-            const health = await connector.callService(service.name, '/api/health');
+            const health: any = await connector.callService(service.name, '/api/health');
             return {
               name: service.name,
-              capabilities: health.capabilities || [],
-              features: health.features || {},
+              capabilities: health?.capabilities || [],
+              features: health?.features || {},
               status: service.status
             };
           } catch {

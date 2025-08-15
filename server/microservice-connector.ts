@@ -84,7 +84,8 @@ export class MicroserviceConnector {
   async getAvailableServices(): Promise<any[]> {
     try {
       const response = await fetch(`${this.hubUrl}/api/repls`);
-      const services: any[] = await response.json();
+      const data = await response.json();
+      const services: any[] = Array.isArray(data) ? data : [];
       
       // Cache service information
       services.forEach((service: any) => {
@@ -169,7 +170,8 @@ export class MicroserviceConnector {
 // Quick setup functions for common integrations
 export async function connectToTaskManager(connector: MicroserviceConnector) {
   try {
-    const agents: any[] = await connector.callService('EI-Task-Manager', '/api/agents');
+    const data = await connector.callService('EI-Task-Manager', '/api/agents');
+    const agents: any[] = Array.isArray(data) ? data : [];
     console.log(`🤖 Connected to Task Manager with ${agents.length} AI agents`);
     return agents;
   } catch (error) {
