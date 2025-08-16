@@ -19,6 +19,7 @@ import {
   Target
 } from 'lucide-react';
 import type { Task } from '@shared/schema';
+import TaskDetailModal from './TaskDetailModal';
 
 interface Project {
   id: string;
@@ -61,6 +62,7 @@ const getCategoryColor = (category: string) => {
 
 export default function ProjectManager({ sessionId }: ProjectManagerProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showCreateProject, setShowCreateProject] = useState(false);
 
   // Fetch tasks and automatically organize into projects
@@ -307,7 +309,11 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
               
               <div className="space-y-2">
                 {selectedProject.tasks.map((task) => (
-                  <div key={task.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                  <div 
+                    key={task.id} 
+                    className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedTask(task)}
+                  >
                     <CheckCircle2 
                       className={`w-5 h-5 ${task.status === 'done' ? 'text-green-500' : 'text-gray-300'}`} 
                     />
@@ -317,7 +323,10 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
                         <p className="text-sm text-muted-foreground mt-1">{task.context}</p>
                       )}
                     </div>
-                    <Badge variant="outline">{task.status}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{task.status}</Badge>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -325,6 +334,14 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal 
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        sessionId={sessionId}
+      />
     </div>
   );
 }

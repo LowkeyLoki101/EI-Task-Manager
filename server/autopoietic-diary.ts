@@ -78,12 +78,31 @@ export class AutopoieticDiary {
         }
       }
 
-      // 4. Create actual tasks from generated task suggestions
+      // 4. Check task limits before creating new tasks
+      const { TaskCompletionSystem } = await import('./task-completion-system');
+      const taskSystem = new TaskCompletionSystem(this.sessionId);
+      const limitCheck = await taskSystem.shouldBlockTaskCreation();
+      
       let taskCount = 0;
-      if (lensSession.generatedTasks && lensSession.generatedTasks.length > 0) {
-        for (const taskTitle of lensSession.generatedTasks.slice(0, 2)) { // Limit to 2 tasks
+      if (limitCheck.blocked) {
+        console.log(`[AutopoieticDiary] Task creation blocked: ${limitCheck.reason}`);
+        console.log(`[AutopoieticDiary] Incomplete tasks: ${limitCheck.incompleteTasks}`);
+        
+        // Focus on existing incomplete tasks instead of creating new ones
+        const incompleteTasks = await taskSystem.getIncompleteTasks();
+        if (incompleteTasks.length > 0) {
+          const randomTask = incompleteTasks[Math.floor(Math.random() * incompleteTasks.length)];
+          await taskSystem.focusAIOnTask(randomTask.id, 
+            `Complete this task based on autopoietic thinking cycle: "${trigger}"`);
+          console.log(`[AutopoieticDiary] Focused AI on existing task: ${randomTask.title}`);
+        }
+      } else if (lensSession.generatedTasks && lensSession.generatedTasks.length > 0) {
+        // Only create tasks if under limit
+        const maxNewTasks = Math.min(2, 5 - limitCheck.incompleteTasks); // Stay under 5 total
+        
+        for (const taskTitle of lensSession.generatedTasks.slice(0, maxNewTasks)) {
           try {
-            await storage.createTask({
+            const task = await storage.createTask({
               sessionId: this.sessionId,
               title: taskTitle,
               context: "computer",
@@ -92,9 +111,13 @@ export class AutopoieticDiary {
               tags: ["autopoietic", "diary-generated"],
               category: "ai-generated",
               priority: "medium",
+              description: `Generated from autopoietic thinking: "${trigger}"`
             });
+            
+            // Initialize task with completion system
+            await taskSystem.initializeTaskProgress(task.id);
             taskCount++;
-            console.log(`[AutopoieticDiary] Created task: "${taskTitle}"`);
+            console.log(`[AutopoieticDiary] Created task with completion tracking: "${taskTitle}"`);
           } catch (error) {
             console.error(`[AutopoieticDiary] Failed to create task "${taskTitle}":`, error);
           }

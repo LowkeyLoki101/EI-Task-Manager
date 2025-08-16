@@ -514,6 +514,85 @@ Return as a complete HTML page that can be saved and used immediately.`;
     }
   });
 
+  // === TASK COMPLETION SYSTEM ROUTES ===
+  
+  // Task details with progress
+  app.get("/api/tasks/:taskId/details", async (req, res) => {
+    try {
+      const { TaskCompletionSystem } = await import('./task-completion-system');
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId) {
+        return res.status(400).json({ error: "sessionId query parameter required" });
+      }
+      
+      const taskSystem = new TaskCompletionSystem(sessionId);
+      const details = await taskSystem.getTaskDetails(req.params.taskId);
+      
+      if (!details) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+      
+      res.json(details);
+    } catch (error) {
+      console.error("Error fetching task details:", error);
+      res.status(500).json({ error: "Failed to fetch task details" });
+    }
+  });
+
+  // Complete task stage
+  app.post("/api/tasks/:taskId/complete-stage", async (req, res) => {
+    try {
+      const { TaskCompletionSystem } = await import('./task-completion-system');
+      const { sessionId, stage, notes } = req.body;
+      
+      if (!sessionId || !stage) {
+        return res.status(400).json({ error: "sessionId and stage are required" });
+      }
+      
+      const taskSystem = new TaskCompletionSystem(sessionId);
+      const progress = await taskSystem.completeStage(req.params.taskId, stage, notes || '');
+      
+      res.json({ success: true, progress });
+    } catch (error) {
+      console.error("Error completing task stage:", error);
+      res.status(500).json({ error: "Failed to complete task stage" });
+    }
+  });
+
+  // AI Focus endpoint
+  app.post("/api/workstation/ai-focus", async (req, res) => {
+    try {
+      const { TaskCompletionSystem } = await import('./task-completion-system');
+      const { sessionId, taskId, instruction } = req.body;
+      
+      if (!sessionId || !taskId) {
+        return res.status(400).json({ error: "sessionId and taskId are required" });
+      }
+      
+      const taskSystem = new TaskCompletionSystem(sessionId);
+      await taskSystem.focusAIOnTask(taskId, instruction);
+      
+      res.json({ success: true, message: "AI focused on task" });
+    } catch (error) {
+      console.error("Error focusing AI on task:", error);
+      res.status(500).json({ error: "Failed to focus AI on task" });
+    }
+  });
+
+  // Check task creation limits
+  app.get("/api/tasks/limits/:sessionId", async (req, res) => {
+    try {
+      const { TaskCompletionSystem } = await import('./task-completion-system');
+      const taskSystem = new TaskCompletionSystem(req.params.sessionId);
+      
+      const limitCheck = await taskSystem.shouldBlockTaskCreation();
+      res.json(limitCheck);
+    } catch (error) {
+      console.error("Error checking task limits:", error);
+      res.status(500).json({ error: "Failed to check task limits" });
+    }
+  });
+
   // GET /conversations/:id/transcript
   app.get("/api/conversations/:id/transcript", async (req, res) => {
     try {
