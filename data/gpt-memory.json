@@ -17959,5 +17959,37 @@
       "sessionId": "s_njlk7hja5y9"
     }
   ],
-  "enhancedDiary": []
+  "enhancedDiary": [
+    {
+      "id": "diary_1755384866825_fallback",
+      "timestamp": "2025-08-16T22:54:26.825Z",
+      "title": "System Reflection",
+      "content": "Reflecting on current state: System running normally. Continuing to learn and adapt.",
+      "mode": "reflective",
+      "type": "active",
+      "tags": [
+        "fallback",
+        "system"
+      ],
+      "sessionId": "s_y439m78bw1",
+      "context": {
+        "system": {
+          "status": "good",
+          "uptime": 19.144883999,
+          "memoryUsage": 0.8339621668221954,
+          "activeConnections": 1,
+          "lastBackup": "2025-08-16T22:54:25.188Z"
+        }
+      },
+      "autonomyDecision": {
+        "shouldWrite": true,
+        "reason": "Manual trigger",
+        "noveltyScore": 1,
+        "relevanceScore": 1
+      },
+      "metadata": {
+        "error": "429 You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors."
+      }
+    }
+  ]
 }
