@@ -327,8 +327,13 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
                 const modes: WorkstationState['mode'][] = ['human', 'hybrid', 'ai'];
                 const currentIndex = modes.indexOf(workstationState.mode);
                 const nextMode = modes[(currentIndex + 1) % modes.length];
-                setWorkstationState(prev => ({ ...prev, mode: nextMode }));
+                setWorkstationState(prev => ({ 
+                  ...prev, 
+                  mode: nextMode,
+                  aiActive: nextMode === 'ai' || nextMode === 'hybrid'
+                }));
                 console.log(`[Workstation] Switched to ${nextMode} mode`);
+                logUserAction(`Switched to ${nextMode} mode`);
               }}
               title="Click to cycle through modes: Human → Hybrid → AI"
               data-testid="mode-switcher">
@@ -499,12 +504,16 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
           const isActive = activeTool === tool.id;
           const isHumanMode = workstationState.mode === 'human';
           const isAiMode = workstationState.mode === 'ai';
-          const shouldBeEnabled = isHumanMode || workstationState.mode === 'hybrid';
+          const shouldBeEnabled = workstationState.mode !== 'off';
           
           const handleClick = () => {
+            if (workstationState.mode === 'off') return;
             console.log(`[Workstation] Switching to ${tool.name} tool, current mode: ${workstationState.mode}`);
             setActiveTool(tool.id);
-            logUserAction(`Switched to ${tool.name} tool`);
+            setCurrentPayload(null); // Clear any AI payload when user manually switches
+            if (workstationState.mode === 'human' || workstationState.mode === 'hybrid') {
+              logUserAction(`Switched to ${tool.name} tool`);
+            }
           };
           
           return (
