@@ -170,6 +170,7 @@ export class MemStorage implements IStorage {
     this.artifacts = new Map();
     this.memories = new Map();
     this.conversations = new Map();
+    this.diaryEntries = new Map();
     this.installations = new Map();
     this.proposals = new Map();
     this.files = new Map();
@@ -197,6 +198,7 @@ export class MemStorage implements IStorage {
         artifacts: Array.from(this.artifacts.entries()),
         memories: Array.from(this.memories.entries()),
         conversations: Array.from(this.conversations.entries()),
+        diaryEntries: Array.from(this.diaryEntries.entries()),
         installations: Array.from(this.installations.entries()),
         proposals: Array.from(this.proposals.entries()),
         files: Array.from(this.files.entries()),
@@ -250,6 +252,10 @@ export class MemStorage implements IStorage {
         this.conversations = new Map(data.conversations?.map(([k, v]: [string, any]) => [k, {
           ...v,
           timestamp: new Date(v.timestamp)
+        }]) || []);
+        this.diaryEntries = new Map(data.diaryEntries?.map(([k, v]: [string, any]) => [k, {
+          ...v,
+          createdAt: new Date(v.createdAt)
         }]) || []);
         this.installations = new Map(data.installations || []);
         this.proposals = new Map(data.proposals || []);
@@ -504,6 +510,35 @@ export class MemStorage implements IStorage {
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     
     return limit ? messages.slice(-limit) : messages;
+  }
+
+  // Diary Entries implementation
+  async createDiaryEntry(insertEntry: InsertDiaryEntry): Promise<DiaryEntry> {
+    const entry: DiaryEntry = {
+      ...insertEntry,
+      id: randomUUID(),
+      createdAt: new Date(),
+    };
+    
+    // Store in memory (you might want to persist to disk)
+    if (!this.diaryEntries) {
+      this.diaryEntries = new Map();
+    }
+    this.diaryEntries.set(entry.id, entry);
+    this.saveToFile();
+    return entry;
+  }
+
+  async listDiaryEntries(sessionId: string, limit?: number): Promise<DiaryEntry[]> {
+    if (!this.diaryEntries) {
+      return [];
+    }
+    
+    const entries = Array.from(this.diaryEntries.values())
+      .filter(entry => entry.sessionId === sessionId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    return limit ? entries.slice(0, limit) : entries;
   }
 
   // Installations

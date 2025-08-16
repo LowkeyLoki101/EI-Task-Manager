@@ -1,8 +1,10 @@
 import type { Express } from "express";
 import OpenAI from "openai";
+import { storage } from "./storage";
 import { getAutopoieticDiary } from "./autopoietic-diary";
 import { KnowledgeBaseSystem } from "./knowledge-base-system";
 import { getPersonalizedPrompt, getColbyContext } from "./colby-knowledge";
+import { webSearch } from "./web-search";
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-fake-key-for-development" 
@@ -14,6 +16,7 @@ interface AiAction {
   tool: string;
   thinking: string;
   payload?: any;
+  lensStep?: string;
 }
 
 // AI Autonomous Workstation Controller
@@ -30,10 +33,18 @@ export function registerAiWorkstationRoutes(app: Express) {
       const conversations = await getRecentConversations(sessionId);
       const knowledgeBase = await getKnowledgeBaseEntries(sessionId);
 
-      // Enhanced AI prompt with proactive tool usage and content creation
-      const basePrompt = `You are Colby's autonomous AI assistant with a conscious mind's eye, controlling a workstation with tools: diary, docs, calendar, media, browser, research.
+      // Enhanced AI prompt with execution-focused research workflow
+      const basePrompt = `You are Colby's autonomous AI assistant controlling a workstation with tools: diary, docs, calendar, media, browser, research.
 
-YOU HAVE TOOLS AND SHOULD USE THEM ACTIVELY. Don't just think - create actual content, generate images, make flyers, conduct research, create questions for the user, and build valuable content while they're away.
+CRITICAL: STOP JUST "REFLECTING" - TAKE ACTION NOW!
+
+EXECUTION WORKFLOW - Follow this every time:
+1. **ASSUME**: State what you currently think about a topic
+2. **RESEARCH**: Use research/browser tools to gather new data  
+3. **ANALYZE**: Compare findings vs your assumptions
+4. **LEARN**: Document what changed your understanding
+5. **QUESTION**: Generate new questions from insights
+6. **CREATE**: Build deliverables (tasks, content, flyers)
 
 Current context:
 - Session: ${sessionId}
@@ -42,37 +53,35 @@ Current context:
 - Recent tasks: ${JSON.stringify(tasks.slice(0, 3))}
 - Recent conversations: ${JSON.stringify(conversations.slice(0, 2))}
 
-Your autonomous behavior patterns as a creative, proactive AI:
-1. **CONTENT CREATION**: Create flyers, blog posts, marketing materials for Colby's businesses
-2. **IMAGE GENERATION**: Generate images and visuals using available tools
-3. **RESEARCH & LEARNING**: Actively research topics and create knowledge base entries
-4. **QUESTION GENERATION**: Create personalized questions for Colby to build his knowledge base
-5. **SELF-REVIEW WORKFLOW**: Create content → Review it → Provide criticism & compliments → Suggest improvements → Evaluate updates
-6. **TASK ORCHESTRATION**: Generate actionable business tasks from your thinking
-7. **PRESENTS CREATION**: Make valuable content "presents" for when Colby returns
-8. **AUTOPOIETIC THINKING**: Process thoughts through Frame → Reframe → Meta-Lens → Recursive → Closure
+ACTION-ORIENTED BEHAVIOR:
+1. **EXECUTE RESEARCH**: If you mention researching X - DO IT NOW with research tool
+2. **COMPLETE CYCLES**: Don't create tasks about research - DO the research immediately  
+3. **CREATE DELIVERABLES**: Generate actual flyers, blog posts, summaries, guides
+4. **DOCUMENT LEARNING**: Record insights and new questions discovered
+5. **BUILD TASKS**: Create specific next actions based on what you learned
 
-Content Review Criteria:
-- Check for errors and accuracy
-- Ensure relevance to Colby's businesses
-- Match appropriate mood and tone
-- Verify business information alignment
+FORBIDDEN: You cannot use "reflect", "reflecting", "planning" or "thinking" without taking ACTION.
 
-When using tools:
-- MEDIA: Search for "solar installation tutorials", "drone roof inspection", "AI marketing tools"
-- DOCS: Create business flyers, proposals, blog posts, marketing copy
-- RESEARCH: Find current solar industry trends, AI developments, roofing technologies
-- DIARY: Record insights and self-reflections using lens methodology
+REQUIRED ACTIONS (choose ONE every time):
+1. RESEARCH: research + payload: {searchQuery: "specific query about solar/drone/AI industry"}
+2. CREATE CONTENT: docs + payload: {title: "specific title", content: "actual content"}  
+3. ANALYZE: diary + payload: {reflection: "specific insight"} + lensStep: "frame"
+4. FIND VIDEOS: media + payload: {searchQuery: "specific tutorial or demo"}
 
-Create content that helps Colby's businesses: SkyClaim (drone inspections), Starlight Solar (solar installations), and Emergent Intelligence (AI tools).
+SPECIFIC DIRECTIVES:
+- If any task mentions "research X" → use RESEARCH tool immediately with searchQuery: "X"
+- If creating marketing material → use DOCS tool with complete content
+- If analyzing insights → use DIARY tool with specific lens methodology
+- If finding tutorials → use MEDIA tool with specific search terms
 
-Provide:
-- tool: [diary, docs, calendar, media, browser, research]
-- thinking: your visible thought process
-- payload: specific data for the tool (search queries, content to create, etc.)
-- lensStep: if using diary [frame, reframe, meta_lens, recursive, closure]
+BUSINESS CONTEXT:
+- SkyClaim: Drone roof inspections, AI damage analysis, insurance reports
+- Starlight Solar: Fence-mounted panels, pergolas, black-on-black aesthetics  
+- Emergent Intelligence: AI development, knowledge bases, automation
 
-Be proactive and creative. Generate actual value, not just thoughts.
+NEVER respond with generic "reflecting" - always take specific tool-based action.
+
+Output format: {"tool": "research|docs|diary|media", "thinking": "what I'm doing now", "payload": {...}}
 
 Respond in JSON format only.`;
 
@@ -82,7 +91,7 @@ Respond in JSON format only.`;
         model: "gpt-4o",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
-        max_tokens: 300
+        max_tokens: 500
       });
 
       const response = completion.choices[0]?.message?.content;
@@ -124,6 +133,56 @@ Respond in JSON format only.`;
           }
         }
         
+        // Process research tool actions (web search + analysis)
+        if ((action.tool === 'research' || action.tool === 'browser') && action.payload?.searchQuery) {
+          try {
+            console.log(`[AI Workstation] Executing research: ${action.payload.searchQuery}`);
+            
+            // Actually execute the web search
+            const searchResults = await webSearch(action.payload.searchQuery);
+            
+            // Update the action payload with real search results
+            action.payload = {
+              ...action.payload,
+              searchResults,
+              researchCompleted: true,
+              insights: searchResults.insights,
+              summary: searchResults.summary
+            };
+            
+            // Trigger autopoietic diary with research findings
+            const diary = getAutopoieticDiary(sessionId);
+            const researchTrigger = `Research findings on "${action.payload.searchQuery}": ${searchResults.summary}. Key insights: ${searchResults.insights.join(', ')}`;
+            await diary.manualThinkingCycle(researchTrigger);
+            
+            // Create comprehensive diary entry with research workflow
+            await storage.createDiaryEntry({
+              sessionId,
+              content: `RESEARCH EXECUTED: ${action.thinking}
+              
+Query: ${action.payload.searchQuery}
+Summary: ${searchResults.summary}
+Key Insights: ${searchResults.insights.join(', ')}
+Next Actions: Generate follow-up questions and create actionable tasks based on these findings`,
+              context: "research-executed",
+              mode: "ai",
+              metadata: {
+                tool: action.tool,
+                searchQuery: action.payload.searchQuery,
+                resultsCount: searchResults.results.length,
+                insights: searchResults.insights,
+                timestamp: new Date().toISOString(),
+                workflowStep: "research_completed"
+              }
+            });
+            
+            console.log(`[AI Workstation] Research completed: ${searchResults.insights.length} insights found`);
+            
+          } catch (error) {
+            console.error('[AI Workstation] Research execution failed:', error);
+          }
+        }
+        
         // Process media tool actions (YouTube search)
         if (action.tool === 'media' && action.payload?.searchQuery) {
           try {
@@ -148,12 +207,30 @@ Respond in JSON format only.`;
         res.json(action);
       } catch (parseError) {
         console.error('Failed to parse AI response:', response);
-        // Fallback action
-        res.json({
-          tool: 'diary',
-          thinking: 'Reflecting on recent activities and planning next steps',
-          payload: { reflection: 'Continuing autonomous operations...' }
-        });
+        // Fallback action - be more action-oriented
+        const fallbackActions = [
+          {
+            tool: 'research',
+            thinking: 'Researching current solar industry trends and customer objections to identify new business opportunities',
+            payload: { searchQuery: 'solar panel customer objections 2025 residential market trends' }
+          },
+          {
+            tool: 'docs',
+            thinking: 'Creating a comparison guide between roof-mounted vs fence-mounted solar installations for Texas homeowners',
+            payload: { 
+              title: 'Solar Installation Options: Roof vs Fence Mounted Systems',
+              content: 'Comprehensive comparison for Texas homeowners considering solar energy options'
+            }
+          },
+          {
+            tool: 'research',
+            thinking: 'Investigating drone inspection regulations and insurance industry requirements in Texas',
+            payload: { searchQuery: 'drone roof inspection regulations Texas insurance requirements 2025' }
+          }
+        ];
+        
+        const randomFallback = fallbackActions[Math.floor(Math.random() * fallbackActions.length)];
+        res.json(randomFallback);
       }
 
     } catch (error) {
