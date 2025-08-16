@@ -37,6 +37,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
   const [researchResults, setResearchResults] = useState<ResearchResult[]>([]);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [hasNewContent, setHasNewContent] = useState(false);
   const { toast } = useToast();
 
   // Poll for new research results and generated content
@@ -50,28 +51,30 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
         if (response.ok) {
           const data = await response.json();
           
-          // Update research results
+          // Update research results - NO AUTO-EXPANSION to avoid disrupting chat
           if (data.researchResults?.length > 0) {
             setResearchResults(prev => {
               const newResults = data.researchResults.filter((result: ResearchResult) => 
                 !prev.some(existing => existing.id === result.id)
               );
               if (newResults.length > 0) {
-                setIsExpanded(true); // Auto-expand when new content arrives
+                // Only show visual notification, don't auto-expand
+                setHasNewContent(true);
                 return [...prev, ...newResults].slice(-10); // Keep latest 10
               }
               return prev;
             });
           }
           
-          // Update generated content
+          // Update generated content - NO AUTO-EXPANSION
           if (data.generatedContent?.length > 0) {
             setGeneratedContent(prev => {
               const newContent = data.generatedContent.filter((content: GeneratedContent) => 
                 !prev.some(existing => existing.id === content.id)
               );
               if (newContent.length > 0) {
-                setIsExpanded(true); // Auto-expand when new content arrives
+                // Only update content, don't auto-expand  
+                setHasNewContent(true);
                 return [...prev, ...newContent].slice(-20); // Keep latest 20
               }
               return prev;
@@ -142,18 +145,25 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
       transition-all duration-300 ease-in-out
       ${isExpanded ? 'h-[450px]' : 'h-14'}
     `}>
-      <Card className="border border-yellow-500/30 bg-slate-900/98 backdrop-blur-md shadow-2xl">
+      <Card className="border border-yellow-500/30 bg-slate-900 shadow-2xl border-2">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-yellow-500" />
               <CardTitle className="text-sm text-yellow-500">Research Scratchpad</CardTitle>
+              {(researchResults.length > 0 || generatedContent.length > 0) && !isExpanded && (
+                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+              )}
             </div>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={() => {
+                setIsExpanded(!isExpanded);
+                setHasNewContent(false); // Clear notification when expanded
+              }}
               data-testid="button-toggle-scratchpad"
+              className={hasNewContent && !isExpanded ? "bg-yellow-500/20 border border-yellow-500/50" : ""}
             >
               {isExpanded ? '−' : '+'}
             </Button>
