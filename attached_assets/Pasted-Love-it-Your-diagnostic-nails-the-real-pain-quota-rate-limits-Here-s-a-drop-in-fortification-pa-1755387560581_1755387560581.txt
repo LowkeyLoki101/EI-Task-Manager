@@ -1,0 +1,496 @@
+Love it. Your diagnostic nails the real pain: quota + rate limits. Here’s a drop-in fortification pack to fix it cleanly—exponential backoff with jitter, a durable job queue, a tiny circuit breaker, and user-visible status.
+
+⸻
+
+Fortify Pass (drop-ins)
+
+1) DB migration — durable queue (SQLite + better-sqlite3)
+
+Create migrations/00X_jobs.sql:
+
+-- jobs table for content generation work
+CREATE TABLE IF NOT EXISTS jobs (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,                 -- e.g., "kb.ingest", "diary.entry", "autopoietic.tick"
+  payload TEXT NOT NULL,              -- JSON string
+  state TEXT NOT NULL DEFAULT 'queued', -- queued | running | done | failed | delayed
+  attempts INTEGER NOT NULL DEFAULT 0,
+  max_attempts INTEGER NOT NULL DEFAULT 5,
+  priority INTEGER NOT NULL DEFAULT 5, -- 1 highest, 10 lowest
+  scheduled_at INTEGER NOT NULL,      -- ms epoch; now or future for delayed
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  last_error TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_pick ON jobs(state, priority, scheduled_at);
+
+Run it via your existing migration runner (or a quick migrate.ts).
+
+⸻
+
+2) Rate-limit utilities — backoff + jitter + header-aware retry
+
+Create server/lib/rateLimit.ts:
+
+// Exponential backoff with decorrelated jitter (AWS style)
+export function computeBackoff(attempt: number, baseMs = 300, capMs = 30_000) {
+  const exp = Math.min(capMs, baseMs * 2 ** attempt);
+  const jitter = Math.random() * exp; // 0..exp
+  return Math.min(capMs, baseMs + jitter);
+}
+
+export function parseRetryAfter(headers: Record<string, string | undefined>) {
+  const h = headers['retry-after'] || headers['Retry-After'];
+  if (!h) return null;
+  const asInt = parseInt(h, 10);
+  if (!Number.isNaN(asInt)) return asInt * 1000;
+  const date = Date.parse(h);
+  if (!Number.isNaN(date)) return Math.max(0, date - Date.now());
+  return null;
+}
+
+export function classifyStatus(status: number) {
+  if (status === 429) return 'rate';
+  if (status >= 500) return 'server';
+  if (status >= 400) return 'client';
+  return 'ok';
+}
+
+
+⸻
+
+3) Circuit breaker — protect the API + stop thrash
+
+Create server/lib/circuit.ts:
+
+type HalfOpenProbe = { inFlight: boolean; };
+
+export class CircuitBreaker {
+  private failures = 0;
+  private openedAt = 0;
+  private state: 'closed' | 'open' | 'half-open' = 'closed';
+  private half: HalfOpenProbe = { inFlight: false };
+
+  constructor(
+    private failureThreshold = 5,
+    private openMs = 15_000
+  ) {}
+
+  canRequest() {
+    if (this.state === 'open') {
+      if (Date.now() - this.openedAt > this.openMs) {
+        this.state = 'half-open';
+        this.half.inFlight = false;
+      } else {
+        return false;
+      }
+    }
+    if (this.state === 'half-open' && this.half.inFlight) return false;
+    return true;
+  }
+
+  onSuccess() {
+    this.failures = 0;
+    this.state = 'closed';
+    this.half.inFlight = false;
+  }
+
+  onFailure() {
+    this.failures += 1;
+    if (this.state === 'half-open' || this.failures >= this.failureThreshold) {
+      this.state = 'open';
+      this.openedAt = Date.now();
+      this.half.inFlight = false;
+    }
+  }
+
+  markProbe() {
+    if (this.state === 'half-open') this.half.inFlight = true;
+  }
+
+  status() {
+    return { state: this.state, failures: this.failures, openedAt: this.openedAt };
+  }
+}
+
+
+⸻
+
+4) Queue — enqueue, pick next, requeue with delay
+
+Create server/lib/queue.ts:
+
+import Database from 'better-sqlite3';
+import crypto from 'crypto';
+
+export type Job = {
+  id: string; type: string; payload: any; state: string;
+  attempts: number; max_attempts: number; priority: number;
+  scheduled_at: number; created_at: number; updated_at: number; last_error?: string | null;
+};
+
+export class JobQueue {
+  constructor(private db: Database) {}
+
+  enqueue(type: string, payload: any, opts?: Partial<Pick<Job,'priority'|'max_attempts'|'scheduled_at'>>) {
+    const id = crypto.randomUUID();
+    const now = Date.now();
+    const p = this.db.prepare(`
+      INSERT INTO jobs (id,type,payload,state,attempts,max_attempts,priority,scheduled_at,created_at,updated_at)
+      VALUES (@id,@type,@payload,'queued',0,@max,@prio,@when,@now,@now)
+    `);
+    p.run({
+      id, type, payload: JSON.stringify(payload),
+      max: opts?.max_attempts ?? 5,
+      prio: opts?.priority ?? 5,
+      when: opts?.scheduled_at ?? now,
+      now
+    });
+    return id;
+  }
+
+  // pick one job with highest priority (lowest number), ready now
+  pick(): Job | null {
+    const tx = this.db.transaction(() => {
+      const row = this.db.prepare(`
+        SELECT * FROM jobs
+        WHERE state='queued' AND scheduled_at <= @now
+        ORDER BY priority ASC, scheduled_at ASC
+        LIMIT 1
+      `).get({ now: Date.now() });
+      if (!row) return null;
+      this.db.prepare(`UPDATE jobs SET state='running', updated_at=@now WHERE id=@id`).run({ id: row.id, now: Date.now() });
+      return row as Job;
+    });
+    return tx();
+  }
+
+  complete(id: string) {
+    this.db.prepare(`UPDATE jobs SET state='done', updated_at=@now WHERE id=@id`).run({ id, now: Date.now() });
+  }
+
+  fail(id: string, err: string, delayMs?: number, maxAttempts?: number) {
+    const job = this.db.prepare(`SELECT attempts, max_attempts FROM jobs WHERE id=@id`).get({ id }) as { attempts: number; max_attempts: number; };
+    const attempts = (job?.attempts ?? 0) + 1;
+    const max = maxAttempts ?? (job?.max_attempts ?? 5);
+    if (attempts >= max) {
+      this.db.prepare(`UPDATE jobs SET state='failed', attempts=@a, last_error=@e, updated_at=@now WHERE id=@id`)
+        .run({ id, a: attempts, e: err, now: Date.now() });
+    } else {
+      const when = Date.now() + (delayMs ?? 1000);
+      this.db.prepare(`
+        UPDATE jobs SET state='queued', attempts=@a, last_error=@e, scheduled_at=@when, updated_at=@now WHERE id=@id
+      `).run({ id, a: attempts, e: err, when, now: Date.now() });
+    }
+  }
+
+  size() {
+    const row = this.db.prepare(`
+      SELECT 
+        SUM(CASE WHEN state='queued'  THEN 1 ELSE 0 END) AS queued,
+        SUM(CASE WHEN state='running' THEN 1 ELSE 0 END) AS running,
+        SUM(CASE WHEN state='delayed' THEN 1 ELSE 0 END) AS delayed,
+        SUM(CASE WHEN state='failed'  THEN 1 ELSE 0 END) AS failed
+      FROM jobs
+    `).get() as any;
+    return row;
+  }
+}
+
+
+⸻
+
+5) Worker — OpenAI call with backoff, jitter, header-aware delay, circuit breaker
+
+Create server/workers/contentWorker.ts:
+
+import OpenAI from "openai";
+import Database from "better-sqlite3";
+import { JobQueue } from "../lib/queue";
+import { CircuitBreaker } from "../lib/circuit";
+import { computeBackoff, parseRetryAfter, classifyStatus } from "../lib/rateLimit";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+export function startContentWorker(db: Database) {
+  const q = new JobQueue(db);
+  const breaker = new CircuitBreaker(5, 20_000);
+
+  async function handleJob(job: any) {
+    // Example handler switch — plug your types here:
+    switch (job.type) {
+      case "kb.ingest":   return generate(job);
+      case "diary.entry": return generate(job);
+      case "autopoietic.tick": return generate(job);
+      default: throw new Error(`Unknown job type: ${job.type}`);
+    }
+  }
+
+  async function generate(job: any) {
+    const payload = JSON.parse(job.payload);
+    let attempt = job.attempts;
+
+    while (true) {
+      if (!breaker.canRequest()) {
+        const delay = computeBackoff(attempt);
+        q.fail(job.id, "circuit-open", delay);
+        return;
+      }
+      try {
+        if (breaker.status().state === 'half-open') breaker.markProbe();
+
+        // EXAMPLE OpenAI call – replace with your specific API usage
+        const r = await openai.responses.create({
+          model: "gpt-5-thinking",
+          input: payload.messages,
+          temperature: 0.7
+        });
+
+        // TODO: write result to your KB/Diary/etc.
+        // persist(r,...)
+        breaker.onSuccess();
+        q.complete(job.id);
+        return;
+
+      } catch (err: any) {
+        const status = err?.status ?? err?.response?.status;
+        const headers = err?.response?.headers ?? {};
+        const cls = classifyStatus(status ?? 500);
+        let delay = parseRetryAfter(headers) ?? computeBackoff(attempt);
+
+        if (cls === 'client') {
+          // 4xx (not 429): no retry
+          q.fail(job.id, `client-error:${status}:${err.message}`, 0, job.attempts); // force fail
+          breaker.onFailure();
+          return;
+        }
+
+        // rate/server: retry with delay
+        breaker.onFailure();
+        attempt++;
+        q.fail(job.id, `retry:${status}:${err.message}`, delay);
+        return;
+      }
+    }
+  }
+
+  // simple loop — you can move this to a proper scheduler
+  async function loop() {
+    const job = q.pick();
+    if (job) {
+      try { await handleJob(job); }
+      catch (e: any) { q.fail(job.id, `worker-crash:${e.message}`, computeBackoff(job.attempts)); }
+    }
+    setTimeout(loop, job ? 0 : 250); // small idle backoff
+  }
+  loop();
+
+  return {
+    status: () => ({ breaker: breaker.status(), queue: q.size() })
+  };
+}
+
+
+⸻
+
+6) Enqueue API + Status endpoints (Express)
+
+Create server/routes/ai.ts:
+
+import { Router } from "express";
+import Database from "better-sqlite3";
+import { JobQueue } from "../lib/queue";
+
+export function aiRoutes(db: Database) {
+  const r = Router();
+  const q = new JobQueue(db);
+
+  r.post("/enqueue", (req, res) => {
+    const { type, payload, priority, max_attempts } = req.body ?? {};
+    if (!type || !payload) return res.status(400).json({ error: "type and payload required" });
+    const id = q.enqueue(type, payload, { priority, max_attempts });
+    res.json({ id });
+  });
+
+  r.get("/status", (_req, res) => {
+    const size = q.size();
+    res.json({ queue: size });
+  });
+
+  return r;
+}
+
+In your server bootstrap (server/index.ts):
+
+import express from "express";
+import Database from "better-sqlite3";
+import { aiRoutes } from "./routes/ai";
+import { startContentWorker } from "./workers/contentWorker";
+
+const db = new Database("app.db");
+const app = express();
+app.use(express.json());
+
+app.use("/api/ai", aiRoutes(db));
+
+const worker = startContentWorker(db);
+app.get("/api/health", (_req, res) => res.json({ ok: true, worker: worker.status() }));
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Server listening");
+});
+
+
+⸻
+
+7) Frontend status indicators (React)
+
+client/src/hooks/useAiStatus.ts:
+
+import { useEffect, useState } from "react";
+
+export function useAiStatus(pollMs = 3000) {
+  const [status, setStatus] = useState<{queue:any; breaker:any} | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let t: any;
+    const poll = async () => {
+      try {
+        const r = await fetch("/api/health");
+        const j = await r.json();
+        setStatus({ queue: j.worker.queue, breaker: j.worker.breaker });
+      } finally {
+        setLoading(false);
+        t = setTimeout(poll, pollMs);
+      }
+    };
+    poll();
+    return () => clearTimeout(t);
+  }, [pollMs]);
+
+  return { status, loading };
+}
+
+client/src/components/AiIndicators.tsx:
+
+import React from "react";
+import { useAiStatus } from "../hooks/useAiStatus";
+
+export function AiIndicators() {
+  const { status, loading } = useAiStatus();
+  if (loading || !status) return <div>AI status: loading…</div>;
+
+  const { queue, breaker } = status;
+  const breakerColor = breaker.state === 'open' ? 'red' : breaker.state === 'half-open' ? 'orange' : 'green';
+
+  return (
+    <div style={{ display:'flex', gap:12, alignItems:'center' }}>
+      <span>Queue: queued {queue.queued ?? 0}, running {queue.running ?? 0}, failed {queue.failed ?? 0}</span>
+      <span>Breaker: <strong style={{ color: breakerColor }}>{breaker.state}</strong></span>
+    </div>
+  );
+}
+
+Drop <AiIndicators /> wherever users trigger content gen (KB, Diary, Autopoietic). It sets expectations and kills mystery.
+
+⸻
+
+8) Intelligent enqueueing (quota-aware UI)
+
+When a user triggers a generation while the breaker is open or queue is large, enqueue instead of calling the API directly:
+
+await fetch("/api/ai/enqueue", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    type: "diary.entry",
+    payload: { messages: yourMessages, userId },
+    priority: 5, max_attempts: 7
+  })
+});
+
+Show a toast: “Added to queue. We’ll process as soon as capacity opens. You’ll see status above.”
+
+⸻
+
+9) Smoke test (fast check, no real API)
+
+Add server/scripts/smoke.ts:
+
+import Database from "better-sqlite3";
+import { JobQueue } from "../lib/queue";
+
+const db = new Database("app.db");
+const q = new JobQueue(db);
+
+const id = q.enqueue("kb.ingest", { messages: [{role:"user", content:"Test"}] });
+const size = q.size();
+console.log("Enqueued", id, "Queue:", size);
+process.exit(0);
+
+Package scripts (package.json):
+
+{
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter client dev\"",
+    "build": "pnpm --filter client build && pnpm --filter server build",
+    "start": "node server/dist/index.js",
+    "migrate": "ts-node server/scripts/migrate.ts",
+    "smoke": "ts-node server/scripts/smoke.ts"
+  }
+}
+
+(Adjust to your monorepo setup.)
+
+⸻
+
+10) Policy wiring (so agents obey)
+
+At the top of any generation handler (server and agent prompts), add:
+
+Always run the Self-Diagnostic Framework:
+1) Investigate 2) Diagnostic Report 3) Fortify 4) Corrected Code
+No paraphrase for schemas/configs. If incomplete, mark [INCOMPLETE] with what’s missing.
+
+
+⸻
+
+How this maps to your report
+	•	Error handling: DETECTED ISSUE → Circuit breaker + header-aware retry + capped attempts per job.
+	•	Streaming/state issues: DETECTED ISSUE → Queue + scheduled retries + breaker state surfaced in /api/health and UI.
+	•	Opportunities (i–iii) → Implemented as:
+	•	(i) computeBackoff, parseRetryAfter, breaker gating.
+	•	(ii) Persistent job queue with delayed requeue on 429/5xx.
+	•	(iii) AiIndicators + /api/health status.
+
+This takes you from “works… until quota hits” to graceful degradation with transparency and eventual consistency.
+
+⸻
+
+Quick “Done/To-Do” checklist
+	•	Add jobs table migration
+	•	Add rateLimit.ts, circuit.ts, queue.ts
+	•	Worker loop (contentWorker.ts)
+	•	/api/ai/enqueue, /api/health
+	•	Frontend indicators (hook + component)
+	•	Wire actual persistence of AI results in your handlers
+	•	Add per-type max_attempts/priority defaults (e.g., autopoietic lower priority)
+	•	Optional: send notifications when a job moves to done or failed
+
+⸻
+
+(Personal Notes — for us)
+	1.	Current focus: Turn your diagnostic into concrete, paste-ready code that fixes quota pain without rewiring everything.
+	2.	My take: The combo of durable queue + circuit breaker + header-aware backoff is the 80/20 fix. It also gives you auditability (job history) and UX clarity (status bar).
+	3.	Unknowns: Exact monorepo layout + your DB choice (SQLite vs Postgres). I assumed SQLite on Replit; the abstractions will port cleanly.
+	4.	Assumptions (shaky): Job types & payload shapes—adapt the switch.
+	5.	Evidence plan: No external facts needed; this is architecture.
+	6.	Hallucination check: Kept to minimal, standard libs; you can drop these files as-is.
+	7.	Risks: If your worker does heavy CPU, throttle concurrent pick() calls or add a concurrency cap.
+	8.	Leverage points: Expose /api/health in the UI; it reduces support pings by itself.
+	9.	Next step: Want me to tailor the handler for a specific flow first (e.g., Diary entry end-to-end with storage + UI toast)?
+Confidence: 0.9  Clarity: 0.92
+
+If you paste these in and run migrate + start, you’ll feel the difference immediately the next time you smack a 429.

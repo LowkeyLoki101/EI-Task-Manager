@@ -74,6 +74,22 @@ export const conversations = pgTable("conversations", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+// AI Job Queue for intelligent quota management
+export const aiJobs = pgTable("ai_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(), // 'kb.ingest', 'diary.entry', 'autopoietic.tick', 'supervisor.analysis'
+  payload: json("payload").notNull(),
+  state: text("state", { enum: ['queued', 'running', 'completed', 'failed', 'delayed'] }).default('queued').notNull(),
+  attempts: integer("attempts").default(0).notNull(),
+  maxAttempts: integer("max_attempts").default(5).notNull(),
+  priority: integer("priority").default(5).notNull(), // 1 highest, 10 lowest
+  scheduledAt: timestamp("scheduled_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  lastError: text("last_error"),
+  result: json("result"), // Store successful results
+});
+
 // Diary entries for tracking AI thoughts and reflections
 export const diaryEntries = pgTable("diary_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

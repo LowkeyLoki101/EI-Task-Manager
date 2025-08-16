@@ -160,6 +160,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerAutopoieticRoutes } = await import("./autopoietic-routes");
   registerAutopoieticRoutes(app);
 
+  // Register AI Job Queue for intelligent quota management
+  const { aiQueueRoutes } = await import("./routes/aiQueue");
+  app.use('/api/ai', aiQueueRoutes());
+
   // Register System Modifier for advanced GPT-5 capabilities
   const { registerSystemModifier } = await import("./system-modifier");
   registerSystemModifier(app);
@@ -1983,6 +1987,15 @@ Current time: ${new Date().toLocaleString()}`;
   
   // Mount GPT Realtime voice router
   app.use(realtimeRouter);
+
+  // Start AI Worker for intelligent content generation
+  try {
+    const { aiWorker } = await import("./workers/aiWorker");
+    aiWorker.start();
+    console.log('[AiWorker] Intelligent AI content worker started');
+  } catch (error) {
+    console.error('[AiWorker] Failed to start AI worker:', error);
+  }
 
   const httpServer = createServer(app);
   return httpServer;
