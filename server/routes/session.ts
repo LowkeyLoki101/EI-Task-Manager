@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { newSessionId, sign, saveSession } from "../session";
+import { newSessionId, sign, saveSession, validate } from "../session";
 
 const sessionRouter = Router();
 
@@ -40,7 +40,7 @@ sessionRouter.get("/validate", (req: Request, res: Response) => {
     return res.status(401).json({ valid: false, error: "No session cookies found" });
   }
 
-  const { validate } = await import("../session");
+  // validate function imported at top
   if (validate(id, sig)) {
     res.json({ valid: true, sessionId: id });
   } else {

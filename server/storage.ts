@@ -1,11 +1,11 @@
 import { randomUUID } from "crypto";
 import { writeFileSync, readFileSync, existsSync } from "fs";
 import type { 
-  Session, Task, Step, Artifact, Memory, Conversation, DiaryEntry, Installation,
+  Session, Task, Step, Artifact, Memory, Conversation, Installation,
   Proposal, File, Project, ResearchDoc, CalendarEvent, ProjectFile, BlogPost,
   CodeRecommendation, RecommendationVote, FileAnalysis, ExportRequest,
   InsertSession, InsertTask, InsertStep, InsertArtifact, 
-  InsertMemory, InsertConversation, InsertDiaryEntry, InsertInstallation, InsertProposal, 
+  InsertMemory, InsertConversation, InsertInstallation, InsertProposal, 
   InsertFile, InsertProject, InsertResearchDoc, InsertCalendarEvent, InsertProjectFile, InsertBlogPost,
   InsertCodeRecommendation, InsertRecommendationVote, InsertFileAnalysis, InsertExportRequest,
   GetTodoListAction, AddTaskAction, UpdateStepStatusAction
