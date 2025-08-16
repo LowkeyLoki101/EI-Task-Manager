@@ -2,11 +2,11 @@ import { randomUUID } from "crypto";
 import { writeFileSync, readFileSync, existsSync } from "fs";
 import type { 
   Session, Task, Step, Artifact, Memory, Conversation, DiaryEntry, Installation,
-  Proposal, File, Project, ResearchDoc, CalendarEvent, ProjectFile,
+  Proposal, File, Project, ResearchDoc, CalendarEvent, ProjectFile, BlogPost,
   CodeRecommendation, RecommendationVote, FileAnalysis, ExportRequest,
   InsertSession, InsertTask, InsertStep, InsertArtifact, 
   InsertMemory, InsertConversation, InsertDiaryEntry, InsertInstallation, InsertProposal, 
-  InsertFile, InsertProject, InsertResearchDoc, InsertCalendarEvent, InsertProjectFile,
+  InsertFile, InsertProject, InsertResearchDoc, InsertCalendarEvent, InsertProjectFile, InsertBlogPost,
   InsertCodeRecommendation, InsertRecommendationVote, InsertFileAnalysis, InsertExportRequest,
   GetTodoListAction, AddTaskAction, UpdateStepStatusAction
 } from "@shared/schema";
@@ -47,6 +47,15 @@ export interface IStorage {
   // Diary Entries
   createDiaryEntry(entry: InsertDiaryEntry): Promise<DiaryEntry>;
   listDiaryEntries(sessionId: string, limit?: number): Promise<DiaryEntry[]>;
+
+  // Blog Posts
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  getBlogPost(id: string): Promise<BlogPost | undefined>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  listBlogPosts(status?: string, limit?: number, offset?: number): Promise<BlogPost[]>;
+  listBlogPostsBySession(sessionId: string, status?: string): Promise<BlogPost[]>;
+  updateBlogPost(id: string, updates: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: string): Promise<boolean>;
 
   // Installations
   createInstallation(installation: InsertInstallation): Promise<Installation>;
@@ -162,6 +171,7 @@ export class MemStorage implements IStorage {
   private recommendationVotes: Map<string, RecommendationVote>;
   private fileAnalysis: Map<string, FileAnalysis>;
   private exportRequests: Map<string, ExportRequest>;
+  private blogPosts: Map<string, BlogPost>;
 
   constructor() {
     this.sessions = new Map();
@@ -184,6 +194,7 @@ export class MemStorage implements IStorage {
     this.recommendationVotes = new Map();
     this.fileAnalysis = new Map();
     this.exportRequests = new Map();
+    this.blogPosts = new Map();
     
     // Load persisted data on startup
     this.loadFromFile();
@@ -206,6 +217,7 @@ export class MemStorage implements IStorage {
         researchDocs: Array.from(this.researchDocs.entries()),
         calendarEvents: Array.from(this.calendarEvents.entries()),
         projectFiles: Array.from(this.projectFiles.entries()),
+        blogPosts: Array.from(this.blogPosts.entries()),
       };
       writeFileSync('data/storage.json', JSON.stringify(data, null, 2));
     } catch (error) {
@@ -268,8 +280,14 @@ export class MemStorage implements IStorage {
         this.researchDocs = new Map(data.researchDocs || []);
         this.calendarEvents = new Map(data.calendarEvents || []);
         this.projectFiles = new Map(data.projectFiles || []);
+        this.blogPosts = new Map(data.blogPosts?.map(([k, v]: [string, any]) => [k, {
+          ...v,
+          publishedAt: v.publishedAt ? new Date(v.publishedAt) : null,
+          createdAt: new Date(v.createdAt),
+          updatedAt: new Date(v.updatedAt)
+        }]) || []);
         
-        console.log('[Storage] Loaded persisted data: tasks=', this.tasks.size, 'steps=', this.steps.size);
+        console.log('[Storage] Loaded persisted data: tasks=', this.tasks.size, 'steps=', this.steps.size, 'blogs=', this.blogPosts.size);
       }
     } catch (error) {
       console.warn('[Storage] Failed to load from file:', error);
@@ -1110,6 +1128,90 @@ export class MemStorage implements IStorage {
   async getTasksBySessionId(sessionId: string): Promise<Task[]> {
     const tasks = Array.from(this.tasks.values()).filter(task => task.sessionId === sessionId);
     return tasks;
+  }
+
+  // **BLOG POST IMPLEMENTATIONS**
+
+  // Blog Posts
+  async createBlogPost(insertPost: InsertBlogPost): Promise<BlogPost> {
+    const id = randomUUID();
+    const blogPost: BlogPost = {
+      ...insertPost,
+      id,
+      projectId: insertPost.projectId || null,
+      excerpt: insertPost.excerpt || null,
+      author: insertPost.author || 'Autonomous AI',
+      source: insertPost.source || 'ai-research',
+      tags: insertPost.tags || [],
+      metadata: insertPost.metadata || {},
+      publishedAt: insertPost.publishedAt || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.blogPosts.set(blogPost.id, blogPost);
+    this.saveToFile();
+    return blogPost;
+  }
+
+  async getBlogPost(id: string): Promise<BlogPost | undefined> {
+    return this.blogPosts.get(id);
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    return Array.from(this.blogPosts.values()).find(post => post.slug === slug);
+  }
+
+  async listBlogPosts(status?: string, limit = 10, offset = 0): Promise<BlogPost[]> {
+    let posts = Array.from(this.blogPosts.values());
+
+    if (status) {
+      posts = posts.filter(post => post.status === status);
+    }
+
+    // Sort by publishedAt for published posts, createdAt for others
+    posts.sort((a, b) => {
+      const aDate = a.publishedAt || a.createdAt;
+      const bDate = b.publishedAt || b.createdAt;
+      return bDate.getTime() - aDate.getTime();
+    });
+
+    return posts.slice(offset, offset + limit);
+  }
+
+  async listBlogPostsBySession(sessionId: string, status?: string): Promise<BlogPost[]> {
+    let posts = Array.from(this.blogPosts.values())
+      .filter(post => post.sessionId === sessionId);
+
+    if (status) {
+      posts = posts.filter(post => post.status === status);
+    }
+
+    return posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async updateBlogPost(id: string, updates: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
+    const existing = this.blogPosts.get(id);
+    if (!existing) {
+      return undefined;
+    }
+    
+    const updated: BlogPost = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.blogPosts.set(id, updated);
+    this.saveToFile();
+    return updated;
+  }
+
+  async deleteBlogPost(id: string): Promise<boolean> {
+    const exists = this.blogPosts.has(id);
+    if (exists) {
+      this.blogPosts.delete(id);
+      this.saveToFile();
+    }
+    return exists;
   }
 }
 

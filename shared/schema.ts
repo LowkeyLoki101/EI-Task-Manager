@@ -225,6 +225,25 @@ export const files = pgTable("files", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Blog posts - AI research publications
+export const blogPosts = pgTable("blog_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  projectId: varchar("project_id"), // Optional project association
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(), // URL-friendly version of title
+  excerpt: text("excerpt"), // Short summary for listings
+  content: text("content").notNull(), // Full markdown content
+  status: text("status", { enum: ['draft', 'published', 'archived'] }).default('draft').notNull(),
+  author: text("author").default('Autonomous AI').notNull(),
+  source: text("source", { enum: ['ai-research', 'completion-cycle', 'manual'] }).default('ai-research').notNull(),
+  tags: text("tags").array().default([]),
+  metadata: json("metadata").default({}), // Research sources, insights, completion cycle data
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertSessionSchema = createInsertSchema(sessions).omit({ createdAt: true, updatedAt: true });
 export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true, updatedAt: true });
@@ -236,6 +255,11 @@ export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({ id
 export const insertInstallationSchema = createInsertSchema(installations).omit({ createdAt: true, updatedAt: true });
 export const insertProposalSchema = createInsertSchema(proposals).omit({ createdAt: true });
 export const insertFileSchema = createInsertSchema(files).omit({ createdAt: true });
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 export const insertEventSchema = createInsertSchema(events).omit({ id: true, createdAt: true });
 export const insertSnapshotSchema = createInsertSchema(snapshots).omit({ id: true, createdAt: true });
 export const insertNoteSchema = createInsertSchema(notes).omit({ id: true, createdAt: true, lastUsed: true });
@@ -267,6 +291,7 @@ export type Project = typeof projects.$inferSelect;
 export type ResearchDoc = typeof researchDocs.$inferSelect;
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
 export type ProjectFile = typeof projectFiles.$inferSelect;
+export type BlogPost = typeof blogPosts.$inferSelect;
 
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
@@ -287,6 +312,7 @@ export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type InsertResearchDoc = z.infer<typeof insertResearchDocSchema>;
 export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
 export type InsertProjectFile = z.infer<typeof insertProjectFileSchema>;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 
 // Select types for enhanced actions
 export type SelectTask = typeof tasks.$inferSelect;

@@ -1,0 +1,107 @@
+Excellent push. Let me hold this up to the light and see what’s missing / under-specified in the instructions.
+
+⸻
+
+🔍 Gaps & Blind Spots
+
+1. Content-Type Classifier
+	•	I said “classifier (LLM prompt or regex heuristics)” but didn’t specify the mechanism.
+	•	Missing: exact classification prompt, fallback rules, and confidence thresholds.
+	•	Without this, ingestion might misclassify narrative logs as “inventory” and clutter item_facts.
+
+⸻
+
+2. Extractor Prompting & Schema Enforcement
+	•	I didn’t show the actual LLM extraction prompt.
+	•	Missing:
+	•	Output format (strict JSON schema).
+	•	Guardrails for “no hallucinated facts.”
+	•	Error handling if the model produces malformed JSON.
+
+⸻
+
+3. Validation Layer
+	•	I listed checks (totals, units, ISO timestamps) but didn’t define:
+	•	How they’re implemented (e.g., regex/unit library, sum tests).
+	•	What happens on failure (reject? retry? mark low-confidence?).
+	•	Missing: decision flow for “when facts don’t reconcile with narrative.”
+
+⸻
+
+4. Linking Facts to Narrative
+	•	Right now, narrative and facts are stored separately but loosely coupled.
+	•	Missing: guidance on cross-referencing facts inside summaries (e.g., embed fact IDs or a fact-count badge).
+	•	Without this, humans won’t know if the summary is backed by facts or just prose.
+
+⸻
+
+5. Updates & Versioning
+	•	Missing: how to handle updates when facts change.
+	•	Do we overwrite, archive, or version facts?
+	•	If new extraction differs from old (e.g., socks went from 6 → 4), how is that diff represented?
+	•	Without this, you lose temporal patterns (e.g., inventory trends, energy logs).
+
+⸻
+
+6. Search UX
+	•	I gave endpoints but not the query language or UI design.
+	•	Missing:
+	•	Fact search DSL (e.g., entity:sock count>=5).
+	•	Mixed-mode queries (search facts + summaries together).
+	•	Without this, developer may expose clunky SQL instead of a clean interface.
+
+⸻
+
+7. Scaling Boundaries
+	•	I hand-waved about “FTS vs facts” but didn’t define token limits or size thresholds.
+	•	Missing:
+	•	Rules for chunking large text into multiple items.
+	•	What to do when facts exceed N rows (summarize, paginate, or shard).
+
+⸻
+
+8. Housekeeping Interaction with Facts
+	•	I mentioned “promote clusters” and “stale facts” but didn’t define:
+	•	How facts influence clustering (e.g., repeated entities like “battery” auto-cluster).
+	•	When stale facts should be auto-archived or flagged for re-ingestion.
+
+⸻
+
+9. Error Handling & Logging
+	•	Missing: a feedback loop for ingestion errors.
+	•	Need: logs that record what was ingested, whether summary matched facts, and whether validators passed.
+	•	Without this, silent drift creeps in.
+
+⸻
+
+10. Agent Access Rules
+	•	I didn’t explicitly wire the ACL we discussed earlier into this system.
+	•	Missing: clarity on whether Agent A sees facts, summaries, or both.
+	•	If A sees only summaries, but B sees facts → it recreates the “different lenses” dynamic.
+
+⸻
+
+🧩 Enhancements to Add
+	•	Classifier Prompt: strict categories, fallback = “narrative.”
+	•	Extractor Prompt: “Output valid JSON array of {entity, attribute, value, unit, ts} objects only.”
+	•	Validator Module: runs immediately post-extraction, auto-retries once, else flags for review.
+	•	Cross-link: embed fact IDs in summaries (like footnotes).
+	•	Versioning: item_facts_history table with valid_from/valid_to fields.
+	•	Search DSL: e.g., /kb/search/facts?q="entity=sock count>=5 AND color=black".
+	•	Chunker: split >4k tokens into child items with part=1/3 metadata.
+	•	Housekeeper + facts: promote repeated entities into new parent projects.
+	•	Error log: /kb/errors endpoint to review ingestion failures.
+	•	Access tiers: A gets summaries, B gets facts + summaries. User sees all.
+
+⸻
+
+✅ So what I’m missing boils down to:
+	•	exact prompts & enforcement (classifier + extractor)
+	•	reconciliation logic when facts ≠ summary
+	•	versioning of facts
+	•	UX/query design for fact search
+	•	clear ACL integration (which agent sees which layer)
+
+⸻
+
+Do you want me to rewrite the full ingestion instructions again with these gaps filled — as if I’m delivering a finished dev spec you could hand to your Developer agent and it wouldn’t have to guess at anything?

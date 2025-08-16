@@ -71,6 +71,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Colby Actions API - matches the comprehensive Colby toolset specification
   const { registerColbyActions } = await import("./colby-actions");
   registerColbyActions(app);
+
+  // Register Blog Routes - AI Research Publications System
+  const { registerBlogRoutes } = await import("./blog-routes");
+  registerBlogRoutes(app);
   
   // Register audio transcription routes
   const { registerTranscriptionRoutes } = await import("./transcription");

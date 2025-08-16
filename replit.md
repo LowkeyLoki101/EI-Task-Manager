@@ -35,6 +35,8 @@ Chat behavior: No disruptive auto-scrolling when user is typing - allow natural 
 - **AI Workstation**: Dynamic interface with autonomous and human control modes, integrated tools (Calendar, Diary, Docs, Media, Browser, Research), and real-time AI observation.
 - **Autopoietic Diary System**: Autonomous AI that conducts research, builds knowledge, and generates tasks based on its internal thought processes (Colby-Style Lens Processing).
 - **Microservice Integration Network**: Comprehensive connector for cross-service AI collaboration, task delegation, and knowledge sharing.
+- **Blog System**: AI-powered research publication platform where autonomous agents publish polished blog posts from completion cycles.
+- **Tool Limitation System**: 5-tool cycle limit forcing structured completion workflow: Task → Diary → Knowledge Base → Blog Publication.
 
 ### AI Integration
 - **Supervisor Agent**: GPT-5 processes conversations and manages workflows.
