@@ -21,7 +21,7 @@ interface WorkstationProps {
 }
 
 interface WorkstationState {
-  mode: 'ai' | 'human';
+  mode: 'off' | 'human' | 'hybrid' | 'ai';
   aiActive: boolean;
   lastAiAction: Date | null;
   maintenanceSchedule: string[];
@@ -96,21 +96,25 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
   const { data: autopoieticStatus } = useQuery<AutopoieticStatus>({
     queryKey: [`/api/autopoietic/status/${sessionId}`],
     refetchInterval: 3000, // Update every 3 seconds to show thinking in real-time
-    enabled: workstationState.mode === 'ai'
+    enabled: workstationState.mode === 'ai' || workstationState.mode === 'hybrid'
   });
 
   // AI Autonomous Mode Logic
   useEffect(() => {
-    if (workstationState.mode === 'ai' && workstationState.aiActive) {
+    if ((workstationState.mode === 'ai' || workstationState.mode === 'hybrid') && workstationState.aiActive) {
+      // AI mode: Very fast thinking (3 seconds) - like human mode speed
+      // Hybrid mode: Medium speed (8 seconds) - balanced approach  
+      const interval = workstationState.mode === 'ai' ? 3000 : 8000;
+      
       // Start AI autonomous behavior
       aiIntervalRef.current = setInterval(() => {
         performAutonomousAiAction();
-      }, 15000); // Every 15 seconds, AI considers an action
+      }, interval);
 
       // Initial AI action
       setTimeout(() => {
         performAutonomousAiAction();
-      }, 2000);
+      }, 1000);
 
       return () => {
         if (aiIntervalRef.current) {
@@ -139,7 +143,7 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
 
   // AI Autonomous Actions
   const performAutonomousAiAction = async () => {
-    if (workstationState.mode !== 'ai') return;
+    if (workstationState.mode !== 'ai' && workstationState.mode !== 'hybrid') return;
 
     try {
       const response = await fetch(`/api/workstation/ai-action/${sessionId}`, {
@@ -173,18 +177,41 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
     }
   };
 
-  // Toggle between AI and Human modes
+  // Toggle between modes: off -> human -> hybrid -> ai -> off
   const toggleMode = () => {
     setWorkstationState(prev => {
-      const newMode: 'ai' | 'human' = prev.mode === 'ai' ? 'human' : 'ai';
+      let newMode: 'off' | 'human' | 'hybrid' | 'ai';
+      
+      switch (prev.mode) {
+        case 'off':
+          newMode = 'human';
+          break;
+        case 'human':
+          newMode = 'hybrid';
+          break;
+        case 'hybrid':
+          newMode = 'ai';
+          break;
+        case 'ai':
+          newMode = 'off';
+          break;
+        default:
+          newMode = 'human';
+      }
+      
       const newState: WorkstationState = {
         ...prev,
         mode: newMode,
-        aiActive: newMode === 'ai'
+        aiActive: newMode === 'ai' || newMode === 'hybrid'
       };
       
       if (newMode === 'ai') {
-        setAiThinking('Initiating autonomous mode...');
+        setAiThinking('Initiating full autonomous mode...');
+      } else if (newMode === 'hybrid') {
+        setAiThinking('Initiating hybrid mode...');
+      } else if (newMode === 'off') {
+        setAiThinking('');
+        setUserActions([]);
       } else {
         setAiThinking('');
         setUserActions([]);
@@ -264,7 +291,11 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
           <div className={`w-3 h-3 rounded-full shadow-lg ${
             workstationState.mode === 'ai' 
               ? 'bg-amber-400 animate-pulse shadow-amber-400/50' 
-              : 'bg-blue-400 shadow-blue-400/50'
+              : workstationState.mode === 'hybrid'
+              ? 'bg-purple-400 animate-pulse shadow-purple-400/50'
+              : workstationState.mode === 'human'
+              ? 'bg-blue-400 shadow-blue-400/50'
+              : 'bg-gray-400 shadow-gray-400/50'
           }`}></div>
           <div>
             <h3 className="text-sm font-bold text-amber-100">
@@ -272,13 +303,17 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
               <span className={`ml-2 text-xs px-2 py-0.5 rounded ${
                 workstationState.mode === 'ai' 
                   ? 'bg-amber-900/30 text-amber-300' 
-                  : 'bg-blue-900/30 text-blue-300'
+                  : workstationState.mode === 'hybrid'
+                  ? 'bg-purple-900/30 text-purple-300'
+                  : workstationState.mode === 'human'
+                  ? 'bg-blue-900/30 text-blue-300'
+                  : 'bg-gray-900/30 text-gray-400'
               }`}>
-                {workstationState.mode === 'ai' ? 'AI MODE' : 'HUMAN MODE'}
+                {workstationState.mode.toUpperCase()} MODE
               </span>
             </h3>
             {/* Autopoietic Mind's Eye Display */}
-            {workstationState.mode === 'ai' && autopoieticStatus?.isActive && (
+            {(workstationState.mode === 'ai' || workstationState.mode === 'hybrid') && autopoieticStatus?.isActive && (
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex items-center gap-1">
                   <Brain className="h-3 w-3 text-blue-400 animate-pulse" />
@@ -310,10 +345,16 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
             className={`text-xs px-3 border ${
               workstationState.mode === 'ai' 
                 ? 'border-amber-500/40 text-amber-300 hover:bg-amber-900/20' 
-                : 'border-blue-500/40 text-blue-300 hover:bg-blue-900/20'
+                : workstationState.mode === 'hybrid'
+                ? 'border-purple-500/40 text-purple-300 hover:bg-purple-900/20'
+                : workstationState.mode === 'human'
+                ? 'border-blue-500/40 text-blue-300 hover:bg-blue-900/20'
+                : 'border-gray-500/40 text-gray-400 hover:bg-gray-900/20'
             }`}
           >
-            {workstationState.mode === 'ai' ? 'Switch to Human' : 'Enable AI'}
+            {workstationState.mode === 'off' ? 'Turn On' : 
+             workstationState.mode === 'human' ? 'Enable Hybrid' : 
+             workstationState.mode === 'hybrid' ? 'Enable AI' : 'Turn Off'}
           </Button>
           {/* Height Controls */}
           <div className="flex items-center gap-1">
@@ -367,30 +408,30 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       </div>
 
       {/* AI Mind's Eye Rolodex - Visual thinking display */}
-      {workstationState.mode === 'ai' && (
+      {(workstationState.mode === 'ai' || workstationState.mode === 'hybrid') && (
         <div className="px-4 py-2 border-b border-amber-500/10 bg-gradient-to-r from-slate-800/40 to-gray-700/40">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2">
               <Eye className="h-4 w-4 text-amber-400 animate-pulse" />
               <span className="text-xs font-mono text-amber-300">MIND'S EYE</span>
             </div>
-            <div className="flex-1 flex items-center gap-2 overflow-hidden">
+            <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2 overflow-hidden">
               {autopoieticStatus?.isActive && (
-                <>
+                <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs bg-blue-900/30 border-blue-500/50 text-blue-300">
                     {autopoieticStatus.lensStep?.toUpperCase() || 'FRAME'}
                   </Badge>
                   <ArrowRight className="h-3 w-3 text-gray-500" />
-                </>
+                </div>
               )}
-              <div className="flex-1 overflow-hidden">
-                <p className="text-xs text-amber-200/90 truncate animate-pulse">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-amber-200/90 line-clamp-2 animate-pulse">
                   {autopoieticStatus?.currentThinking || aiThinking || 'Observing and learning...'}
                 </p>
               </div>
             </div>
             {autopoieticStatus?.cycleCounts && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 whitespace-nowrap">
                 Cycles: {autopoieticStatus.cycleCounts}
               </div>
             )}

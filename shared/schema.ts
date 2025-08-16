@@ -74,6 +74,17 @@ export const conversations = pgTable("conversations", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+// Diary entries for tracking AI thoughts and reflections
+export const diaryEntries = pgTable("diary_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  content: text("content").notNull(),
+  context: text("context").default("general"),
+  mode: text("mode", { enum: ['human', 'ai', 'hybrid'] }).default('ai'),
+  metadata: json("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Event sourcing for persistent, adaptive sessions
 export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -221,6 +232,7 @@ export const insertStepSchema = createInsertSchema(steps).omit({ createdAt: true
 export const insertArtifactSchema = createInsertSchema(artifacts).omit({ createdAt: true });
 export const insertMemorySchema = createInsertSchema(memories).omit({ createdAt: true, updatedAt: true });
 export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, timestamp: true });
+export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({ id: true, createdAt: true });
 export const insertInstallationSchema = createInsertSchema(installations).omit({ createdAt: true, updatedAt: true });
 export const insertProposalSchema = createInsertSchema(proposals).omit({ createdAt: true });
 export const insertFileSchema = createInsertSchema(files).omit({ createdAt: true });

@@ -1,11 +1,11 @@
 import { randomUUID } from "crypto";
 import { writeFileSync, readFileSync, existsSync } from "fs";
 import type { 
-  Session, Task, Step, Artifact, Memory, Conversation, Installation,
+  Session, Task, Step, Artifact, Memory, Conversation, DiaryEntry, Installation,
   Proposal, File, Project, ResearchDoc, CalendarEvent, ProjectFile,
   CodeRecommendation, RecommendationVote, FileAnalysis, ExportRequest,
   InsertSession, InsertTask, InsertStep, InsertArtifact, 
-  InsertMemory, InsertConversation, InsertInstallation, InsertProposal, 
+  InsertMemory, InsertConversation, InsertDiaryEntry, InsertInstallation, InsertProposal, 
   InsertFile, InsertProject, InsertResearchDoc, InsertCalendarEvent, InsertProjectFile,
   InsertCodeRecommendation, InsertRecommendationVote, InsertFileAnalysis, InsertExportRequest,
   GetTodoListAction, AddTaskAction, UpdateStepStatusAction
@@ -43,6 +43,10 @@ export interface IStorage {
   // Conversations
   createMessage(message: InsertConversation): Promise<Conversation>;
   listMessages(sessionId: string, limit?: number): Promise<Conversation[]>;
+
+  // Diary Entries
+  createDiaryEntry(entry: InsertDiaryEntry): Promise<DiaryEntry>;
+  listDiaryEntries(sessionId: string, limit?: number): Promise<DiaryEntry[]>;
 
   // Installations
   createInstallation(installation: InsertInstallation): Promise<Installation>;
