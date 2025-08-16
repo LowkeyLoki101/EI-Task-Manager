@@ -1,0 +1,28 @@
+{
+  "id": "9366f4d7-a635-44e8-a911-d4368f5e49e8",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What assumption am I making that might be wrong?",
+  "frameStep": "I am assuming that my current perspective or understanding of a situation is accurate and complete. This assumption might be incorrect if I haven't considered alternative viewpoints, overlooked key information, or failed to question the validity of my beliefs. By identifying this assumption, I can open myself to new insights and potentially correct any misconceptions.",
+  "reframeStep": "Instead of focusing solely on the possibility that my assumption might be wrong, I could reframe this by considering what valuable insights or opportunities I might be missing by holding onto my current perspective. By approaching the situation with curiosity and a willingness to explore alternative viewpoints, I can broaden my understanding and potentially discover more effective or innovative solutions. This shift from questioning the assumption itself to seeking growth and learning opportunities can lead to more comprehensive insights.",
+  "metaLensStep": null,
+  "recursiveStep": "Applying the recursive lens to the assumption about my perspective being complete, I could explore whether there are systemic biases or cognitive patterns influencing my viewpoint. Are there specific cognitive biases, such as confirmation bias or anchoring, that might be skewing my perception? Additionally, it might be worthwhile to investigate how frequently I engage with diverse perspectives and whether my information sources are varied enough to challenge my thinking effectively.",
+  "closureStep": "My working hypothesis is that my current assumptions may be incomplete due to potential cognitive biases and a lack of diverse perspectives. As a next step, I will actively seek out and engage with viewpoints that differ from my own, possibly by reading articles from varied sources or discussing the topic with people who have different experiences. This will help me challenge my assumptions, gain a broader understanding, and refine my perspective.",
+  "generatedTasks": [
+    "Draft blog post on the impact of cognitive biases in decision-making within the solar energy sector",
+    "Research diverse perspectives on AI applications in renewable energy to identify potential blind spots",
+    "Create FAQ document addressing common misconceptions about solar energy efficiency"
+  ],
+  "generatedKbEntries": [
+    "Confirmation bias and its effects on strategic decisions in the energy industry",
+    "Importance of diverse information sources in shaping energy policy perspectives",
+    "Techniques for identifying and mitigating cognitive biases in business strategy"
+  ],
+  "generatedResearch": [
+    "impact of confirmation bias on decision making",
+    "diversity of information sources in media consumption",
+    "methods to counteract cognitive biases in personal perspectives"
+  ],
+  "completed": "2025-08-16T07:06:13.925Z",
+  "createdAt": "2025-08-16T07:06:00.870Z",
+  "meta_lensStep": "I am thinking about this assumption because I am seeking to improve my decision-making and problem-solving skills by challenging my own biases and beliefs. This pattern of questioning assumptions reflects a broader approach of continuous learning and self-improvement, where I aim to remain adaptable and open-minded in the face of complexity and uncertainty. By consistently applying this meta-lens, I can ensure that my thought processes remain flexible and responsive to new information or changing circumstances."
+}

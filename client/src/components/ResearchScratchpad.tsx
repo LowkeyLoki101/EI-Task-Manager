@@ -137,8 +137,12 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
   if (!isVisible) return null;
 
   return (
-    <div className={`transition-all duration-300 ${isExpanded ? 'min-h-[400px]' : 'min-h-[120px]'}`}>
-      <Card className="border border-yellow-500/30 bg-slate-900/95 backdrop-blur-sm">
+    <div className={`
+      fixed bottom-20 right-4 z-40 max-w-md w-full
+      transition-all duration-300 ease-in-out
+      ${isExpanded ? 'h-[450px]' : 'h-14'}
+    `}>
+      <Card className="border border-yellow-500/30 bg-slate-900/98 backdrop-blur-md shadow-2xl">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -157,7 +161,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
         </CardHeader>
         
         {isExpanded && (
-          <CardContent>
+          <CardContent className="h-[400px] overflow-hidden flex flex-col">
             <Tabs defaultValue="research" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="research" className="text-xs">
@@ -174,7 +178,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="research" className="space-y-3 mt-4">
+              <TabsContent value="research" className="space-y-3 mt-4 h-[320px] overflow-y-auto">
                 {researchResults.length === 0 ? (
                   <div className="text-center text-slate-400 py-8">
                     <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -224,7 +228,11 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                           {research.insights.map((insight, idx) => (
                             <div key={idx} className="flex items-start gap-2">
                               <Lightbulb className="h-3 w-3 text-yellow-400 mt-0.5 flex-shrink-0" />
-                              <p className="text-xs text-slate-300">{insight}</p>
+                              <p className="text-xs text-slate-300">
+                                {typeof insight === 'string' ? insight : 
+                                 typeof insight === 'object' ? JSON.stringify(insight) : 
+                                 String(insight)}
+                              </p>
                             </div>
                           ))}
                         </div>
@@ -234,7 +242,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                 )}
               </TabsContent>
 
-              <TabsContent value="content" className="space-y-3 mt-4">
+              <TabsContent value="content" className="space-y-3 mt-4 h-[320px] overflow-y-auto">
                 {generatedContent.length === 0 ? (
                   <div className="text-center text-slate-400 py-8">
                     <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -286,12 +294,16 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                 )}
               </TabsContent>
 
-              <TabsContent value="insights" className="space-y-3 mt-4">
+              <TabsContent value="insights" className="space-y-3 mt-4 h-[320px] overflow-y-auto">
                 <div className="space-y-2">
                   {researchResults.flatMap(r => r.insights).map((insight, idx) => (
                     <div key={idx} className="flex items-start gap-2 p-2 bg-slate-800/30 rounded">
                       <Lightbulb className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-slate-300">{insight}</p>
+                      <p className="text-sm text-slate-300">
+                        {typeof insight === 'string' ? insight : 
+                         typeof insight === 'object' ? JSON.stringify(insight) : 
+                         String(insight)}
+                      </p>
                     </div>
                   ))}
                   {researchResults.length === 0 && (
