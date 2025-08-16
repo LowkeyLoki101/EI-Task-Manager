@@ -1,0 +1,28 @@
+{
+  "id": "2427885a-8f57-4d0c-81d9-4170da158993",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The problem is identifying key trends and changes within your industry that could impact your business or career. This involves staying informed about technological advancements, regulatory changes, market shifts, and emerging competitors. By monitoring these factors, you can anticipate challenges and opportunities, allowing you to adapt and strategize effectively.",
+  "reframeStep": "Instead of focusing solely on what's happening in your industry, consider what your customers or clients are experiencing and how their needs and expectations are evolving. By shifting your perspective to understand their challenges and desires, you might uncover trends and opportunities that could guide your strategic decisions more effectively. Additionally, look at how industries adjacent to yours are changing; innovations there could inspire transformations in your own field.",
+  "metaLensStep": null,
+  "recursiveStep": "From this perspective, consider exploring how technological advancements in adjacent industries could create opportunities or threats in your field. Additionally, investigate how global events, such as economic shifts or climate change, might indirectly influence your industry. It may also be valuable to delve deeper into how changing consumer behaviors, potentially influenced by social media trends or sustainability concerns, could redefine market demands and expectations.",
+  "closureStep": "Based on the insights gathered, my working hypothesis is that focusing on customer-centric trends and adjacent industry innovations will provide the most valuable foresight for navigating changes in my industry. As a next step, I will set up regular monitoring of consumer behavior trends and technological advancements in related fields, possibly by subscribing to industry reports and engaging with online forums or networks. Additionally, I will seek feedback from customers to better understand their evolving needs and expectations.",
+  "generatedTasks": [
+    "Draft blog post on the impact of AI advancements on the renewable energy sector",
+    "Research customer objections to adopting solar energy solutions",
+    "Create FAQ document for common questions about electric vehicle adoption influenced by social media trends"
+  ],
+  "generatedKbEntries": [
+    "AI advancements and their impact on the renewable energy sector",
+    "Global economic shifts affecting sustainable agriculture",
+    "Social media influence on electric vehicle adoption trends"
+  ],
+  "generatedResearch": [
+    "impact of AI advancements on renewable energy sector",
+    "effects of global economic shifts on sustainable agriculture",
+    "influence of social media trends on electric vehicle adoption"
+  ],
+  "completed": "2025-08-16T06:28:15.591Z",
+  "createdAt": "2025-08-16T06:28:03.535Z",
+  "meta_lensStep": "You're thinking about industry trends because you want to stay competitive and relevant in a rapidly changing environment. This pattern reflects a proactive approach to strategic planning, where you seek to anticipate and adapt to shifts before they fully manifest. By consistently challenging your assumptions and broadening your perspective, you can avoid tunnel vision and uncover innovative paths for growth and resilience."
+}

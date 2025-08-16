@@ -1,0 +1,28 @@
+{
+  "id": "441a1cfd-d20c-4b3a-87be-b7b85c90866c",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What assumption am I making that might be wrong?",
+  "frameStep": "I am assuming that my current understanding or belief about a situation is accurate without questioning its validity. This assumption might be leading me to overlook potential errors or alternative perspectives that could provide a more complete or accurate view. It is crucial to identify and challenge these assumptions to ensure they are not hindering my decision-making process.",
+  "reframeStep": "From a different perspective, consider that instead of focusing solely on identifying potentially incorrect assumptions, you could reframe the situation by exploring what new assumptions or beliefs could be formed based on additional information or alternative viewpoints. This shift in focus encourages openness to new ideas and fosters a proactive approach to learning and adapting, rather than merely correcting past assumptions. By embracing a mindset that seeks out novel assumptions, you may uncover innovative solutions or insights that were previously overlooked.",
+  "metaLensStep": null,
+  "recursiveStep": "Exploring this question recursively could lead to examining what habitual thought patterns or cognitive biases might be influencing my assumptions. This could prompt deeper research into how these biases form and persist, or how different cultural or contextual factors shape assumptions. Additionally, it raises the question of what methods or tools can be implemented to regularly audit and challenge these assumptions, fostering a more adaptive and critical thinking process.",
+  "closureStep": "My working hypothesis is that my current assumptions might be influenced by cognitive biases or incomplete information. As a next step, I will actively seek out diverse perspectives and feedback from others to identify any blind spots in my thinking. Additionally, I will make it a regular practice to reflect on my assumptions and question their validity, potentially incorporating tools like assumption mapping or bias checklists to enhance this process.",
+  "generatedTasks": [
+    "Research customer objections to solar energy adoption and how cognitive biases might influence these objections.",
+    "Create a checklist for auditing assumptions in solar energy project planning.",
+    "Draft a blog post on the impact of cultural influences on energy consumption patterns."
+  ],
+  "generatedKbEntries": [
+    "Cognitive biases affecting decision-making in solar energy investments",
+    "Tools and methods for challenging assumptions in renewable energy projects",
+    "Cultural factors influencing solar energy adoption rates"
+  ],
+  "generatedResearch": [
+    "cognitive biases formation and persistence",
+    "cultural influences on cognitive biases",
+    "tools for auditing and challenging assumptions"
+  ],
+  "completed": "2025-08-16T06:30:34.866Z",
+  "createdAt": "2025-08-16T06:30:23.465Z",
+  "meta_lensStep": "I am thinking about this assumption because I seek to improve my decision-making by identifying potential errors in my current understanding. This pattern of questioning assumptions reflects a broader approach of striving for accuracy and open-mindedness, which can sometimes lead to overanalyzing or second-guessing my decisions. By recognizing this pattern, I can balance critical thinking with trusting my judgment when making decisions."
+}

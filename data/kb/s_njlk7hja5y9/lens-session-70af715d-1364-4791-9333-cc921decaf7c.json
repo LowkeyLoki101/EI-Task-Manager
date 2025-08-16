@@ -1,0 +1,24 @@
+{
+  "id": "70af715d-1364-4791-9333-cc921decaf7c",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The problem is identifying key trends and developments in your industry that could impact your business or career. This includes staying informed about technological advancements, regulatory changes, market shifts, and emerging competitors. Understanding these dynamics is crucial for strategic planning and maintaining a competitive edge.",
+  "reframeStep": "Instead of focusing solely on the broad changes within your industry, consider reframing the question to, \"What unique challenges or opportunities are emerging that align with my specific strengths or business capabilities?\" This shift allows you to not only stay informed about industry trends but also to identify areas where you can leverage your existing skills or resources to capitalize on new developments. By doing so, you can tailor your strategic planning to focus on areas where you have a competitive advantage.",
+  "metaLensStep": null,
+  "recursiveStep": "From the perspective of recursive exploration, consider asking: \"What are the long-term implications of current industry trends, and how might they converge with broader societal, technological, or economic changes?\" Additionally, investigate how these trends could lead to the emergence of new sub-sectors or niche markets within your industry that are currently overlooked. These questions can guide deeper research into potential future scenarios and strategic opportunities that align with your strengths.",
+  "closureStep": "Based on the exploration of industry trends and their alignment with your strengths, the next step is to conduct targeted research on the specific emerging challenges and opportunities that match your capabilities. This involves reviewing industry reports, attending relevant conferences, and networking with key industry players to gather insights. Additionally, consider setting up a system for continuous monitoring of these trends, perhaps by using news alerts or subscribing to industry newsletters, to stay informed and agile in your strategic planning.",
+  "generatedTasks": [
+    "Draft blog post on leveraging AI in solar energy optimization",
+    "Research customer objections to adopting solar technology in residential areas",
+    "Create FAQ document for new solar energy storage solutions"
+  ],
+  "generatedKbEntries": [
+    "Emerging solar energy technologies and their impact on the market",
+    "AI applications in energy efficiency and management",
+    "Regulatory changes affecting the solar industry in 2023"
+  ],
+  "generatedResearch": [],
+  "completed": "2025-08-16T06:29:58.457Z",
+  "createdAt": "2025-08-16T06:29:49.369Z",
+  "meta_lensStep": "You're thinking about this now because staying informed about industry trends is crucial for maintaining competitiveness and strategic positioning. The pattern you might be repeating is a reactive approach to industry changes, where you focus on broad trends rather than aligning them with your unique strengths or business capabilities. Shifting to a more proactive mindset by integrating personal or organizational strengths into your analysis can enhance your strategic planning and decision-making."
+}

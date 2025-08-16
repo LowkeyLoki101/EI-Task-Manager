@@ -7,12 +7,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from "@tanstack/react-query";
+import { ResearchScratchpad } from './ResearchScratchpad';
 
 interface WorkstationTool {
   id: string;
   name: string;
   icon: React.ElementType;
-  component: React.ComponentType<{ payload?: any; onUpdate?: (data: any) => void }>;
+  component: React.ComponentType<{ payload?: any; onUpdate?: (data: any) => void; sessionId?: string }>;
 }
 
 interface WorkstationProps {
@@ -755,25 +756,12 @@ function BrowserPanel({ payload, onUpdate }: { payload?: any; onUpdate?: (data: 
   );
 }
 
-function ResearchPanel({ payload, onUpdate }: { payload?: any; onUpdate?: (data: any) => void }) {
-  const [notes, setNotes] = useState(payload?.notes || '');
-
+function ResearchPanel({ payload, onUpdate, sessionId }: { payload?: any; onUpdate?: (data: any) => void; sessionId?: string }) {
+  // Enhanced research panel that displays real AI research results
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-slate-800/20 to-gray-900/20">
-      <div className="p-3 border-b border-amber-500/10">
-        <h4 className="text-sm font-medium text-amber-200 flex items-center gap-2">
-          <Search className="h-4 w-4" />
-          Research Scratchpad
-        </h4>
-      </div>
-      <div className="flex-1 p-3">
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="AI research and analysis will appear here..."
-          className="w-full h-full bg-slate-700/20 border border-amber-500/20 rounded text-amber-100 text-sm p-3 resize-none focus:outline-none focus:border-amber-400/40 placeholder-amber-300/40"
-        />
-      </div>
-    </div>
+    <ResearchScratchpad 
+      sessionId={sessionId || 's_njlk7hja5y9'}
+      isVisible={true}
+    />
   );
 }

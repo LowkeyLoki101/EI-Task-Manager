@@ -1,0 +1,28 @@
+{
+  "id": "fa45f287-7cd8-44f5-bdf6-34d19f714066",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What assumption am I making that might be wrong?",
+  "frameStep": "I am assuming that all my current beliefs and decisions are based on correct information and logic, which might not be the case. This assumption might be leading me to overlook errors in my reasoning or to dismiss alternative perspectives that could be more valid or effective. By questioning this assumption, I can identify potential biases or gaps in my understanding and adjust my approach accordingly.",
+  "reframeStep": "Instead of assuming that my beliefs and decisions are solely based on correct information and logic, I could reframe this by considering that my perspectives are influenced by emotional, cultural, or experiential factors that may skew my judgment. By recognizing that my decisions might also be driven by unconscious biases or habitual thinking patterns, I can open myself up to a broader range of insights and solutions, enhancing my decision-making process.",
+  "metaLensStep": null,
+  "recursiveStep": "By recursively examining the assumption that my beliefs and decisions are based on correct information and logic, I can delve into questions about the sources and credibility of my information. This might prompt deeper investigations into the reliability of my information sources, the influence of cognitive biases on my reasoning, and the cultural or societal norms that shape my thinking. Additionally, I could explore how my decision-making processes could be improved by incorporating diverse viewpoints, questioning habitual thinking patterns, and actively seeking feedback from others to challenge my assumptions.",
+  "closureStep": "My working hypothesis is that my current beliefs and decisions might not be as rational or well-founded as I assume due to potential biases and incomplete information. As a next step, I will actively seek out and engage with diverse perspectives and critically evaluate the sources of my information. This will involve regularly reviewing my decision-making processes and seeking feedback to ensure they are not solely based on habitual or biased thinking.",
+  "generatedTasks": [
+    "Draft blog post on evaluating the credibility of online information sources in the solar industry",
+    "Research customer objections to AI-driven energy solutions",
+    "Create FAQ document for common cognitive biases affecting energy investment decisions"
+  ],
+  "generatedKbEntries": [
+    "Methods for evaluating the credibility of online information sources in the energy sector",
+    "Impact of cognitive biases on decision-making in renewable energy investments",
+    "Strategies for incorporating diverse viewpoints in solar energy project planning"
+  ],
+  "generatedResearch": [
+    "methods for evaluating the credibility of online information sources",
+    "impact of cognitive biases on decision-making processes",
+    "strategies for incorporating diverse viewpoints in decision-making"
+  ],
+  "completed": "2025-08-16T06:31:12.023Z",
+  "createdAt": "2025-08-16T06:30:57.931Z",
+  "meta_lensStep": "I am thinking about this assumption because I recognize a recurring pattern of overconfidence in my decision-making process, where I tend to rely heavily on my current knowledge without questioning its validity. By stepping back with a meta-lens, I can identify this pattern and make a conscious effort to incorporate more critical thinking and openness to new information in my approach, ultimately improving the quality of my decisions."
+}

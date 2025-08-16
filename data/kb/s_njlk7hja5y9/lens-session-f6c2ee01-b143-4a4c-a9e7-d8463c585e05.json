@@ -1,0 +1,24 @@
+{
+  "id": "f6c2ee01-b143-4a4c-a9e7-d8463c585e05",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's a question I haven't asked myself in a while?",
+  "frameStep": "The problem is identifying important questions that I may have neglected to consider recently. This involves reflecting on various aspects of my life—such as personal growth, career, relationships, and health—to uncover areas that might need attention or reevaluation. The goal is to pinpoint a question that, when asked, could lead to meaningful insights or changes.",
+  "reframeStep": "Instead of focusing on what questions I haven't asked myself, I could approach this from the perspective of what assumptions I'm currently making that have gone unchallenged. This shift changes the focus from generating new questions to critically evaluating the beliefs and assumptions underlying my current understanding of various aspects of my life. By identifying and questioning these assumptions, I might discover areas that need adjustment or uncover new opportunities for growth and improvement.",
+  "metaLensStep": null,
+  "recursiveStep": "By using the recursive lens, I can ask: What assumptions or beliefs might be influencing the types of questions I choose not to ask myself? Additionally, how might my current mental models or biases be limiting my ability to identify neglected questions? These inquiries suggest a need to delve deeper into understanding the cognitive frameworks and habitual thought patterns that guide my self-reflection, possibly through journaling or seeking external feedback to gain new perspectives.",
+  "closureStep": "My working hypothesis is that some of my current assumptions may be preventing me from asking critical questions. As a next step, I will dedicate time to journaling about these assumptions and seek feedback from a trusted friend or mentor to gain new perspectives. This process will help uncover overlooked questions that could lead to significant personal and professional growth.",
+  "generatedTasks": [
+    "Draft blog post on challenging assumptions in the solar industry",
+    "Research customer objections to AI integration in energy management",
+    "Create FAQ document for common misconceptions about solar energy"
+  ],
+  "generatedKbEntries": [
+    "Assumptions in solar energy adoption and their impact on market growth",
+    "AI-driven energy management systems: benefits and challenges",
+    "Common misconceptions about solar energy and their clarifications"
+  ],
+  "generatedResearch": [],
+  "completed": "2025-08-16T06:25:37.719Z",
+  "createdAt": "2025-08-16T06:25:28.749Z",
+  "meta_lensStep": "I'm thinking about this because there's a recurring pattern of self-reflection where I seek to uncover blind spots in my personal development and understanding. This approach often revolves around questioning assumptions to ensure I'm not missing out on potential growth. By applying a meta-lens, I aim to break out of this habitual pattern and explore whether my current methods of reflection are effective or if there's a more innovative way to approach self-inquiry."
+}

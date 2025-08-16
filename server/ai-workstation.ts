@@ -204,6 +204,9 @@ Next Actions: Generate follow-up questions and create actionable tasks based on 
         // Store AI action for learning
         await storeAiAction(sessionId, action);
         
+        // Store the generated content for display in scratchpad
+        await storeGeneratedContent(sessionId, action);
+        
         res.json(action);
       } catch (parseError) {
         console.error('Failed to parse AI response:', response);
@@ -236,6 +239,25 @@ Next Actions: Generate follow-up questions and create actionable tasks based on 
     } catch (error) {
       console.error('AI workstation action error:', error);
       res.status(500).json({ error: 'Failed to generate AI action' });
+    }
+  });
+
+  // Get AI workstation results (research + generated content)
+  app.get('/api/workstation/results/:sessionId', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      // Get research results and generated content
+      const researchResults = await getStoredResearchResults(sessionId);
+      const generatedContent = await getStoredGeneratedContent(sessionId);
+      
+      res.json({
+        researchResults,
+        generatedContent
+      });
+    } catch (error) {
+      console.error('Failed to get workstation results:', error);
+      res.status(500).json({ error: 'Failed to get results' });
     }
   });
 
@@ -366,7 +388,27 @@ async function storeAiAction(sessionId: string, action: AiAction) {
   try {
     // Store AI action for pattern analysis and learning
     console.log(`[AI Action Storage] ${sessionId}:`, action);
-    // Implement your storage logic here
+    
+    // Store research results if available
+    if (action.tool === 'research' && action.payload?.searchResults) {
+      const researchResult = {
+        id: `research_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        sessionId,
+        query: action.payload.searchQuery,
+        summary: action.payload.searchResults.summary,
+        insights: action.payload.searchResults.insights,
+        results: action.payload.searchResults.results,
+        timestamp: new Date()
+      };
+      
+      // Store in memory
+      if (!(global as any).workstationResearch) {
+        (global as any).workstationResearch = new Map();
+      }
+      (global as any).workstationResearch.set(researchResult.id, researchResult);
+      
+      console.log(`[AI Workstation] Stored research result: ${action.payload.searchQuery}`);
+    }
   } catch (error) {
     console.error('Failed to store AI action:', error);
   }
@@ -437,4 +479,70 @@ async function searchYouTubeVideos(query: string) {
     console.error(`YouTube search error for "${query}":`, error);
     return [];
   }
+}
+
+// Enhanced storage functions for research results and generated content
+async function storeGeneratedContent(sessionId: string, action: AiAction) {
+  try {
+    let contentType = 'analysis';
+    let title = 'AI Analysis';
+    let content = action.thinking;
+    
+    if (action.tool === 'docs' && action.payload?.title) {
+      contentType = 'docs';
+      title = action.payload.title;
+      content = typeof action.payload.content === 'string' 
+        ? action.payload.content 
+        : JSON.stringify(action.payload.content, null, 2);
+    } else if (action.tool === 'research' && action.payload?.searchResults) {
+      contentType = 'research';
+      title = `Research: ${action.payload.searchQuery}`;
+      content = `Query: ${action.payload.searchQuery}\n\nSummary: ${action.payload.searchResults.summary}\n\nInsights:\n${action.payload.searchResults.insights.map((i: string) => `• ${i}`).join('\n')}`;
+    }
+    
+    const generatedContent = {
+      id: `content_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: contentType,
+      title,
+      content,
+      sessionId,
+      timestamp: new Date(),
+      metadata: {
+        tool: action.tool,
+        payload: action.payload
+      }
+    };
+    
+    // Store in memory 
+    if (!(global as any).workstationContent) {
+      (global as any).workstationContent = new Map();
+    }
+    (global as any).workstationContent.set(generatedContent.id, generatedContent);
+    
+    console.log(`[AI Workstation] Stored generated content: ${title}`);
+  } catch (error) {
+    console.error('[AI Workstation] Failed to store generated content:', error);
+  }
+}
+
+async function getStoredResearchResults(sessionId: string) {
+  if (!(global as any).workstationResearch) {
+    return [];
+  }
+  
+  return Array.from((global as any).workstationResearch.values())
+    .filter((result: any) => result.sessionId === sessionId)
+    .sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime())
+    .slice(0, 10); // Latest 10 results
+}
+
+async function getStoredGeneratedContent(sessionId: string) {
+  if (!(global as any).workstationContent) {
+    return [];
+  }
+  
+  return Array.from((global as any).workstationContent.values())
+    .filter((content: any) => content.sessionId === sessionId)
+    .sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime())
+    .slice(0, 20); // Latest 20 items
 }
