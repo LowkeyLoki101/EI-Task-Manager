@@ -156,6 +156,26 @@
         "createdAt": "2025-08-15T16:52:38.368Z",
         "updatedAt": "2025-08-15T16:52:38.368Z"
       }
+    ],
+    [
+      "576d245b-3414-4d57-991d-19eedd129993",
+      {
+        "sessionId": "s_njlk7hja5y9",
+        "title": "Test New Session Fix",
+        "context": "computer",
+        "timeWindow": "any",
+        "status": "today",
+        "id": "576d245b-3414-4d57-991d-19eedd129993",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "category": "general",
+        "dueDate": null,
+        "resources": [],
+        "notes": null,
+        "createdAt": "2025-08-16T03:52:07.960Z",
+        "updatedAt": "2025-08-16T03:52:07.960Z"
+      }
     ]
   ],
   "steps": [],

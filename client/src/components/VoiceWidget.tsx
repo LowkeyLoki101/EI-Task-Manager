@@ -70,8 +70,16 @@ export function VoiceWidget({
   useEffect(() => {
     const el = document.querySelector("elevenlabs-convai");
     if (el && sessionId) {
-      el.setAttribute("dynamic-variables", JSON.stringify({ sessionId }));
-      console.log('[ElevenLabs] Set dynamic variables:', { sessionId });
+      // Set sessionId in multiple ways to ensure it gets through
+      el.setAttribute("dynamic-variables", JSON.stringify({ sessionId, session_id: sessionId }));
+      el.setAttribute("session-id", sessionId);
+      el.setAttribute("data-session-id", sessionId);
+      
+      // Also try setting it as a property
+      (el as any).sessionId = sessionId;
+      (el as any).session_id = sessionId;
+      
+      console.log('[ElevenLabs] Set session info in multiple ways:', { sessionId });
     }
   }, [sessionId]);
 
