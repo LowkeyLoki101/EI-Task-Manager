@@ -245,6 +245,30 @@ class GPTDiaryService {
     this.saveMemory();
   }
 
+  // Estimate token count for messages array
+  private estimateTokenCount(messages: any[]): number {
+    const text = messages.map(m => m.content).join(' ');
+    return Math.ceil(text.length / 4); // Rough estimation: 4 chars per token
+  }
+
+  // Prune old memories to prevent context overflow
+  private async pruneOldMemories(): Promise<void> {
+    const currentSize = this.memory.diary.length;
+    if (currentSize > 800) {
+      // Keep most recent 500 entries
+      this.memory.diary = this.memory.diary.slice(-500);
+      console.log(`[GPT Diary] Pruned diary entries: ${currentSize} -> ${this.memory.diary.length}`);
+    }
+
+    // Also prune enhanced diary if it exists
+    if (this.memory.enhancedDiary && this.memory.enhancedDiary.length > 200) {
+      this.memory.enhancedDiary = this.memory.enhancedDiary.slice(-100);
+      console.log(`[GPT Diary] Pruned enhanced diary entries`);
+    }
+
+    this.saveMemory();
+  }
+
   // Search diary entries (RAG-style retrieval)
   searchDiary(query: string, limit: number = 10): DiaryEntry[] {
     const lowercaseQuery = query.toLowerCase();

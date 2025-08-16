@@ -24,7 +24,8 @@ export class PatternOrganizer {
 
   // Analyze tasks and projects to detect larger organizing patterns
   async analyzeOrganizingPatterns(sessionId: string): Promise<OrganizingPattern[]> {
-    const tasks = (await import('./storage')).storage.tasks.filter((task: any) => task.sessionId === sessionId);
+    const { storage } = await import('./storage');
+    const tasks = await storage.listTasks(sessionId);
     const projects = await this.getProjects(sessionId);
     
     console.log(`[PatternOrganizer] Analyzing ${tasks.length} tasks across ${projects.length} projects`);
