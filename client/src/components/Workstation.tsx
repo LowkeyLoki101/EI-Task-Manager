@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  Calendar, FileText, Brain, Monitor, Search, Youtube, 
+  Calendar, FileText, Brain, Monitor, Search, Youtube, Database,
   Maximize2, Minimize2, Grid3x3, ChevronLeft, ChevronRight,
   Download, ExternalLink, Plus, Minus, Eye, Lightbulb, ArrowRight
 } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from "@tanstack/react-query";
 import { ResearchScratchpad } from './ResearchScratchpad';
+import { KnowledgeBasePanel } from './KnowledgeBasePanel';
 
 interface WorkstationTool {
   id: string;
@@ -73,6 +74,12 @@ const tools: WorkstationTool[] = [
     name: 'Research',
     icon: Search,
     component: ResearchPanel
+  },
+  {
+    id: 'knowledge',
+    name: 'Knowledge Base',
+    icon: Database,
+    component: KnowledgeBasePanel
   }
 ];
 

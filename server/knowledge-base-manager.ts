@@ -378,6 +378,17 @@ export class KnowledgeBaseManager {
     return stats;
   }
 
+  // Get available exports
+  async getAvailableExports(): Promise<string[]> {
+    try {
+      const exports = await this.listExports();
+      return exports.map(exp => exp.filename);
+    } catch (error) {
+      console.error('[Knowledge Base] Error getting available exports:', error);
+      return [];
+    }
+  }
+
   // Get statistics
   async getStatistics(sessionId: string): Promise<any> {
     const entries = Array.from(this.entries.values())

@@ -259,6 +259,26 @@ Keep it concise but comprehensive (300-400 words).`
         }
       });
 
+      // Also add to knowledge base for RAG integration
+      try {
+        const { knowledgeBaseManager } = await import("./knowledge-base-manager");
+        await knowledgeBaseManager.addEntry({
+          title: `AI Diary: ${trigger}`,
+          content: diaryContent,
+          type: 'conversation',
+          sessionId: this.sessionId,
+          metadata: {
+            tags: ["ai-diary", "autopoietic", "thinking", trigger.toLowerCase().replace(/\s+/g, '-')],
+            category: "AI Autonomous Thinking",
+            source: "autopoietic_diary",
+            priority: "medium"
+          }
+        });
+        console.log(`[AutopoieticDiary] Added to knowledge base for trigger: "${trigger}"`);
+      } catch (error) {
+        console.error('[AutopoieticDiary] Error adding to knowledge base:', error);
+      }
+
       console.log(`[AutopoieticDiary] Saved diary entry for trigger: "${trigger}"`);
 
     } catch (error) {
