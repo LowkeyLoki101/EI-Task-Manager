@@ -125,9 +125,23 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const successfulPatterns = insightsData?.patterns || [];
   const userPreferences = insightsData?.preferences || [];
 
+  // Auto-scroll to bottom when chat is expanded
+  useEffect(() => {
+    if (isExpanded && messages.length > 0) {
+      const timer = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end',
+          inline: 'nearest'
+        });
+      }, 100); // Small delay to ensure DOM is updated
+      return () => clearTimeout(timer);
+    }
+  }, [isExpanded]);
+
   // Smart auto-scroll - only scroll if user is near bottom and not actively typing
   useEffect(() => {
-    if (messages.length > 0 && !isUserTyping) {
+    if (messages.length > 0 && !isUserTyping && isExpanded) {
       const timer = setTimeout(() => {
         const scrollArea = scrollAreaRef.current;
         if (scrollArea) {
@@ -147,7 +161,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [messages, isUserTyping]);
+  }, [messages, isUserTyping, isExpanded]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
