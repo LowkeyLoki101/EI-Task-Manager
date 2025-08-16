@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb, Upload, X, Code, Zap, Copy, Check } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb, Upload, X, Code, Zap, Copy, Check, HelpCircle } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -43,6 +45,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUserTyping, setIsUserTyping] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -526,6 +529,58 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
             >
               <Upload className="h-4 w-4" />
             </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Dialog open={showHelp} onOpenChange={setShowHelp}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-10 w-10 p-0 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        data-testid="help-button"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Brain className="h-5 w-5 text-blue-600" />
+                          How to Use Colby
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 text-sm">
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <Upload className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <strong>File Upload:</strong> Upload screenshots, documents, or images. Colby can extract text, analyze content, and create tasks based on what's found.
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Zap className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <strong>Autonomous Actions:</strong> Colby can autonomously create tasks, research information, suggest automations, and learn from our interactions.
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Brain className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <strong>Smart Assistance:</strong> Ask for help with project management, research, code analysis, or workflow automation. Colby has persistent memory and builds context over time.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>How to use Colby</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Button 
               type="submit" 
               disabled={(!message.trim() && uploadedFiles.length === 0) || sendMessageMutation.isPending}
@@ -534,14 +589,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               <Send className="h-4 w-4" />
             </Button>
           </div>
-          <div className="text-xs text-blue-600 dark:text-blue-400">
-            💡 Upload screenshots, documents, or images. Colby can extract text, analyze content, and create tasks based on what's found.
-          </div>
         </form>
-
-        <div className="text-xs text-blue-600 dark:text-blue-400">
-          💡 Colby can autonomously create tasks, research information, suggest automations, and learn from our interactions.
-        </div>
       </CardContent>
     </Card>
   );
