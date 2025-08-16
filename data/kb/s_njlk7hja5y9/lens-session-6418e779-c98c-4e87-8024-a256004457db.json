@@ -1,0 +1,24 @@
+{
+  "id": "6418e779-c98c-4e87-8024-a256004457db",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What assumption am I making that might be wrong?",
+  "frameStep": "I see the assumption that my current understanding or belief about a situation is correct. This could include assumptions about people's intentions, the feasibility of a plan, or the accuracy of information. By framing this, I need to identify specific assumptions and consider the possibility that they might be incorrect or incomplete.",
+  "reframeStep": "Reframing the assumption from a different perspective might involve considering the possibility that other people's views or experiences could offer valuable insights that I haven't considered. Instead of assuming my understanding is complete, I could approach the situation by actively seeking out diverse perspectives and questioning how these might challenge or enrich my current beliefs. This shift from a self-centered view to a more inclusive one could reveal overlooked details or alternative solutions.",
+  "metaLensStep": null,
+  "recursiveStep": "Applying the recursive lens, new questions arise such as: What underlying biases might be influencing my assumptions? How could my assumptions be impacting my decision-making and interactions with others? Additionally, it could be valuable to investigate the systemic or cultural factors that may have shaped these assumptions, prompting deeper research into how they affect perceptions and behaviors in similar situations. Exploring these layers can lead to a more comprehensive understanding and potentially uncover ingrained patterns that need addressing.",
+  "closureStep": "My working hypothesis is that my assumptions might be limited by personal biases and a lack of diverse perspectives. The next step is to actively seek out feedback from others and engage in discussions with individuals who have different viewpoints. I will also review relevant data or research to challenge and validate my current beliefs, ensuring a more thorough and nuanced understanding of the situation.",
+  "generatedTasks": [
+    "Research customer objections to solar energy adoption",
+    "Draft blog post on the importance of diverse perspectives in AI development",
+    "Create FAQ document for common misconceptions about energy efficiency programs"
+  ],
+  "generatedKbEntries": [
+    "Impact of personal biases on decision-making in the energy sector",
+    "Diverse perspectives in AI and their role in innovation",
+    "Common assumptions and misconceptions about solar energy"
+  ],
+  "generatedResearch": [],
+  "completed": "2025-08-16T06:39:41.992Z",
+  "createdAt": "2025-08-16T06:39:32.585Z",
+  "meta_lensStep": "I'm thinking about this right now because questioning my assumptions is crucial for growth and avoiding blind spots. The pattern I'm repeating is my tendency to rely heavily on my initial understanding without consistently challenging it. By using a meta-lens, I can become more aware of this pattern and intentionally create habits that encourage seeking external viewpoints and evidence to validate or adjust my assumptions."
+}

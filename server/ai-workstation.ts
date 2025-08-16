@@ -155,6 +155,40 @@ Respond in JSON format only.`;
             const researchTrigger = `Research findings on "${action.payload.searchQuery}": ${searchResults.summary}. Key insights: ${searchResults.insights.join(', ')}`;
             await diary.manualThinkingCycle(researchTrigger);
             
+            // Store research result for scratchpad display IMMEDIATELY
+            const researchResult = {
+              id: `research_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              sessionId,
+              query: action.payload.searchQuery,
+              summary: searchResults.summary,
+              insights: searchResults.insights,
+              results: searchResults.results,
+              searchUrls: searchResults.results?.map((r: any) => r.url) || [],
+              timestamp: new Date(),
+              thinking: action.thinking
+            };
+            
+            // Store in memory for immediate display
+            if (!(global as any).workstationResearch) {
+              (global as any).workstationResearch = new Map();
+            }
+            (global as any).workstationResearch.set(researchResult.id, researchResult);
+            
+            console.log(`[AI Workstation] ✓ Stored research for scratchpad: ${action.payload.searchQuery}`);
+            
+            // ALSO store as research footprint for project organization
+            const { projectManager } = await import('./project-manager');
+            await projectManager.storeResearchFootprint({
+              sessionId,
+              query: action.payload.searchQuery,
+              searchUrls: searchResults.results?.map((r: any) => r.url) || [],
+              summary: searchResults.summary,
+              insights: searchResults.insights,
+              results: searchResults.results,
+              aiThinking: action.thinking,
+              status: 'completed'
+            });
+            
             // Create comprehensive diary entry with research workflow
             await storage.createDiaryEntry({
               sessionId,
@@ -251,9 +285,18 @@ Next Actions: Generate follow-up questions and create actionable tasks based on 
       const researchResults = await getStoredResearchResults(sessionId);
       const generatedContent = await getStoredGeneratedContent(sessionId);
       
+      console.log(`[API] /workstation/results/${sessionId} - returning ${researchResults.length} research results, ${generatedContent.length} content items`);
+      
       res.json({
         researchResults,
-        generatedContent
+        generatedContent,
+        debug: {
+          totalResearch: researchResults.length,
+          totalContent: generatedContent.length,
+          sessionId: sessionId,
+          hasGlobalResearch: !!(global as any).workstationResearch,
+          globalResearchSize: (global as any).workstationResearch ? (global as any).workstationResearch.size : 0
+        }
       });
     } catch (error) {
       console.error('Failed to get workstation results:', error);
@@ -398,6 +441,7 @@ async function storeAiAction(sessionId: string, action: AiAction) {
         summary: action.payload.searchResults.summary,
         insights: action.payload.searchResults.insights,
         results: action.payload.searchResults.results,
+        searchUrls: action.payload.searchResults.results?.map((r: any) => r.url) || [],
         timestamp: new Date()
       };
       
@@ -409,6 +453,9 @@ async function storeAiAction(sessionId: string, action: AiAction) {
       
       console.log(`[AI Workstation] Stored research result: ${action.payload.searchQuery}`);
     }
+    
+    // ALSO store generated content
+    await storeGeneratedContent(sessionId, action);
   } catch (error) {
     console.error('Failed to store AI action:', error);
   }
@@ -545,4 +592,30 @@ async function getStoredGeneratedContent(sessionId: string) {
     .filter((content: any) => content.sessionId === sessionId)
     .sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime())
     .slice(0, 20); // Latest 20 items
+}
+
+// Mark task as completed and store results  
+async function markTaskCompleted(sessionId: string, taskId: string, actionData: any) {
+  try {
+    const { storage } = await import('./storage');
+    
+    // Update task status to completed
+    await storage.updateTaskStatus(taskId, 'completed');
+    
+    // Store completion results in diary
+    const diaryContent = `Task completed: ${actionData.thinking}\n\nResults: ${JSON.stringify(actionData.payload, null, 2)}`;
+    await storage.createDiaryEntry({
+      sessionId,
+      content: diaryContent,
+      tags: ['task-completion', 'ai-generated'],
+      metadata: {
+        taskId,
+        actionData
+      }
+    });
+    
+    console.log(`[AI Workstation] Task ${taskId} marked as completed`);
+  } catch (error) {
+    console.error(`[AI Workstation] Failed to mark task completed:`, error);
+  }
 }

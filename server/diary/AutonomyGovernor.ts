@@ -25,8 +25,8 @@ export class AutonomyGovernor {
     this.config = {
       minIntervalSeconds: parseInt(process.env.DIARY_MIN_INTERVAL_SECONDS || '900'), // 15 min default
       maxPerHour: parseInt(process.env.DIARY_MAX_PER_HOUR || '3'),
-      noveltyThreshold: 0.35,
-      relevanceThreshold: 0.2,
+      noveltyThreshold: 0.15, // Lower for more AI research capture  
+      relevanceThreshold: 0.05, // Much lower - capture all AI activity
       ...config
     };
   }
