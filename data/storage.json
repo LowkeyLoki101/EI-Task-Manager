@@ -86,9 +86,9 @@
     [
       "b94b6529-3230-4a6e-829a-1b9ea4223db6",
       {
-        "title": "title=Prepare for Level 10 Meeting",
-        "context": "context=Go over the meeting agenda and gather necessary documents and notes for discussion",
-        "timeWindow": "timeWindow=Before the meeting",
+        "title": "Prepare for Level 10 Meeting",
+        "context": "Go over the meeting agenda and gather necessary documents and notes for discussion",
+        "timeWindow": "Before the meeting",
         "status": "today",
         "sessionId": "s_y439m78bw1",
         "id": "b94b6529-3230-4a6e-829a-1b9ea4223db6",

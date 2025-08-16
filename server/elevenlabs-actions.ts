@@ -164,7 +164,7 @@ export function registerElevenLabsActions(app: Express) {
       // Clean up parameter names from ElevenLabs agent data
       const cleanField = (value: any, prefix: string) => {
         if (typeof value === 'string' && value.startsWith(prefix)) {
-          return value.replace(prefix, '');
+          return value.replace(prefix, '').trim();
         }
         return value;
       };
@@ -173,7 +173,9 @@ export function registerElevenLabsActions(app: Express) {
         title: cleanField(actionData.title, 'title='),
         context: cleanField(actionData.context, 'context='),
         timeWindow: cleanField(actionData.timeWindow || actionData.time_window, 'timeWindow=') || 
-                   cleanField(actionData.timeWindow || actionData.time_window, 'time_window='),
+                   cleanField(actionData.timeWindow || actionData.time_window, 'time_window=') ||
+                   cleanField(actionData.timeWindow || actionData.time_window, 'time_window') ||
+                   'any',
         steps: actionData.steps
       };
       
