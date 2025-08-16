@@ -1,0 +1,151 @@
+Nice—pulled your repo. Here’s the tight audit + merge plan so this ships cleanly in Replit.
+
+What’s in the repo (top-level)
+	•	Folders present: client, server, data, shared, plus uploads/Elevenlabs Docs and tooling files like drizzle.config.ts, vite.config.ts, tailwind.config.ts, etc.  ￼
+
+(translation: you’ve got a classic Vite/TS app split into frontend, backend, and a flat-file data/ store—perfect for Replit.)
+
+⸻
+
+Where you are vs. where we’re going
+
+Target product (single sentence)
+
+A voice-first, dual-agent workbench where an ElevenLabs widget + GPT-5 turn conversation into a rolling to-do system, a unified knowledge base, and safe reviewable code changes—running locally in Replit with flat-file persistence (DB optional later).
+
+Immediate frictions I expect in this repo
+	1.	Multiple KBs drifting (e.g., /data facts vs “agent KB” vs public diary). We’ll converge on a single KB service with access flags (public/private/system).
+	2.	Actions zoo (many endpoints). We’ll expose one /api/actions/run that fans out by action internally.
+	3.	Task model variants (plain tasks vs. tasks-with-YouTube/reminders). We’ll lock one JSON schema and add light migration-on-read.
+	4.	Widget failures in Replit preview. Force external tab, CSP/CORS allowlist, and a deterministic mount order.
+
+⸻
+
+Repo merge plan (surgical, Replit-ready)
+
+0) Environment & hardening
+	•	.replit: open on external tab by default (mic permissions).
+	•	CORS (server boot): allow your *.repl.co origin and Authorization, x-api-key headers.
+	•	CSP meta (client index.html) so the ElevenLabs script can load:
+	•	script-src 'self' https://unpkg.com;
+	•	connect-src 'self' https://api.elevenlabs.io https://api.elevenlabs.*;
+	•	frame-src https://*.elevenlabs.io;  (this is the common fail point)  ￼
+
+1) ElevenLabs widget (client)
+	•	Mount <elevenlabs-convai> near end of <body>, not inside nested iframes.
+	•	Add listeners for convai-ready, convai-error and a 3s shadowRoot check. If not upgraded, log “CSP/allowlist/SDK 404” so you don’t mystery-chase.
+	•	In ElevenLabs: turn Web Widget ON, Public/Unauthenticated (MVP), and allow your exact Replit URL. (Agent-id typos and origin mismatches are the typical causes.)  ￼
+
+2) Canonical API surface (server)
+
+Create a single router with:
+	•	POST /api/actions/run → { action: "add_task" | "kb_upload" | ... , payload: {...} }
+	•	POST /api/elevenlabs/webhook (verify signature/Bearer before touching state)
+	•	POST /api/supervisor/ingest (mirror transcript/events)
+	•	POST /api/supervisor/tick (planner tick → returns planned mutations)
+	•	GET/POST /api/tasks, PATCH /api/tasks/:id, PATCH /api/steps/:id
+	•	POST /api/kb/ingest, GET /api/kb, GET /api/kb/:id
+
+Why: one “run” action keeps your agent contract stable while you iterate server internals.
+
+3) Unified storage (flat files now, DB later)
+
+Inside /data:
+
+/data
+  /sessions/<sessionId>/tasks.json      # tasks + steps + resources
+  /kb/index.json                        # list of KB ids + tags
+  /kb/items/<id>.json                   # a single KB entry {id, ts, source, topic, content, tags, acl}
+  /proposals/<id>/*                     # code proposals (diff, preview files)
+  /backups/*                            # rollback targets
+  /logs/transcripts/<session>.jsonl     # raw convo/ASR if needed
+
+	•	Add acl: "public" | "private" | "system" on every KB item; your ACL gate enforces who can read (Agent A/B/User).
+	•	Keep the DB path optional by building adapters (fsAdapter, later drizzleAdapter).
+
+4) Task schema (lock it)
+
+Single JSON task shape:
+
+{
+  id, title, status, priority?,
+  context: "Computer"|"Phone"|"Physical"|"Any",
+  time_window: "Morning"|"Midday"|"Evening"|"Any",
+  steps: Step[],
+  resources?: Resource[],         // e.g., {type:"youtube", id, title, url}
+  dueAt?: number, remind?: boolean,
+  meta: { createdAt, updatedAt }
+}
+
+	•	On read: if fields missing, hydrate defaults (no brittle migrations).
+	•	Expose helper attachResource(taskId, resource) so Supervisor or UI can add videos, PDFs, etc.
+
+5) Supervisor loop (server)
+	•	/api/supervisor/tick ingests the last N transcript events for the sessionId, asks GPT-5 for a plan:
+	•	{add_task, update_task, add_step, attach_resource, propose_code_change}
+	•	Immediately apply task updates; store code changes as proposals under /data/proposals/<id>/… and don’t hot-patch code without human approval.
+
+6) Proposals lane (safe code updates)
+	•	Routes: GET /api/dev/proposals, POST /api/dev/approve, POST /api/dev/reject, POST /api/dev/preview
+	•	Approve = copy staged file(s) into working tree and create a backup.
+	•	Preview = serve from proposal dir so UI can overlay before committing.
+	•	Reject = delete proposal dir.
+
+7) Audio/transcription fix
+	•	Your 400s typically happen when the frontend posts a blob with mislabeled Content-Type or a codec mismatch. Enforce input set { 'flac','m4a','mp3','mp4','mpeg','mpga','oga','ogg','wav','webm' }, and if extension is webm but Content-Type is audio/ogg, normalize it server-side before handing to the ASR client. (Also make sure you don’t double-read the stream into an empty buffer.)
+	•	Add a 415 handler that replies with exact accepted types in the error JSON so the widget can recover gracefully.
+
+8) Frontend UX (client)
+	•	/assistant: widget, tasks board (filters by context + time window), quick buttons:
+	•	“Find video” → calls /api/tools/youtubeSearch and attaches Resource (optional but high ROI)
+	•	“Set reminder” → sets dueAt/remind and starts an interval that opens a video modal when due
+	•	/proposals: human review → approve/preview/rollback
+	•	/kb: list KB → open item; “promote to public/private” toggles acl
+
+9) Session identity
+	•	On first load, set localStorage.ei_session; server trusts this as the session silo key for /data/sessions/<id>/*.
+	•	Include the sessionId in every client→server call.
+
+⸻
+
+Concrete “Do this now” checklist
+
+Server
+	1.	Add a tiny CORS middleware (origin: /\.repl\.co$/).
+	2.	Mount routes exactly as in sections (2) & (6).
+	3.	Add ACL gate function: readKB(id, actor) → checks acl and caller (Agent A/B/User).
+	4.	Add Content-Type normalizer in /api/transcribe and reject with a helpful 415.
+
+Client
+	1.	Mount ElevenLabs widget at end of <body>; open in external tab; verify convai-ready shows.
+	2.	Create TasksBoard with filters (context/time_window) + “Find video” + “Set reminder” buttons.
+	3.	Add VideoModal component; pop it when reminders trigger.
+	4.	A tiny status toast that reads Supervisor deltas (“2 tasks updated; 1 blocked”).
+
+Repo hygiene
+	•	Create /docs/CONTRACTS.md with your single /api/actions/run schema so the agent side doesn’t drift.
+	•	Add /docs/CSP_CORS.md with the exact copy/paste headers and a screenshot of where to allowlist the Replit domain in ElevenLabs.
+	•	Add /docs/STORAGE.md describing the unified /data layout & ACLs.
+
+⸻
+
+“What success looks like today”
+	•	Opening /assistant and speaking creates or updates tasks within ~3s.
+	•	Hitting Find video on a task attaches a YouTube resource and can auto-open at due time.
+	•	The widget reliably shows [EL] ready and errors are actionable.
+	•	Proposals lane allows you to approve a one-file change and see it live without breaking anything.
+
+If you want, I can turn this into a short PR plan (branch list + file paths + diffs order), but you can also just follow the checklist above and it’ll click.
+
+⸻
+
+(Personal Notes — for us)
+Current focus: unify KB, stabilize actions, fix widget/CSP, and lock a single task schema—minimum to demo.
+My take: codebase is shaped right; entropy is from duplicate KB/task patterns. One gate + one actions endpoint kills 80% of chaos.
+Unknowns: how much of drizzle you want active now. I’m assuming flat files first.
+Assumptions: Vite + Express; running on Replit external tab; EL agent already created.
+Evidence plan: repo confirms folder layout and toolchain; CSP/CORS guidance matches common ElevenLabs embed pitfalls.  ￼
+Risks: sessionId drift if not included in every call; fixed by a small client helper.
+Leverage points: proposals lane + unified /api/actions/run accelerate everything.
+Next best steps: implement CORS/CSP → mount widget → wire /api/actions/run → lock task schema → add ACL gate.
+Confidence: 84 | Clarity: 90
