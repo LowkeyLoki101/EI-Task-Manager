@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Project Organization System - Scalable task and research management
+// Fractal Project Organization System - Self-organizing and scalable
 export const ProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -9,6 +9,18 @@ export const ProjectSchema = z.object({
   priority: z.enum(['low', 'medium', 'high', 'critical']),
   tags: z.array(z.string()),
   sessionId: z.string(),
+  // Fractal nesting
+  parentProjectId: z.string().optional(), // For hierarchical organization
+  childProjectIds: z.array(z.string()).optional(), // Sub-projects
+  nestingLevel: z.number().default(0), // Depth in hierarchy
+  // Pattern recognition
+  patternSignature: z.string().optional(), // AI-detected organizing pattern
+  autoReorganized: z.boolean().optional(), // Whether system auto-organized this
+  organizingThemes: z.array(z.string()).optional(), // Detected themes for grouping
+  // Scaling metrics
+  taskCount: z.number().default(0),
+  researchCount: z.number().default(0),
+  complexityScore: z.number().default(0), // For determining when to split/merge
   createdAt: z.date(),
   updatedAt: z.date(),
   metadata: z.record(z.any()).optional()

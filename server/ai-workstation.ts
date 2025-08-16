@@ -574,24 +574,40 @@ async function storeGeneratedContent(sessionId: string, action: AiAction) {
 
 async function getStoredResearchResults(sessionId: string) {
   if (!(global as any).workstationResearch) {
+    console.log('[getStoredResearchResults] No workstationResearch found');
     return [];
   }
   
-  return Array.from((global as any).workstationResearch.values())
+  const results = Array.from((global as any).workstationResearch.values())
     .filter((result: any) => result.sessionId === sessionId)
-    .sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime())
+    .sort((a: any, b: any) => {
+      const aTime = new Date(a.timestamp).getTime();
+      const bTime = new Date(b.timestamp).getTime();
+      return bTime - aTime;
+    })
     .slice(0, 10); // Latest 10 results
+  
+  console.log(`[getStoredResearchResults] Found ${results.length} results for session ${sessionId}`);
+  return results;
 }
 
 async function getStoredGeneratedContent(sessionId: string) {
   if (!(global as any).workstationContent) {
+    console.log('[getStoredGeneratedContent] No workstationContent found');
     return [];
   }
   
-  return Array.from((global as any).workstationContent.values())
+  const content = Array.from((global as any).workstationContent.values())
     .filter((content: any) => content.sessionId === sessionId)
-    .sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime())
+    .sort((a: any, b: any) => {
+      const aTime = new Date(a.timestamp).getTime();
+      const bTime = new Date(b.timestamp).getTime();
+      return bTime - aTime;
+    })
     .slice(0, 20); // Latest 20 items
+  
+  console.log(`[getStoredGeneratedContent] Found ${content.length} content items for session ${sessionId}`);
+  return content;
 }
 
 // Mark task as completed and store results  
