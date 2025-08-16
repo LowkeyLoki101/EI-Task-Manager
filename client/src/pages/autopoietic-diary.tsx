@@ -16,7 +16,8 @@ import {
   Target, 
   Clock,
   TrendingUp,
-  Lightbulb
+  Lightbulb,
+  ArrowLeft
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -218,14 +219,26 @@ export default function AutopoieticDiary() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
-          <Brain className="w-8 h-8 text-blue-600" />
-          Autopoietic Diary
-        </h1>
-        <p className="text-muted-foreground">
-          Self-growing AI system that thinks, researches, and builds knowledge autonomously
-        </p>
+      <div className="flex items-center gap-4 mb-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2"
+          data-testid="button-back"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <div className="flex-1 text-center">
+          <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
+            <Brain className="w-8 h-8 text-blue-600" />
+            Autopoietic Diary
+          </h1>
+          <p className="text-muted-foreground">
+            Self-growing AI system that thinks, researches, and builds knowledge autonomously
+          </p>
+        </div>
       </div>
 
       {/* Status Card */}

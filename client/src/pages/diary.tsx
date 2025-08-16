@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSessionId } from '@/hooks/useSessionId';
 import { apiRequest } from '@/lib/queryClient';
-import { BookOpen, Brain, Search, Plus, TrendingUp, Clock, Target, Eye } from 'lucide-react';
+import { BookOpen, Brain, Search, Plus, TrendingUp, Clock, Target, Eye, ArrowLeft } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface EnhancedDiaryEntry {
@@ -148,14 +148,26 @@ export default function DiaryPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Brain className="w-8 h-8 text-purple-600" />
-            AI Diary System
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Autonomous reflections and insights with contextual awareness
-          </p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Brain className="w-8 h-8 text-purple-600" />
+              AI Diary System
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Autonomous reflections and insights with contextual awareness
+            </p>
+          </div>
         </div>
         
         <Button
@@ -182,7 +194,7 @@ export default function DiaryPage() {
                 <SelectValue placeholder="Filter by mode" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All modes</SelectItem>
+                <SelectItem value="all">All modes</SelectItem>
                 <SelectItem value="directive">Directive</SelectItem>
                 <SelectItem value="exploratory">Exploratory</SelectItem>
                 <SelectItem value="reflective">Reflective</SelectItem>
@@ -193,7 +205,7 @@ export default function DiaryPage() {
 
           <div className="space-y-4">
             {entries
-              .filter(entry => !selectedMode || entry.mode === selectedMode)
+              .filter(entry => selectedMode === 'all' || !selectedMode || entry.mode === selectedMode)
               .map((entry) => (
                 <Card key={entry.id} className="hover:shadow-md transition-shadow" data-testid={`card-entry-${entry.id}`}>
                   <CardHeader className="pb-3">
