@@ -314,7 +314,7 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
           <div>
             <h3 className="text-sm font-bold text-amber-100">
               AI WORKSTATION
-              <span className={`ml-2 text-xs px-2 py-0.5 rounded ${
+              <span className={`ml-2 text-xs px-2 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${
                 workstationState.mode === 'ai' 
                   ? 'bg-amber-900/30 text-amber-300' 
                   : workstationState.mode === 'hybrid'
@@ -322,7 +322,16 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
                   : workstationState.mode === 'human'
                   ? 'bg-blue-900/30 text-blue-300'
                   : 'bg-gray-900/30 text-gray-400'
-              }`}>
+              }`}
+              onClick={() => {
+                const modes: WorkstationState['mode'][] = ['human', 'hybrid', 'ai'];
+                const currentIndex = modes.indexOf(workstationState.mode);
+                const nextMode = modes[(currentIndex + 1) % modes.length];
+                setWorkstationState(prev => ({ ...prev, mode: nextMode }));
+                console.log(`[Workstation] Switched to ${nextMode} mode`);
+              }}
+              title="Click to cycle through modes: Human → Hybrid → AI"
+              data-testid="mode-switcher">
                 {workstationState.mode.toUpperCase()} MODE
               </span>
             </h3>
@@ -488,25 +497,31 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
         {tools.map((tool) => {
           const Icon = tool.icon;
           const isActive = activeTool === tool.id;
+          const isHumanMode = workstationState.mode === 'human';
           const isAiMode = workstationState.mode === 'ai';
+          const shouldBeEnabled = isHumanMode || workstationState.mode === 'hybrid';
+          
+          const handleClick = () => {
+            console.log(`[Workstation] Switching to ${tool.name} tool, current mode: ${workstationState.mode}`);
+            setActiveTool(tool.id);
+            logUserAction(`Switched to ${tool.name} tool`);
+          };
           
           return (
             <Button
               key={tool.id}
               variant={isActive ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => {
-                setActiveTool(tool.id);
-                logUserAction(`Switched to ${tool.name} tool`);
-              }}
-              disabled={isAiMode}
+              onClick={handleClick}
+              disabled={!shouldBeEnabled}
+              data-testid={`tool-button-${tool.id}`}
               className={`
                 flex items-center gap-1.5 text-xs h-8 px-3 transition-all duration-200
                 ${isActive 
                   ? 'bg-amber-900/30 text-amber-100 border border-amber-500/30 shadow-md scale-105' 
                   : 'text-amber-300/70 hover:text-amber-200 hover:bg-amber-900/10'
                 }
-                ${isAiMode ? 'opacity-50 cursor-not-allowed' : ''}
+                ${!shouldBeEnabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 ${isAiMode && isActive ? 'ring-2 ring-amber-400/50 animate-pulse' : ''}
               `}
             >
