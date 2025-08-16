@@ -4,7 +4,7 @@
  */
 
 import type { Express } from 'express';
-import { gptDiary } from './gpt-diary';
+import { gptDiary, type DiaryEntry } from './gpt-diary';
 
 export function registerDiaryRoutes(app: Express) {
   // Get enhanced diary entries
@@ -13,12 +13,35 @@ export function registerDiaryRoutes(app: Express) {
       const { sessionId } = req.params;
       const limit = parseInt(req.query.limit as string) || 20;
       
-      const entries = gptDiary.getEnhancedEntries(sessionId, limit);
+      const enhancedEntries = gptDiary.getEnhancedEntries(sessionId, limit);
+      const legacyEntries = gptDiary.getLegacyEntries(sessionId, limit);
+      
+      // Convert legacy entries to enhanced format for frontend compatibility
+      const convertedLegacy = legacyEntries.map((entry: DiaryEntry) => ({
+        id: entry.id,
+        timestamp: entry.timestamp.toISOString(),
+        title: entry.content.substring(0, 60) + (entry.content.length > 60 ? '...' : ''),
+        content: entry.content,
+        mode: 'reflective' as const,
+        type: 'passive' as const,
+        tags: entry.tags,
+        sessionId: entry.sessionId || 'unknown',
+        autonomyDecision: {
+          shouldWrite: true,
+          reason: 'Legacy entry from autonomous system'
+        },
+        metadata: entry.metadata || {}
+      }));
+      
+      // Combine and sort by timestamp
+      const allEntries = [...enhancedEntries, ...convertedLegacy]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, limit);
       
       res.json({
         success: true,
-        entries,
-        total: entries.length
+        entries: allEntries,
+        total: allEntries.length
       });
     } catch (error) {
       console.error('[Diary API] Failed to get enhanced entries:', error);
@@ -34,12 +57,35 @@ export function registerDiaryRoutes(app: Express) {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
       
-      const entries = gptDiary.getEnhancedEntries(undefined, limit);
+      const enhancedEntries = gptDiary.getEnhancedEntries(undefined, limit);
+      const legacyEntries = gptDiary.getLegacyEntries(undefined, limit);
+      
+      // Convert legacy entries to enhanced format for frontend compatibility
+      const convertedLegacy = legacyEntries.map((entry: DiaryEntry) => ({
+        id: entry.id,
+        timestamp: entry.timestamp.toISOString(),
+        title: entry.content.substring(0, 60) + (entry.content.length > 60 ? '...' : ''),
+        content: entry.content,
+        mode: 'reflective' as const,
+        type: 'passive' as const,
+        tags: entry.tags,
+        sessionId: entry.sessionId || 'unknown',
+        autonomyDecision: {
+          shouldWrite: true,
+          reason: 'Legacy entry from autonomous system'
+        },
+        metadata: entry.metadata || {}
+      }));
+      
+      // Combine and sort by timestamp
+      const allEntries = [...enhancedEntries, ...convertedLegacy]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, limit);
       
       res.json({
         success: true,
-        entries,
-        total: entries.length
+        entries: allEntries,
+        total: allEntries.length
       });
     } catch (error) {
       console.error('[Diary API] Failed to get all enhanced entries:', error);
@@ -148,7 +194,7 @@ export function registerDiaryRoutes(app: Express) {
       const memory = gptDiary.getMemory();
       const autonomyStatus = gptDiary.getAutonomyStatus();
       
-      // Calculate statistics
+      // Calculate statistics including both enhanced and legacy entries
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -157,21 +203,35 @@ export function registerDiaryRoutes(app: Express) {
         entry => entry.timestamp > weekAgo
       ).length;
       
+      const legacyThisWeek = memory.diary.filter(
+        entry => new Date(entry.timestamp) > weekAgo
+      ).length;
+      
       const enhancedThisMonth = memory.enhancedDiary.filter(
         entry => entry.timestamp > monthAgo
       ).length;
+      
+      const legacyThisMonth = memory.diary.filter(
+        entry => new Date(entry.timestamp) > monthAgo
+      ).length;
 
-      // Mode distribution
+      // Mode distribution (enhanced entries have modes, legacy entries default to 'reflective')
       const modeStats = memory.enhancedDiary.reduce((acc, entry) => {
         acc[entry.mode] = (acc[entry.mode] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
+      
+      // Add legacy entries as 'reflective' mode
+      modeStats.reflective = (modeStats.reflective || 0) + memory.diary.length;
 
-      // Type distribution  
+      // Type distribution (enhanced entries have types, legacy entries default to 'passive')
       const typeStats = memory.enhancedDiary.reduce((acc, entry) => {
         acc[entry.type] = (acc[entry.type] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
+      
+      // Add legacy entries as 'passive' type
+      typeStats.passive = (typeStats.passive || 0) + memory.diary.length;
 
       res.json({
         success: true,
@@ -181,8 +241,8 @@ export function registerDiaryRoutes(app: Express) {
             legacy: memory.diary.length
           },
           recent: {
-            thisWeek: enhancedThisWeek,
-            thisMonth: enhancedThisMonth
+            thisWeek: enhancedThisWeek + legacyThisWeek,
+            thisMonth: enhancedThisMonth + legacyThisMonth
           },
           distribution: {
             modes: modeStats,

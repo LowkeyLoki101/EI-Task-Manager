@@ -385,6 +385,21 @@ class GPTDiaryService {
     };
   }
 
+  // Get legacy diary entries (from memory.diary)
+  getLegacyEntries(sessionId?: string, limit: number = 50): DiaryEntry[] {
+    let entries = this.memory.diary;
+    
+    // Filter by session if provided
+    if (sessionId) {
+      entries = entries.filter(entry => entry.sessionId === sessionId);
+    }
+    
+    // Sort by timestamp descending and limit
+    return entries
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  }
+
   // Get full memory for API access
   getMemory(): GPTMemory {
     return { ...this.memory };
