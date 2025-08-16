@@ -139,6 +139,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register enhanced diary system with autonomy
   const { registerDiaryRoutes } = await import("./diary-routes");
   registerDiaryRoutes(app);
+  
+  // Register Autopoietic (Self-Growing) Diary System
+  const { registerAutopoieticRoutes } = await import("./autopoietic-routes");
+  registerAutopoieticRoutes(app);
 
   // Register System Modifier for advanced GPT-5 capabilities
   const { registerSystemModifier } = await import("./system-modifier");

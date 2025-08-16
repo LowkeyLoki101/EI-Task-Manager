@@ -10,6 +10,7 @@ import Assistant from "./pages/assistant";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
 import CodeAnalysis from "./pages/CodeAnalysis";
 import DiaryPage from "./pages/diary";
+import AutopoieticDiary from "./pages/autopoietic-diary";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/preview/:id" component={Preview} />
       <Route path="/code-analysis" component={CodeAnalysis} />
       <Route path="/diary" component={DiaryPage} />
+      <Route path="/autopoietic" component={AutopoieticDiary} />
       <Route component={NotFound} />
     </Switch>
   );
