@@ -136,6 +136,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerMicroserviceRoutes } = await import("./microservice-routes");
   registerMicroserviceRoutes(app, microserviceConnector);
 
+  // Register enhanced diary system with autonomy
+  const { registerDiaryRoutes } = await import("./diary-routes");
+  registerDiaryRoutes(app);
+
   // Register System Modifier for advanced GPT-5 capabilities
   const { registerSystemModifier } = await import("./system-modifier");
   registerSystemModifier(app);

@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import OpenAI from 'openai';
+import { DiaryEngine, type EnhancedDiaryEntry } from './diary/DiaryEngine';
+import type { DiaryMode } from './diary/PromptStems';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -14,6 +16,9 @@ export interface DiaryEntry {
   taskId?: string;
   metadata?: Record<string, any>;
 }
+
+// Legacy diary entry for backward compatibility
+export interface LegacyDiaryEntry extends DiaryEntry {}
 
 export interface GPTMemory {
   personalityProfile: {
@@ -36,15 +41,69 @@ export interface GPTMemory {
     automationPatterns: string[];
   };
   diary: DiaryEntry[];
+  enhancedDiary: EnhancedDiaryEntry[];
 }
 
 class GPTDiaryService {
   private memoryFile = join(process.cwd(), 'data', 'gpt-memory.json');
   private memory: GPTMemory;
+  private diaryEngine: DiaryEngine;
+  private lastAutonomousEntry: Date | null = null;
 
   constructor() {
     this.ensureDataDir();
     this.memory = this.loadMemory();
+    this.diaryEngine = new DiaryEngine();
+    
+    // Start autonomous diary loop if enabled
+    if (process.env.AUTONOMY !== 'OFF') {
+      this.startAutonomousLoop();
+    }
+  }
+
+  /**
+   * Start the autonomous diary writing loop
+   */
+  private startAutonomousLoop() {
+    const checkInterval = 5 * 60 * 1000; // Check every 5 minutes
+    
+    setInterval(async () => {
+      try {
+        await this.attemptAutonomousEntry();
+      } catch (error) {
+        console.error('[GPT Diary] Autonomous loop error:', error);
+      }
+    }, checkInterval);
+
+    console.log('[GPT Diary] Autonomous diary loop started (5min intervals)');
+  }
+
+  /**
+   * Attempt to create an autonomous diary entry
+   */
+  private async attemptAutonomousEntry() {
+    // Use most recent session with activity
+    const sessionId = 's_njlk7hja5y9'; // Default active session
+    
+    try {
+      const entry = await this.diaryEngine.attemptEntry(sessionId, this.memory.enhancedDiary);
+      
+      if (entry) {
+        this.memory.enhancedDiary.unshift(entry); // Add to beginning (most recent first)
+        
+        // Keep only last 100 enhanced entries
+        if (this.memory.enhancedDiary.length > 100) {
+          this.memory.enhancedDiary = this.memory.enhancedDiary.slice(0, 100);
+        }
+        
+        this.saveMemory();
+        this.lastAutonomousEntry = new Date();
+        
+        console.log(`[GPT Diary] Autonomous entry created: "${entry.title}" (${entry.mode} ${entry.type})`);
+      }
+    } catch (error) {
+      console.error('[GPT Diary] Failed to create autonomous entry:', error);
+    }
   }
 
   private ensureDataDir() {
@@ -61,6 +120,10 @@ class GPTDiaryService {
         return {
           ...data,
           diary: data.diary?.map((entry: any) => ({
+            ...entry,
+            timestamp: new Date(entry.timestamp)
+          })) || [],
+          enhancedDiary: data.enhancedDiary?.map((entry: any) => ({
             ...entry,
             timestamp: new Date(entry.timestamp)
           })) || []
@@ -90,14 +153,15 @@ class GPTDiaryService {
         toolPreferences: [],
         automationPatterns: []
       },
-      diary: []
+      diary: [],
+      enhancedDiary: []
     };
   }
 
   private saveMemory() {
     try {
       writeFileSync(this.memoryFile, JSON.stringify(this.memory, null, 2));
-      console.log('[GPT Diary] Memory saved with', this.memory.diary.length, 'diary entries');
+      console.log('[GPT Diary] Memory saved with', this.memory.diary.length, 'legacy entries,', this.memory.enhancedDiary.length, 'enhanced entries');
     } catch (error) {
       console.error('[GPT Diary] Failed to save memory:', error);
     }
@@ -248,6 +312,53 @@ class GPTDiaryService {
       console.error('[GPT Diary] Idea generation failed:', error);
       return [];
     }
+  }
+
+  // Get recent diary entries for context
+  getRecentEntries(sessionId?: string, limit: number = 10): DiaryEntry[] {
+    let entries = this.memory.diary;
+    
+    if (sessionId) {
+      entries = entries.filter(entry => entry.sessionId === sessionId);
+    }
+    
+    return entries
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+  }
+
+  // Get enhanced diary entries
+  getEnhancedEntries(sessionId?: string, limit: number = 10): EnhancedDiaryEntry[] {
+    let entries = this.memory.enhancedDiary;
+    
+    if (sessionId) {
+      entries = entries.filter(entry => entry.sessionId === sessionId);
+    }
+    
+    return entries
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+  }
+
+  // Force create a diary entry (for manual triggers)
+  async createManualEntry(sessionId: string, mode?: DiaryMode): Promise<EnhancedDiaryEntry> {
+    const entry = await this.diaryEngine.forceEntry(sessionId, mode);
+    
+    this.memory.enhancedDiary.unshift(entry);
+    this.saveMemory();
+    
+    console.log(`[GPT Diary] Manual entry created: "${entry.title}" (${entry.mode} ${entry.type})`);
+    return entry;
+  }
+
+  // Get autonomy status for debugging
+  getAutonomyStatus() {
+    return {
+      ...this.diaryEngine.getAutonomyStatus(),
+      lastAutonomousEntry: this.lastAutonomousEntry,
+      totalEnhancedEntries: this.memory.enhancedDiary.length,
+      totalLegacyEntries: this.memory.diary.length
+    };
   }
 
   // Get full memory for API access

@@ -16,7 +16,7 @@ import CompactTaskManager from '../components/CompactTaskManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
-import { Code, BookOpen } from 'lucide-react';
+import { Code, BookOpen, Brain } from 'lucide-react';
 import Workstation from '../components/Workstation';
 
 export default function HomePage() {
@@ -118,6 +118,16 @@ export default function HomePage() {
                 <Code className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">Code Analysis</span>
                 <span className="sm:hidden">Code</span>
+              </a>
+              <a 
+                href="/diary" 
+                target="_blank"
+                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200 dark:text-purple-300 dark:bg-purple-900 dark:hover:bg-purple-800 transition-colors"
+                title="AI autonomous diary with context awareness"
+              >
+                <Brain className="h-3 w-3 mr-1" />
+                <span className="hidden sm:inline">AI Diary</span>
+                <span className="sm:hidden">Diary</span>
               </a>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Label htmlFor="builder-mode" className="text-xs sm:text-sm whitespace-nowrap hidden sm:inline">Builder Mode</Label>
