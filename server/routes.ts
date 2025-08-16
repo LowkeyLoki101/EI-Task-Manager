@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage, conversationStorage } from "./storage";
+import realtimeRouter from "./realtime";
 import { registerElevenLabsActions, OpsManager } from "./elevenlabs-actions";
 import { registerEnhancedActions } from "./enhanced-actions";
 import { 
@@ -1950,6 +1951,15 @@ Current time: ${new Date().toLocaleString()}`;
       res.status(500).json({ error: 'Failed to execute workflow' });
     }
   });
+
+  // Add microphone permission header for GPT Realtime voice
+  app.use((_, res, next) => { 
+    res.setHeader("Permissions-Policy", "microphone=*"); 
+    next(); 
+  });
+  
+  // Mount GPT Realtime voice router
+  app.use(realtimeRouter);
 
   const httpServer = createServer(app);
   return httpServer;

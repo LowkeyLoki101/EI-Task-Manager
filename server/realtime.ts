@@ -22,10 +22,12 @@ router.post("/api/realtime/session", async (req, res) => {
 
     if (!r.ok) {
       const text = await r.text();
+      console.error("OpenAI Realtime session creation failed:", text);
       return res.status(500).json({ error: "session_create_failed", detail: text });
     }
 
     const data = await r.json(); // contains client_secret for browser
+    console.log("[Realtime] Session created successfully");
     res.json(data);
   } catch (err: any) {
     console.error("/api/realtime/session error", err?.message);

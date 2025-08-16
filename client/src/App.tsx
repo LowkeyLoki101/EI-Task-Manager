@@ -7,6 +7,7 @@ import Home from "./pages/home";
 import Proposals from "./pages/proposals";
 import Preview from "./pages/preview";
 import Assistant from "./pages/assistant";
+import VoiceChatPage from "./pages/voice-chat";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
 import CodeAnalysis from "./pages/CodeAnalysis";
 import DiaryPage from "./pages/diary";
@@ -18,6 +19,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/assistant" component={Assistant} />
+      <Route path="/voice-chat" component={VoiceChatPage} />
       <Route path="/knowledge-base" component={KnowledgeBasePage} />
       <Route path="/proposals" component={Proposals} />
       <Route path="/preview/:id" component={Preview} />
