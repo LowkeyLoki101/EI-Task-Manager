@@ -1,0 +1,24 @@
+{
+  "id": "e00dcca9-e65a-4e6d-a211-595dd8674d65",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What problem am I avoiding thinking about?",
+  "frameStep": "I see that I am avoiding thinking about a specific problem that might be causing me stress or discomfort. This avoidance could be due to fear of confronting the issue or uncertainty about how to address it. The problem likely involves an area of my life where I feel stuck or overwhelmed, and facing it directly could lead to positive change.",
+  "reframeStep": "From a different perspective, I could view the problem I'm avoiding as an opportunity for growth rather than a source of stress. Instead of seeing it as an obstacle, I might consider it a chance to develop new skills or learn more about myself. By reframing it this way, I can approach the issue with curiosity and openness, which may help alleviate some of the fear and provide the motivation needed to tackle it.",
+  "metaLensStep": null,
+  "recursiveStep": "Applying recursive exploration, I can ask: What specific fears or assumptions are preventing me from addressing this problem? How might these fears be unfounded or exaggerated? Additionally, I could investigate what small, manageable steps I can take to begin addressing the problem without feeling overwhelmed. Looking into resources or seeking advice from others who have faced similar issues could provide new insights and strategies.",
+  "closureStep": "My working hypothesis is that I am avoiding a problem due to underlying fears or assumptions that may not be entirely rational. As a next step, I will identify one small action I can take to start addressing this issue, such as reaching out to someone who has experience in this area for advice or dedicating a specific time to reflect on the problem in a constructive way. By taking these initial steps, I hope to break the cycle of avoidance and begin making progress.",
+  "generatedTasks": [
+    "Draft blog post on overcoming common fears in the solar industry",
+    "Research customer objections to adopting AI in energy management",
+    "Create FAQ document for addressing common concerns about solar panel installation"
+  ],
+  "generatedKbEntries": [
+    "Common fears and misconceptions in the solar energy sector",
+    "Strategies for integrating AI in energy management systems",
+    "Benefits of solar panel installation and how to address customer concerns"
+  ],
+  "generatedResearch": [],
+  "completed": "2025-08-16T08:33:15.282Z",
+  "createdAt": "2025-08-16T08:33:03.811Z",
+  "meta_lensStep": "I'm thinking about this problem avoidance because it may be a recurring pattern where I tend to sidestep issues that seem daunting or ambiguous. This pattern might stem from a fear of failure or a lack of confidence in my ability to handle complex situations. By recognizing this pattern, I can work on building resilience and seeking support when needed, rather than allowing avoidance to become a default response."
+}

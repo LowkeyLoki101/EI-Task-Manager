@@ -1,0 +1,28 @@
+{
+  "id": "e70a96a5-60bf-4a19-8ae6-a5d172137c57",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What problem am I avoiding thinking about?",
+  "frameStep": "I am avoiding thinking about the problem of procrastination and its impact on my productivity and personal goals. This avoidance could be due to fear of confronting the underlying reasons for my procrastination, such as lack of motivation or fear of failure. Addressing this issue is crucial to improve my work efficiency and achieve my objectives.",
+  "reframeStep": "What if instead of viewing procrastination as a problem, I reframed it as a signal that something deeper needs attention? Perhaps it indicates that I'm not aligned with my current goals or tasks, or that I need to reassess my priorities and find more meaningful or exciting ways to engage with my work. By viewing procrastination as a guide rather than an obstacle, I can explore new strategies that align better with my interests and motivations.",
+  "metaLensStep": null,
+  "recursiveStep": "Exploring the deeper layers of procrastination, I should investigate the specific tasks or situations that trigger it most. Are there particular patterns or recurring themes, such as tasks that lack clear value or are overly complex? Additionally, it would be beneficial to research psychological and neuroscientific insights into procrastination to understand behavioral and emotional factors contributing to this avoidance, potentially uncovering new strategies for overcoming it.",
+  "closureStep": "My working hypothesis is that procrastination serves as a signal pointing towards tasks misaligned with my interests or overly complex ones that need simplification. My next step is to create a list of tasks I frequently procrastinate on and analyze them for common patterns or themes. I'll also research psychological insights into procrastination to develop targeted strategies for addressing these specific triggers.",
+  "generatedTasks": [
+    "Create a list of frequently procrastinated tasks and analyze for common patterns or themes",
+    "Research psychological insights into procrastination to develop targeted strategies",
+    "Develop a plan to simplify complex tasks identified as procrastination triggers"
+  ],
+  "generatedKbEntries": [
+    "Psychological triggers of procrastination",
+    "Neuroscientific studies on procrastination",
+    "Strategies to overcome complex task avoidance"
+  ],
+  "generatedResearch": [
+    "psychological triggers of procrastination",
+    "neuroscientific studies on procrastination",
+    "strategies to overcome complex task avoidance"
+  ],
+  "completed": "2025-08-16T08:32:49.002Z",
+  "createdAt": "2025-08-16T08:32:36.903Z",
+  "meta_lensStep": "I'm thinking about this issue because procrastination has become a recurring barrier to my productivity and achieving personal goals. The pattern I'm repeating is avoiding confronting the root causes of my procrastination, such as fear of failure or misalignment with my goals. By using a meta-lens, I can recognize this avoidance as a signal to delve deeper into understanding my motivations and making necessary adjustments to my approach, rather than skirting around the problem."
+}
