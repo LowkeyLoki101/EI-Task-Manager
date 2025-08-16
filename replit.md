@@ -95,4 +95,8 @@ Steps are labeled with `Context` (Computer/Phone/Physical) and `Time Window` (Mo
 - **CSV-Writer**: CSV file creation.
 
 ### Workflow Automation Stack
-- **n8n Integration**: Visual workflow automation.
+- **n8n Integration**: Complete workflow automation with smart suggestions, task conversion, LLM workflows, and execution monitoring.
+- **Smart Workflow Engine**: AI analyzes tasks and suggests 6 automation patterns (email, data, research, social, files, AI assistant).
+- **Visual Workflow Builder**: Convert any task into n8n workflow JSON with automated triggers and actions.
+- **LLM Automation Chains**: OpenAI + n8n workflows for intelligent task processing.
+- **Real-time Monitoring**: Track workflow executions and results integration.
