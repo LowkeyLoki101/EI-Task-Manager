@@ -12,12 +12,25 @@ Emergent Intelligence is an AI-powered project management platform designed to s
 - **✅ AI Focus Feature**: Manual AI focus on specific tasks with instruction capability
 - **✅ Task Lifecycle**: Completed tasks automatically convert to knowledge base entries and diary narratives
 - **✅ Autopoietic Integration**: Task limits integrated with autonomous diary to prevent endless task creation
+- **✅ AI Workstation Mode Switching**: Fixed conflicting mode switchers, tools now work in Human/Hybrid/AI modes
+- **✅ Content Generation Systems**: Knowledge base and diary systems operational with quota management
+- **✅ Development Framework**: Implemented Self-Diagnostic & Improvement Framework for code quality
 - **📊 Current Scale**: 417+ tasks identified, 0% completion rate detected and FIXED
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Interface design: Clean, mobile-first interface without technical backend details exposed to users. Single voice interface only.
 Chat behavior: No disruptive auto-scrolling when user is typing - allow natural interaction without forcing scroll position changes.
+
+## Development Methodology
+**Self-Diagnostic & Improvement Framework**: All code generation, editing, and refactoring must follow the 6-step framework:
+1. **Investigation** - Parse output critically for truncation, paraphrasing, missing details
+2. **Diagnostic Report** - Structured analysis before final code output
+3. **Fortify & Enhance** - Rewrite weak sections completely, expand placeholders
+4. **Adjust for Drift** - Compare against earlier instructions, realign to canonical form
+5. **Final Output Policy** - Provide both diagnostic report and corrected code separately
+6. **Continuous Improvement** - Integrate lessons from prior diagnostics
+Never skip steps. Always investigate → diagnose → fortify → correct → output.
 
 ## System Architecture
 
