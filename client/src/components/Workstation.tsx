@@ -90,6 +90,7 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
     maintenanceSchedule: []
   });
   const [userActions, setUserActions] = useState<string[]>([]);
+  const [isOrganizing, setIsOrganizing] = useState(false);
   const workstationRef = useRef<HTMLDivElement>(null);
   const aiIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -357,6 +358,36 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
              workstationState.mode === 'human' ? 'Enable Hybrid' : 
              workstationState.mode === 'hybrid' ? 'Enable AI' : 'Turn Off'}
           </Button>
+          
+          {/* Fractal Organization Control */}
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={async () => {
+              try {
+                setIsOrganizing(true);
+                logUserAction('Manual fractal organization triggered');
+                
+                const response = await fetch(`/api/projects/${sessionId}/organize`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                console.log('[Workstation] Fractal organization complete:', result);
+                
+                // Show success for 3 seconds
+                setTimeout(() => setIsOrganizing(false), 3000);
+              } catch (error) {
+                console.error('[Workstation] Organization failed:', error);
+                setIsOrganizing(false);
+              }
+            }}
+            className="text-xs px-3 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-900/20"
+            disabled={isOrganizing}
+          >
+            {isOrganizing ? 'Organizing...' : 'Organize Tasks'}
+          </Button>
+          
           {/* Height Controls */}
           <div className="flex items-center gap-1">
             <Button 

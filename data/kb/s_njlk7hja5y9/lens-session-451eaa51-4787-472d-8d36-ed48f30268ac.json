@@ -1,0 +1,20 @@
+{
+  "id": "451eaa51-4787-472d-8d36-ed48f30268ac",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The problem is understanding the current trends, disruptions, and innovations within your industry that could impact your business or strategic decisions. This involves identifying key changes such as technological advancements, regulatory updates, or shifts in consumer behavior that could influence market dynamics. Being aware of these developments is crucial for staying competitive and making informed decisions.",
+  "reframeStep": "What if, instead of focusing solely on the changes within your industry, you consider how adjacent industries or global trends might influence your field? This reframed perspective encourages you to look beyond immediate competitors and explore cross-industry innovations or broader economic shifts that could either pose a threat or offer new opportunities. By doing so, you might uncover unexpected insights or partnerships that could drive strategic growth and adaptation.",
+  "metaLensStep": null,
+  "recursiveStep": "From this exploration, new questions emerge such as: How might emerging technologies in unrelated fields, like AI in healthcare, influence your industry? Are there global economic or environmental trends that could disrupt traditional market dynamics within your sector? These inquiries deserve deeper investigation, as understanding these broader influences could reveal potential risks and opportunities that are not immediately apparent within your industry's current trends.",
+  "closureStep": "Given the exploration of cross-industry influences and global trends, the next step is to conduct a comprehensive analysis of adjacent industries and macroeconomic factors. This could involve setting up alerts for technological advancements and economic changes outside your immediate industry and attending cross-disciplinary conferences or webinars. By actively seeking knowledge from these areas, you can uncover strategic insights that may not be visible through a narrow industry focus.",
+  "generatedTasks": [],
+  "generatedKbEntries": [],
+  "generatedResearch": [
+    "impact of AI advancements in healthcare on renewable energy sector",
+    "global economic trends affecting renewable energy markets",
+    "environmental trends disrupting traditional energy market dynamics"
+  ],
+  "completed": "2025-08-16T07:11:09.079Z",
+  "createdAt": "2025-08-16T07:10:57.031Z",
+  "meta_lensStep": "I'm thinking about this now because staying updated on industry trends is essential for maintaining a competitive edge and ensuring strategic alignment with future developments. A pattern I notice in my approach is a tendency to focus narrowly on immediate industry changes without considering broader, interconnected global trends or innovations in adjacent industries. By using a meta-lens, I can shift my perspective to include a wider array of influences, enhancing my ability to anticipate shifts and adapt proactively."
+}

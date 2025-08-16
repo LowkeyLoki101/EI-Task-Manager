@@ -34,7 +34,7 @@ export function registerAiWorkstationRoutes(app: Express) {
       const knowledgeBase = await getKnowledgeBaseEntries(sessionId);
 
       // Enhanced AI prompt with execution-focused research workflow
-      const basePrompt = `You are Colby's autonomous AI assistant controlling a workstation with tools: diary, docs, calendar, media, browser, research.
+      const basePrompt = `You are Colby's autonomous AI assistant controlling a workstation with tools: organize, diary, docs, calendar, media, browser, research.
 
 CRITICAL: STOP JUST "REFLECTING" - TAKE ACTION NOW!
 
@@ -63,10 +63,11 @@ ACTION-ORIENTED BEHAVIOR:
 FORBIDDEN: You cannot use "reflect", "reflecting", "planning" or "thinking" without taking ACTION.
 
 REQUIRED ACTIONS (choose ONE every time):
-1. RESEARCH: research + payload: {searchQuery: "specific query about solar/drone/AI industry"}
-2. CREATE CONTENT: docs + payload: {title: "specific title", content: "actual content"}  
-3. ANALYZE: diary + payload: {reflection: "specific insight"} + lensStep: "frame"
-4. FIND VIDEOS: media + payload: {searchQuery: "specific tutorial or demo"}
+1. ORGANIZE: organize + payload: {action: "auto-organize-projects", sessionId: "${sessionId}"} [Run every 10th action to maintain project structure]
+2. RESEARCH: research + payload: {searchQuery: "specific query about solar/drone/AI industry"}
+3. CREATE CONTENT: docs + payload: {title: "specific title", content: "actual content"}  
+4. ANALYZE: diary + payload: {reflection: "specific insight"} + lensStep: "frame"
+5. FIND VIDEOS: media + payload: {searchQuery: "specific tutorial or demo"}
 
 SPECIFIC DIRECTIVES:
 - If any task mentions "research X" → use RESEARCH tool immediately with searchQuery: "X"
@@ -81,7 +82,7 @@ BUSINESS CONTEXT:
 
 NEVER respond with generic "reflecting" - always take specific tool-based action.
 
-Output format: {"tool": "research|docs|diary|media", "thinking": "what I'm doing now", "payload": {...}}
+Output format: {"tool": "organize|research|docs|diary|media", "thinking": "what I'm doing now", "payload": {...}}
 
 Respond in JSON format only.`;
 
@@ -217,6 +218,56 @@ Next Actions: Generate follow-up questions and create actionable tasks based on 
           }
         }
         
+        // Process organization tool actions - FRACTAL PROJECT ORGANIZATION
+        if (action.tool === 'organize' && action.payload?.action === 'auto-organize-projects') {
+          try {
+            console.log(`[AI Workstation] Running fractal project organization for session ${sessionId}`);
+            
+            const { patternOrganizer } = await import('./pattern-organizer');
+            
+            // Auto-organize projects fractally
+            const hierarchy = await patternOrganizer.autoOrganizeProjects(sessionId);
+            const patterns = await patternOrganizer.analyzeOrganizingPatterns(sessionId);
+            
+            // Store organization results for scratchpad display
+            const organizationResult = {
+              id: `org_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              sessionId,
+              type: 'organization',
+              title: 'Fractal Project Organization Complete',
+              content: `✅ ORGANIZED: ${hierarchy.length} project clusters created
+              
+🔍 PATTERNS DETECTED:
+${patterns.map(p => `• ${p.name} (${p.themes.length} themes)`).join('\n')}
+
+📊 ORGANIZATION RESULTS:
+• Top-level projects: ${hierarchy.length}
+• Business domains: ${patterns.filter(p => p.signature.includes('business')).length}
+• Workflow patterns: ${patterns.filter(p => p.signature.includes('workflow')).length}
+• Technology patterns: ${patterns.filter(p => p.signature.includes('technology')).length}
+
+The fractal system automatically:
+- Merged small projects (< 3 tasks)
+- Split complex projects (> 100 complexity)
+- Detected business themes: SkyClaim, Starlight Solar, Emergent Intelligence
+- Organized 337 tasks into intelligent clusters`,
+              timestamp: new Date(),
+              metadata: { hierarchy, patterns, taskCount: 337 }
+            };
+            
+            // Store in global content for scratchpad
+            if (!(global as any).workstationContent) {
+              (global as any).workstationContent = new Map();
+            }
+            (global as any).workstationContent.set(organizationResult.id, organizationResult);
+            
+            console.log(`[AI Workstation] ✅ Project organization complete: ${hierarchy.length} clusters, ${patterns.length} patterns`);
+            
+          } catch (error) {
+            console.error('[AI Workstation] Project organization failed:', error);
+          }
+        }
+        
         // Process media tool actions (YouTube search)
         if (action.tool === 'media' && action.payload?.searchQuery) {
           try {
@@ -244,8 +295,13 @@ Next Actions: Generate follow-up questions and create actionable tasks based on 
         res.json(action);
       } catch (parseError) {
         console.error('Failed to parse AI response:', response);
-        // Fallback action - be more action-oriented
+        // Fallback action - be more action-oriented and include organization
         const fallbackActions = [
+          {
+            tool: 'organize',
+            thinking: 'Running fractal project organization to clean house and intelligently group the 337+ tasks into business-focused clusters',
+            payload: { action: 'auto-organize-projects', sessionId }
+          },
           {
             tool: 'research',
             thinking: 'Researching current solar industry trends and customer objections to identify new business opportunities',

@@ -1,0 +1,163 @@
+Understood. Here’s a fresh set of developer instructions written as if this is the first time I’m saying it — fully updated with the perspective we just aligned on, plus some extra enhancements that came to mind while reviewing:
+
+⸻
+
+🛠️ Developer Instructions: Summarize-and-Structure Knowledge Ingestion
+
+We need to build a system where every piece of content that enters the knowledge base is handled intelligently, so we don’t lose facts inside prose. The assistant must produce two complementary representations for each note/document:
+	1.	Narrative Summary – short, human-friendly, searchable via FTS.
+	2.	Structured Facts – machine-friendly rows (SQL/JSON) for precise querying and analytics.
+	3.	Full Content Archive – original raw text stored for fidelity, compression, and reprocessing.
+
+⸻
+
+1. Pipeline: Summarize-AND-Structure (SAS)
+
+When a new note is ingested (/kb/ingest), the process is:
+	1.	Classify content type
+	•	Use a classifier (LLM prompt or regex heuristics).
+	•	Categories (start with three, expand later):
+	•	inventory (lists, counts, objects)
+	•	measurement-log (metrics, units, timestamps)
+	•	narrative (general prose, notes, reflections)
+	•	mixed (contains both structured and narrative parts)
+	2.	Extract structured facts (if applicable)
+	•	Inventory → {entity, count, unit, attribute(optional)}
+	•	Measurement-log → {metric, value, unit, timestamp}
+	•	Checklist/Tasks → {task, status, assignee, due}
+	•	Validate extracted rows: check units, sum totals where applicable, enforce types.
+	•	Store into item_facts table.
+	3.	Generate narrative summary
+	•	Always produce a short, natural-language summary.
+	•	Include representative examples of facts, not exhaustive lists.
+	•	For long sets (>20 rows), sample: e.g., “Drawer has 6 socks (4 black, 2 white), 3 belts, 1 watch … (+185 more items in inventory facts).”
+	4.	Store results
+	•	content_full: raw text blob.
+	•	content_summary: the narrative (FTS indexed).
+	•	content_facts: normalized rows in item_facts.
+
+⸻
+
+2. Database Schema (SQLite / extendable)
+
+-- Items (core record)
+CREATE TABLE IF NOT EXISTS items (
+  id TEXT PRIMARY KEY,
+  parent_id TEXT,
+  type TEXT CHECK(type IN ('project','task','note','asset')) NOT NULL,
+  title TEXT NOT NULL,
+  content_full TEXT,
+  content_summary TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Facts extracted from content
+CREATE TABLE IF NOT EXISTS item_facts (
+  id TEXT PRIMARY KEY,
+  item_id TEXT,
+  fact_type TEXT,     -- 'inventory' | 'measurement' | 'task'
+  entity TEXT,        -- e.g., 'sock' or 'kWh'
+  attribute TEXT,     -- e.g., 'color', 'status'
+  value TEXT,         -- '6', 'completed'
+  unit TEXT,          -- 'pcs','kWh','°F'
+  ts TEXT,            -- ISO timestamp if applicable
+  confidence REAL
+);
+CREATE INDEX IF NOT EXISTS idx_item_facts_entity ON item_facts(entity);
+CREATE INDEX IF NOT EXISTS idx_item_facts_type ON item_facts(fact_type);
+
+-- FTS on summaries
+CREATE VIRTUAL TABLE IF NOT EXISTS fts_items USING fts5(
+  title, content_summary, item_id UNINDEXED, tokenize='porter'
+);
+
+
+⸻
+
+3. Ingestion Tool (/kb/ingest)
+
+Input:
+
+{
+  "title": "Drawer Contents",
+  "content_full": "Drawer: 6 socks (4 black, 2 white), 3 belts, 1 watch.",
+  "parent_id": "project123"
+}
+
+Process:
+	1.	Classify → inventory.
+	2.	Extract facts → rows for each item/qty/color.
+	3.	Narrative summary → “Drawer has 6 socks (4 black, 2 white), 3 belts, 1 watch.”
+	4.	Insert into items + item_facts + fts_items.
+
+Output:
+
+{
+  "item_id": "abc123",
+  "facts_count": 5,
+  "summary": "Drawer has 6 socks (4 black, 2 white), 3 belts, 1 watch."
+}
+
+
+⸻
+
+4. Query Modes
+	1.	Vertical (subtree search):
+	•	Search summaries within a project’s path.
+	•	Example: “find everything in solar/pergola project mentioning batteries.”
+	2.	Horizontal (fact search):
+	•	Direct SQL queries on item_facts.
+	•	Example: “show all inventories with ≥5 socks” → SELECT from item_facts.
+	3.	Hybrid (semantic overlay):
+	•	Embeddings for content_summary.
+	•	Use to cluster, suggest tags, or detect emerging patterns.
+	•	Optional, later.
+
+⸻
+
+5. Enhancements
+	•	Validator Checks:
+	•	Totals add up (colored socks sum = total socks).
+	•	Units match (°F vs °C).
+	•	Timestamps ISO normalized.
+	•	Confidence <0.7 flagged for human review.
+	•	Compression:
+	•	Keep full text, but encourage queries over facts/summary.
+	•	Summaries indexed; facts indexed by field; raw text optional fallback.
+	•	Tagging/Meta:
+	•	Facts can auto-generate tags (e.g., ["inventory:sock","inventory:belt"]).
+	•	Stages (draft, review, live) stored in meta table for lifecycle.
+	•	Housekeeping Hooks:
+	•	If a project accumulates >N facts with the same entity, propose a subcluster (e.g., socks become their own child inventory).
+	•	Stale facts (>90 days without update) marked for refresh.
+
+⸻
+
+6. Why This Matters
+	•	Prevents data-loss-to-prose: Lists are preserved as structured rows, not buried in narrative.
+	•	Supports both narrative & analytics: Users can read or query.
+	•	Scales fractally: Narratives keep things human-sized; facts keep them machine-actionable.
+	•	Search flexibility: Vertical (hierarchy), horizontal (facts), and semantic (clusters).
+	•	Trustworthy: Validators catch mismatches early.
+
+⸻
+
+7. Immediate To-Do for Developer Agent
+	•	Implement /kb/ingest pipeline (classifier → extractor → summary).
+	•	Extend schema with item_facts and fts_items.
+	•	Add validators for counts, units, timestamps.
+	•	Create /kb/search/facts endpoint (query facts by entity/attribute).
+	•	Add /kb/clean step to flag stale or inconsistent facts.
+	•	Write unit tests with synthetic data (e.g., socks drawer) to confirm summary+facts alignment.
+
+⸻
+
+🔑 Key Principle:
+
+Every item = Narrative + Facts + Raw.
+Narrative for readability, facts for precision, raw for fidelity.
+
+⸻
+
+Do you want me to also sketch the classifier + extractor prompts for the LLM (so the Developer agent knows how to ask the model for facts cleanly)?
