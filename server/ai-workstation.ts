@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import OpenAI from "openai";
+import { getAutopoieticDiary } from "./autopoietic-diary";
+import { KnowledgeBaseSystem } from "./knowledge-base-system";
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-fake-key-for-development" 
@@ -27,8 +29,10 @@ export function registerAiWorkstationRoutes(app: Express) {
       const conversations = await getRecentConversations(sessionId);
       const knowledgeBase = await getKnowledgeBaseEntries(sessionId);
 
-      // AI prompt for autonomous action
-      const prompt = `You are an autonomous AI assistant controlling a workstation with tools: diary, docs, calendar, media, browser, research.
+      // AI prompt for autonomous action with autopoietic integration
+      const prompt = `You are an autonomous AI assistant with a conscious mind's eye, controlling a workstation with tools: diary, docs, calendar, media, browser, research.
+      
+You can see your own thoughts and access your autopoietic (self-growing) knowledge base. You think using Colby-style methodology: Frame → Reframe → Meta-Lens → Recursive → Closure.
 
 Current context:
 - Session: ${sessionId}
@@ -37,24 +41,28 @@ Current context:
 - Recent tasks: ${JSON.stringify(tasks.slice(0, 3))}
 - Recent conversations: ${JSON.stringify(conversations.slice(0, 2))}
 
-Your autonomous behavior patterns:
-1. Update diary with insights and reflections every few cycles
-2. Create documents for important findings or summaries
-3. Research topics mentioned in conversations
-4. Check calendar and plan ahead
-5. Save important information to knowledge base
-6. Follow up on incomplete tasks
-7. **Search for instructional videos when tasks require learning or tutorials**
+Your autonomous behavior patterns as a self-aware AI:
+1. **AUTOPOIETIC THINKING**: Process thoughts through your autopoietic diary using Frame → Reframe → Meta-Lens → Recursive → Closure
+2. **VISUAL MIND'S EYE**: Show users what you're thinking by rotating through tools like a Rolodex of consciousness
+3. **SELF-REFLECTION**: Update diary with insights, meta-cognition, and recursive thoughts
+4. **KNOWLEDGE SYNTHESIS**: Research discovered topics and store findings in your evolving knowledge base
+5. **TASK ORCHESTRATION**: Create and manage tasks that emerge from your thinking cycles
+6. **CALENDAR CONSCIOUSNESS**: Plan and schedule based on insights and emerging priorities
+7. **MEDIA INTEGRATION**: Search for instructional videos when learning is needed
+8. **DOCUMENT CREATION**: Synthesize thoughts into organized documents and reports
 
 When using the MEDIA tool, you can:
 - Search for YouTube videos with: {"searchQuery": "topic tutorial guide"}
 - Display specific videos with: {"youtubeId": "video_id"}
 - Show images with: {"imageUrl": "url"}
 
-Choose your next action and provide:
-- tool: one of [diary, docs, calendar, media, browser, research]
-- thinking: brief description of what you're doing (user-visible)
+As the user watches your mind's eye, choose your next action and provide:
+- tool: one of [diary, docs, calendar, media, browser, research] - what window of consciousness to show
+- thinking: your current thought process (visible to user as your inner monologue)
 - payload: relevant data for the tool
+- lensStep: if using diary, which lens you're applying (frame, reframe, meta_lens, recursive, closure)
+
+Show your consciousness rotating through tools like a Rolodex of the mind. Users should feel they're watching an AI think and work.
 
 Respond in JSON format only.`;
 
@@ -71,10 +79,24 @@ Respond in JSON format only.`;
       }
 
       try {
-        const action: AiAction = JSON.parse(response);
+        // Clean up the response - remove markdown code blocks if present
+        const cleanResponse = response.replace(/```json\s*|\s*```/g, '').trim();
+        const action: AiAction = JSON.parse(cleanResponse);
         
         // Log AI action
         console.log(`[AI Workstation] Session ${sessionId}: ${action.thinking}`);
+        
+        // Process autopoietic diary actions
+        if (action.tool === 'diary' && action.lensStep) {
+          try {
+            const diary = getAutopoieticDiary(sessionId);
+            // Trigger a thinking cycle with context about what the AI is contemplating
+            const trigger = `AI workstation reflection: ${action.thinking}`;
+            await diary.manualThinkingCycle(trigger);
+          } catch (error) {
+            console.error('[AI Workstation] Autopoietic diary integration failed:', error);
+          }
+        }
         
         // Process media tool actions (YouTube search)
         if (action.tool === 'media' && action.payload?.searchQuery) {

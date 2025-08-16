@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, FileText, Brain, Monitor, Search, Youtube, 
   Maximize2, Minimize2, Grid3x3, ChevronLeft, ChevronRight,
-  Download, ExternalLink, Plus, Minus
+  Download, ExternalLink, Plus, Minus, Eye, Lightbulb, ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useQuery } from "@tanstack/react-query";
 
 interface WorkstationTool {
   id: string;
@@ -24,6 +25,15 @@ interface WorkstationState {
   aiActive: boolean;
   lastAiAction: Date | null;
   maintenanceSchedule: string[];
+}
+
+interface AutopoieticStatus {
+  isActive: boolean;
+  currentThinking?: string;
+  lensStep?: string;
+  lastThought?: string;
+  questionPool?: string[];
+  cycleCounts?: number;
 }
 
 const tools: WorkstationTool[] = [
@@ -81,6 +91,13 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
   const [userActions, setUserActions] = useState<string[]>([]);
   const workstationRef = useRef<HTMLDivElement>(null);
   const aiIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Query autopoietic diary status for mind's eye visualization
+  const { data: autopoieticStatus } = useQuery<AutopoieticStatus>({
+    queryKey: [`/api/autopoietic/status/${sessionId}`],
+    refetchInterval: 3000, // Update every 3 seconds to show thinking in real-time
+    enabled: workstationState.mode === 'ai'
+  });
 
   // AI Autonomous Mode Logic
   useEffect(() => {
@@ -207,11 +224,19 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
         <div className="flex items-center justify-between p-3">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
-            <span className="text-sm text-amber-100 font-medium">AI Workstation</span>
-            {aiThinking && (
+            <span className="text-sm text-amber-100 font-medium">AI Mind's Eye</span>
+            {(aiThinking || autopoieticStatus?.currentThinking) && (
               <Badge variant="secondary" className="bg-amber-900/20 text-amber-300 text-xs">
-                {aiThinking}
+                {aiThinking || autopoieticStatus?.currentThinking || 'Thinking...'}
               </Badge>
+            )}
+            {autopoieticStatus?.isActive && (
+              <div className="flex items-center gap-1">
+                <Brain className="h-3 w-3 text-blue-400 animate-pulse" />
+                <span className="text-xs text-blue-400">
+                  {autopoieticStatus.lensStep || 'Processing'}
+                </span>
+              </div>
             )}
           </div>
           <Button 
@@ -220,7 +245,7 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
             onClick={() => setIsExpanded(true)}
             className="text-amber-400 hover:text-amber-300 hover:bg-amber-900/20"
           >
-            <Maximize2 className="h-4 w-4" />
+            <Eye className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -252,7 +277,22 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
                 {workstationState.mode === 'ai' ? 'AI MODE' : 'HUMAN MODE'}
               </span>
             </h3>
-            {aiThinking && (
+            {/* Autopoietic Mind's Eye Display */}
+            {workstationState.mode === 'ai' && autopoieticStatus?.isActive && (
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-1">
+                  <Brain className="h-3 w-3 text-blue-400 animate-pulse" />
+                  <span className="text-xs text-blue-400 font-mono">
+                    {autopoieticStatus.lensStep?.toUpperCase() || 'FRAME'}
+                  </span>
+                </div>
+                <ArrowRight className="h-2 w-2 text-gray-500" />
+                <p className="text-xs text-amber-300/80 truncate max-w-xs">
+                  {autopoieticStatus.currentThinking || aiThinking || 'Processing thoughts...'}
+                </p>
+              </div>
+            )}
+            {aiThinking && !autopoieticStatus?.isActive && (
               <p className="text-xs text-amber-300/80 mt-0.5">
                 {aiThinking}
               </p>
@@ -326,27 +366,63 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
         </div>
       </div>
 
+      {/* AI Mind's Eye Rolodex - Visual thinking display */}
+      {workstationState.mode === 'ai' && (
+        <div className="px-4 py-2 border-b border-amber-500/10 bg-gradient-to-r from-slate-800/40 to-gray-700/40">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-amber-400 animate-pulse" />
+              <span className="text-xs font-mono text-amber-300">MIND'S EYE</span>
+            </div>
+            <div className="flex-1 flex items-center gap-2 overflow-hidden">
+              {autopoieticStatus?.isActive && (
+                <>
+                  <Badge variant="outline" className="text-xs bg-blue-900/30 border-blue-500/50 text-blue-300">
+                    {autopoieticStatus.lensStep?.toUpperCase() || 'FRAME'}
+                  </Badge>
+                  <ArrowRight className="h-3 w-3 text-gray-500" />
+                </>
+              )}
+              <div className="flex-1 overflow-hidden">
+                <p className="text-xs text-amber-200/90 truncate animate-pulse">
+                  {autopoieticStatus?.currentThinking || aiThinking || 'Observing and learning...'}
+                </p>
+              </div>
+            </div>
+            {autopoieticStatus?.cycleCounts && (
+              <div className="text-xs text-gray-500">
+                Cycles: {autopoieticStatus.cycleCounts}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Tool Selector */}
       <div className="flex items-center gap-1 p-2 border-b border-amber-500/10 bg-slate-800/30">
         {tools.map((tool) => {
           const Icon = tool.icon;
+          const isActive = activeTool === tool.id;
+          const isAiMode = workstationState.mode === 'ai';
+          
           return (
             <Button
               key={tool.id}
-              variant={activeTool === tool.id ? "secondary" : "ghost"}
+              variant={isActive ? "secondary" : "ghost"}
               size="sm"
               onClick={() => {
                 setActiveTool(tool.id);
                 logUserAction(`Switched to ${tool.name} tool`);
               }}
-              disabled={workstationState.mode === 'ai'}
+              disabled={isAiMode}
               className={`
-                flex items-center gap-1.5 text-xs h-8 px-3
-                ${activeTool === tool.id 
-                  ? 'bg-amber-900/30 text-amber-100 border border-amber-500/30 shadow-md' 
+                flex items-center gap-1.5 text-xs h-8 px-3 transition-all duration-200
+                ${isActive 
+                  ? 'bg-amber-900/30 text-amber-100 border border-amber-500/30 shadow-md scale-105' 
                   : 'text-amber-300/70 hover:text-amber-200 hover:bg-amber-900/10'
                 }
-                ${workstationState.mode === 'ai' ? 'opacity-50 cursor-not-allowed' : ''}
+                ${isAiMode ? 'opacity-50 cursor-not-allowed' : ''}
+                ${isAiMode && isActive ? 'ring-2 ring-amber-400/50 animate-pulse' : ''}
               `}
             >
               <Icon className="h-3.5 w-3.5" />
