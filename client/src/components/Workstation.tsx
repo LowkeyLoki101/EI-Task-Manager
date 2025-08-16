@@ -284,8 +284,13 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
   return (
     <div 
       ref={workstationRef}
-      className={`bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 border border-amber-500/30 rounded-lg shadow-2xl backdrop-blur-sm ${className}`}
-      style={{ height: `${height}px` }}
+      className={`relative bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 border border-amber-500/30 rounded-lg shadow-2xl backdrop-blur-sm ${className}`}
+      style={{ 
+        height: `${height}px`,
+        maxHeight: `${height}px`,
+        overflow: 'hidden',
+        zIndex: 10
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-amber-500/20 bg-gradient-to-r from-slate-800/50 to-gray-700/50">
@@ -506,13 +511,16 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden">
-        {activeToolComponent && (
-          <activeToolComponent.component 
-            payload={currentPayload}
-            onUpdate={setCurrentPayload}
-          />
-        )}
+      <div className="flex-1 overflow-hidden relative">
+        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+          {activeToolComponent && (
+            <activeToolComponent.component 
+              payload={currentPayload}
+              onUpdate={setCurrentPayload}
+              sessionId={sessionId}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -790,9 +798,12 @@ function BrowserPanel({ payload, onUpdate }: { payload?: any; onUpdate?: (data: 
 function ResearchPanel({ payload, onUpdate, sessionId }: { payload?: any; onUpdate?: (data: any) => void; sessionId?: string }) {
   // Enhanced research panel that displays real AI research results
   return (
-    <ResearchScratchpad 
-      sessionId={sessionId || 's_njlk7hja5y9'}
-      isVisible={true}
-    />
+    <div className="h-full w-full relative overflow-hidden">
+      <ResearchScratchpad 
+        sessionId={sessionId || 's_njlk7hja5y9'}
+        isVisible={true}
+        isWorkstationMode={true}
+      />
+    </div>
   );
 }

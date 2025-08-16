@@ -31,9 +31,10 @@ interface GeneratedContent {
 interface ResearchScratchpadProps {
   sessionId: string;
   isVisible: boolean;
+  isWorkstationMode?: boolean;
 }
 
-export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadProps) {
+export function ResearchScratchpad({ sessionId, isVisible, isWorkstationMode = false }: ResearchScratchpadProps) {
   const [researchResults, setResearchResults] = useState<ResearchResult[]>([]);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -139,41 +140,50 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
 
   if (!isVisible) return null;
 
+  // Different positioning for workstation mode vs overlay mode
+  const containerClasses = isWorkstationMode 
+    ? `h-full w-full relative` // Full container when inside workstation
+    : `fixed bottom-20 right-4 z-40 max-w-md w-full transition-all duration-300 ease-in-out ${isExpanded ? 'h-[450px]' : 'h-14'}`; // Floating overlay when standalone
+
+  const cardClasses = isWorkstationMode
+    ? "h-full border border-yellow-500/30 bg-slate-900/95 shadow-xl"
+    : "border border-yellow-500/30 bg-slate-900 shadow-2xl border-2";
+
   return (
-    <div className={`
-      fixed bottom-20 right-4 z-40 max-w-md w-full
-      transition-all duration-300 ease-in-out
-      ${isExpanded ? 'h-[450px]' : 'h-14'}
-    `}>
-      <Card className="border border-yellow-500/30 bg-slate-900 shadow-2xl border-2">
-        <CardHeader className="pb-3">
+    <div className={containerClasses}>
+      <Card className={cardClasses}>
+        <CardHeader className={isWorkstationMode ? "pb-2" : "pb-3"}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-yellow-500" />
-              <CardTitle className="text-sm text-yellow-500">Research Scratchpad</CardTitle>
-              {(researchResults.length > 0 || generatedContent.length > 0) && !isExpanded && (
+              <CardTitle className="text-sm text-yellow-500">
+                {isWorkstationMode ? "AI Research Results" : "Research Scratchpad"}
+              </CardTitle>
+              {(researchResults.length > 0 || generatedContent.length > 0) && !isWorkstationMode && !isExpanded && (
                 <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setIsExpanded(!isExpanded);
-                setHasNewContent(false); // Clear notification when expanded
-              }}
-              data-testid="button-toggle-scratchpad"
-              className={hasNewContent && !isExpanded ? "bg-yellow-500/20 border border-yellow-500/50" : ""}
-            >
-              {isExpanded ? '−' : '+'}
-            </Button>
+            {!isWorkstationMode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsExpanded(!isExpanded);
+                  setHasNewContent(false); // Clear notification when expanded
+                }}
+                data-testid="button-toggle-scratchpad"
+                className={hasNewContent && !isExpanded ? "bg-yellow-500/20 border border-yellow-500/50" : ""}
+              >
+                {isExpanded ? '−' : '+'}
+              </Button>
+            )}
           </div>
         </CardHeader>
         
-        {isExpanded && (
-          <CardContent className="h-[400px] overflow-hidden flex flex-col">
-            <Tabs defaultValue="research" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+        {(isExpanded || isWorkstationMode) && (
+          <CardContent className={`${isWorkstationMode ? 'flex-1' : 'h-[400px]'} overflow-hidden flex flex-col`}>
+            <Tabs defaultValue="research" className="w-full flex flex-col flex-1">
+              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
                 <TabsTrigger value="research" className="text-xs">
                   <Search className="h-3 w-3 mr-1" />
                   Research ({researchResults.length})
@@ -188,7 +198,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="research" className="space-y-3 mt-4 h-[320px] overflow-y-auto">
+              <TabsContent value="research" className={`space-y-3 mt-4 overflow-y-auto flex-1 ${isWorkstationMode ? 'min-h-0' : 'h-[320px]'}`}>
                 {researchResults.length === 0 ? (
                   <div className="text-center text-slate-400 py-8">
                     <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -252,7 +262,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                 )}
               </TabsContent>
 
-              <TabsContent value="content" className="space-y-3 mt-4 h-[320px] overflow-y-auto">
+              <TabsContent value="content" className={`space-y-3 mt-4 overflow-y-auto flex-1 ${isWorkstationMode ? 'min-h-0' : 'h-[320px]'}`}>
                 {generatedContent.length === 0 ? (
                   <div className="text-center text-slate-400 py-8">
                     <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
