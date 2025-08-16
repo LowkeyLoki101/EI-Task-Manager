@@ -1,0 +1,74 @@
+Awesome — I built you a plug-and-play scaffold you can drop into Replit right now. It gives your agent a lived-in diary with active/passive prompts, novelty/relevance gates, autonomy modes, and tiny UI. It’s structured so the agent “chooses” to write, not because it’s forced.
+
+Download the project (agent-diary-kit.zip)
+
+How it’s shaped (high level)
+	•	Identity + values persisted (so it can “be someone,” not just log).
+	•	Context snapshot from your tools (tasks, calendar, tool health).
+	•	Active vs. passive stems mirror your “directive / exploratory / reflective / casual” modes.
+	•	Autonomy governor: min interval, max/hour, novelty + relevance thresholds → no spammy entries.
+	•	Diary engine: builds a mode-aware prompt, asks the model for a titled entry (<= ~180 words), stores it.
+	•	UI: lightweight page that lists entries; auto-updates via WebSocket.
+
+Quickstart (Replit)
+	1.	Create a Node.js repl, upload/unzip.
+	2.	npm i
+	3.	Copy .env.example → .env and set:
+	•	OPENAI_API_KEY=... (optional; runs with offline placeholder if missing)
+	•	MODEL=gpt-4o-mini (or your pick)
+	•	AUTONOMY=AUTONOMOUS (or COPILOT / OFF)
+	4.	npm run dev → open the webview. Entries appear ~every 5 min (with jitter) only when gates allow.
+
+Where to plug real data
+	•	src/tools/TaskTool.ts → wire to TaskPilot (open/overdue/changed)
+	•	src/tools/CalendarTool.ts → wire to your calendar API
+	•	src/tools/ToolingStats.ts → log tool successes/errors for passive triggers
+
+What’s inside (files you’ll love)
+	•	src/agent/PromptStems.ts — curated active & passive stems + titles.
+	•	src/agent/AutonomyGovernor.ts — gates for rate, novelty, relevance.
+	•	src/agent/ContextAggregator.ts — turns raw env into a clean snapshot.
+	•	src/agent/DiaryEngine.ts — builds prompts, parses model output, stores entries.
+	•	src/agent/Novelty.ts — quick lexical overlap → novelty score.
+	•	src/agent/MemoryStore.ts — JSON-backed identity & diary.
+	•	src/index.ts — agent loop, API (/api/diary), and tiny UI.
+
+Behavior, by design
+	•	Active vs Passive: If there’s friction (errors/overdues), it uses passive stems. Otherwise it free-plays with active stems.
+	•	Mode selection: Chooses between directive / exploratory / reflective / casual based on env (e.g., tool errors → reflective, overdue → directive).
+	•	Not forced: Writes only if:
+	•	Min interval has passed,
+	•	Under max-per-hour,
+	•	Novelty ≥ 0.35,
+	•	Relevance ≥ 0.2 (quick signal overlap against current summaries).
+
+Tuning knobs (in .env)
+	•	DIARY_MIN_INTERVAL_SECONDS=900 (15 min default)
+	•	DIARY_MAX_PER_HOUR=3
+	•	Raise noveltyThreshold/relevanceThreshold in AutonomyGovernor for stricter entries.
+
+Extend next
+	•	Replace novelty with embeddings for smarter similarity.
+	•	Add midnight summarization to compress old entries.
+	•	Add event webhooks (task created/updated, meeting started) and push to events for richer passive triggers.
+	•	Expose /api/identity to edit the agent’s story of self from the UI.
+
+If you want, I can tailor the stems to your exact product voice and wire TaskPilot + calendar integration in that scaffold.
+
+⸻
+
+(Personal Notes — for us)
+	1.	Current focus: deliver a working, Replit-ready “lived diary” agent with gates and modes.
+	2.	My take: This balances autonomy with control; novelty/relevance gates are the secret sauce to “non-forced.”
+	3.	Unknowns: exact task/calendar APIs; I stubbed them.
+	4.	Assumptions: you’ll run Node + TS in Replit; OpenAI API available.
+	5.	Evidence plan: runnable scaffold + UI; offline fallback if no key.
+	6.	Hallucination check: no claims about external APIs; model call is generic Chat Completions.
+	7.	Risks: If stems aren’t your voice, entries feel generic — easy to swap.
+	8.	Leverage: Hook TaskPilot stats for real passive triggers (errors/overdues).
+	9.	Next best steps: (a) Plug TaskPilot & calendar, (b) tune thresholds, (c) add midnight summarize.
+	10.	Alt path: Drive entries via event webhooks only; disable active freeplay for maximum signal.
+	11.	What I need from you: your preferred voice lines for each mode, plus TaskPilot + calendar endpoints.
+	12.	Memory updates: none yet.
+
+Confidence 0.88 • Clarity 0.84 ￼
