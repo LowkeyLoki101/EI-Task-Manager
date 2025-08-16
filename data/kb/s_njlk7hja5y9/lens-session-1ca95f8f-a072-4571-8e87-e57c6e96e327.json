@@ -1,0 +1,28 @@
+{
+  "id": "1ca95f8f-a072-4571-8e87-e57c6e96e327",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The problem is identifying key trends and shifts within your industry that could impact your business or career. Focus on emerging technologies, regulatory changes, and evolving consumer preferences that could present both challenges and opportunities. Stay informed through industry reports, news, and networking with peers to ensure you remain competitive and proactive.",
+  "reframeStep": "Instead of focusing solely on external industry trends, consider how your company's internal strengths and weaknesses can align with these emerging shifts. By viewing industry changes through the lens of your organization's unique capabilities and culture, you might uncover tailored opportunities for innovation or identify specific areas for improvement that could give you a competitive edge. This perspective encourages a proactive approach to adapting industry trends to fit your business model, rather than passively reacting to them.",
+  "metaLensStep": null,
+  "recursiveStep": "What specific emerging technologies are being adopted by competitors in your industry, and how might these technologies integrate with your current operations or create new service offerings? Are there any regulatory changes on the horizon that could significantly alter the landscape of your industry, and what steps can you take to prepare for or influence these changes? Additionally, how are evolving consumer preferences shaping demand, and what strategies could you implement to better align your products or services with these preferences?",
+  "closureStep": "My working hypothesis is that by closely monitoring competitors' adoption of emerging technologies, upcoming regulatory changes, and shifting consumer preferences, I can strategically align my company's strengths to capitalize on these industry trends. The next step is to conduct a detailed analysis of current industry reports and competitor activities to identify specific opportunities for technological integration and consumer alignment. Additionally, I will engage with industry peers and participate in relevant forums to stay informed and proactive.",
+  "generatedTasks": [
+    "Conduct a detailed analysis of current industry reports to identify opportunities for technological integration.",
+    "Engage with industry peers and participate in relevant forums to stay informed about emerging trends.",
+    "Research upcoming regulatory changes and prepare a strategic plan to address potential impacts."
+  ],
+  "generatedKbEntries": [
+    "Emerging technologies in the solar/energy sector 2023",
+    "Upcoming regulatory changes in the solar/energy industry 2024",
+    "Consumer preferences trends in the solar/energy sector 2023"
+  ],
+  "generatedResearch": [
+    "emerging technologies in [specific industry] 2023",
+    "upcoming regulatory changes in [specific industry] 2024",
+    "consumer preferences trends in [specific industry] 2023"
+  ],
+  "completed": "2025-08-16T06:53:53.280Z",
+  "createdAt": "2025-08-16T06:53:39.876Z",
+  "meta_lensStep": "I'm thinking about this because staying informed about industry trends is crucial for maintaining a competitive edge and ensuring long-term success. This process often reflects a pattern of seeking external validation or guidance, rather than relying solely on internal resources or innovation. By consistently questioning what external changes to focus on, I might be missing opportunities to leverage internal strengths or unique insights within my organization to proactively shape responses to industry shifts."
+}

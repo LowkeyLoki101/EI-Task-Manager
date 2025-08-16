@@ -138,7 +138,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
 
   return (
     <div className={`transition-all duration-300 ${isExpanded ? 'min-h-[400px]' : 'min-h-[120px]'}`}>
-      <Card className="border border-yellow-500/30 bg-slate-900/50">
+      <Card className="border border-yellow-500/30 bg-slate-900/95 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -182,7 +182,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                   </div>
                 ) : (
                   researchResults.map((research) => (
-                    <div key={research.id} className="border border-slate-700 rounded-lg p-4 space-y-3">
+                    <div key={research.id} className="border border-slate-600/50 rounded-lg p-4 space-y-3 bg-slate-800/80">
                       <div className="flex items-start justify-between">
                         <div>
                           <h4 className="font-semibold text-slate-200">"{research.query}"</h4>
@@ -214,7 +214,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                         </div>
                       </div>
                       
-                      <div className="bg-slate-800/50 p-3 rounded">
+                      <div className="bg-slate-800/90 p-3 rounded border border-slate-700/30">
                         <p className="text-sm text-slate-300">{research.summary}</p>
                       </div>
                       
@@ -242,7 +242,7 @@ export function ResearchScratchpad({ sessionId, isVisible }: ResearchScratchpadP
                   </div>
                 ) : (
                   generatedContent.map((content) => (
-                    <div key={content.id} className="border border-slate-700 rounded-lg p-4 space-y-3">
+                    <div key={content.id} className="border border-slate-600/50 rounded-lg p-4 space-y-3 bg-slate-800/80">
                       <div className="flex items-start justify-between">
                         <div>
                           <h4 className="font-semibold text-slate-200">{content.title}</h4>

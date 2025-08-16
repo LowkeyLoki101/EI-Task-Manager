@@ -1,0 +1,24 @@
+{
+  "id": "f294b184-ecbc-4be8-ba58-3697e30af1d5",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The problem is identifying current trends and developments in your industry that could impact your business or professional practice. This involves monitoring technological advancements, regulatory changes, and shifts in consumer behavior that could create opportunities or pose challenges. By staying informed, you can adapt strategies to maintain competitiveness and capitalize on emerging opportunities.",
+  "reframeStep": "Instead of focusing solely on external trends and developments, consider reframing the question to: \"How can I actively influence or shape the trends in my industry?\" This perspective shifts the focus from being a passive observer to an active participant, encouraging innovation and leadership. By identifying areas where you can drive change or introduce new ideas, you can position yourself as a trendsetter and gain a competitive edge.",
+  "metaLensStep": null,
+  "recursiveStep": "From the recursive perspective, consider asking: \"What are the underlying forces driving these industry trends?\" and \"How can I leverage my unique skills and resources to address unmet needs or gaps within these trends?\" These questions invite deeper exploration into the root causes of industry changes and encourage proactive strategies to innovate and lead. Additionally, investigate cross-industry trends that might influence or intersect with your field to uncover new opportunities for collaboration or disruption.",
+  "closureStep": "My working hypothesis is that actively influencing industry trends can provide significant opportunities for growth and innovation. As a next step, I will identify and analyze key trends in my industry and cross-industry influences. I will then brainstorm ways to leverage my unique skills and resources to address unmet needs or gaps, potentially positioning myself as a leader and innovator. Additionally, I will seek collaborations with other industry players to amplify the impact of these efforts.",
+  "generatedTasks": [
+    "Draft a blog post on how to actively influence solar energy industry trends.",
+    "Research cross-industry trends that could impact the solar and energy sectors.",
+    "Create a strategic plan to leverage unique skills for addressing unmet needs in the AI and energy sectors."
+  ],
+  "generatedKbEntries": [
+    "Current technological advancements in the solar energy sector",
+    "Regulatory changes affecting the AI and energy industries",
+    "Consumer behavior shifts in renewable energy adoption"
+  ],
+  "generatedResearch": [],
+  "completed": "2025-08-16T06:52:50.758Z",
+  "createdAt": "2025-08-16T06:52:41.323Z",
+  "meta_lensStep": "Thinking about industry trends is often driven by a desire to stay competitive and relevant. This pattern reflects a focus on external validation and positioning rather than internal innovation and leadership. By regularly questioning how you can influence these trends instead, you're fostering a proactive mindset that seeks to lead and innovate within your industry, rather than simply react to changes."
+}

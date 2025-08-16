@@ -1,0 +1,28 @@
+{
+  "id": "4d99813c-9bbb-4953-81c8-5be8681488df",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The problem is identifying key trends and developments in your industry that are crucial for staying competitive. This involves monitoring technological advancements, regulatory changes, and shifts in consumer behavior that could impact your business. By staying informed, you can adapt strategies to address these changes effectively.",
+  "reframeStep": "Instead of solely focusing on what is happening in your industry, consider what is not happening that perhaps should be. This perspective shifts the focus to identifying gaps or opportunities that have yet to be explored. By looking at what is missing or what innovations could fill these voids, you might uncover new pathways for growth and differentiation from competitors.",
+  "metaLensStep": null,
+  "recursiveStep": "By examining what isn't happening in your industry, you might ask: What unmet needs or pain points exist for consumers that current offerings don't address? Moreover, consider exploring emerging technologies or methodologies that are underutilized in your field—how could their integration provide a competitive edge? Investigating these areas could lead to innovative solutions that set your business apart.",
+  "closureStep": "My working hypothesis is that by focusing on both current trends and identifying gaps in my industry, I can uncover areas ripe for innovation and growth. The next step is to conduct a comprehensive market analysis to identify emerging technologies, regulatory changes, and consumer behavior shifts, while also exploring unmet needs or underutilized opportunities. This will involve gathering insights from industry reports, engaging with thought leaders, and leveraging data analytics to inform strategic decisions.",
+  "generatedTasks": [
+    "Conduct a market analysis to identify unmet consumer needs in renewable energy adoption.",
+    "Research and compile a report on underutilized AI technologies in supply chain management.",
+    "Engage with industry thought leaders to explore emerging methodologies in sustainable agriculture."
+  ],
+  "generatedKbEntries": [
+    "Unmet consumer needs in renewable energy adoption",
+    "Underutilized AI technologies in supply chain management",
+    "Emerging methodologies in sustainable agriculture"
+  ],
+  "generatedResearch": [
+    "unmet consumer needs in renewable energy adoption",
+    "underutilized AI technologies in supply chain management",
+    "emerging methodologies in sustainable agriculture"
+  ],
+  "completed": "2025-08-16T06:52:24.876Z",
+  "createdAt": "2025-08-16T06:52:15.016Z",
+  "meta_lensStep": "Thinking about what's happening in your industry right now is crucial because it helps you remain competitive and responsive to change. However, you might be repeating a pattern of only reacting to current trends rather than proactively seeking out potential innovations or disruptions. By using a meta-lens, you can challenge yourself to question underlying assumptions and explore broader industry dynamics, leading to more strategic decision-making and long-term vision."
+}
