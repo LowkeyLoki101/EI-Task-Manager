@@ -12,6 +12,7 @@ import AutonomousChat from '../components/AutonomousChat';
 import WorkflowSuggestions from '../components/WorkflowSuggestions';
 import CalendarSync from '../components/CalendarSync';
 import CompactTaskManager from '../components/CompactTaskManager';
+import ProjectManager from '../components/ProjectManager';
 
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
@@ -159,11 +160,10 @@ export default function HomePage() {
             <AutonomousChat sessionId={sessionId} />
           </div>
 
-          {/* Compact Collapsible Task Manager */}
-          <CompactTaskManager 
-            sessionId={sessionId} 
-            onVideoSelect={(video) => console.log('Video selected:', video)}
-          />
+          {/* Project-Based Task Management */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <ProjectManager sessionId={sessionId} />
+          </div>
 
           {/* Workflow Suggestions - Where the user can see automation features */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
