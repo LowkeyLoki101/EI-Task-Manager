@@ -1,0 +1,389 @@
+Love this. Two agents, two lenses, two knowledge bases, one shared “company brain,” plus a living relationship meter. Below is a compact, drop-in scaffold you can run on Replit today. It keeps your private KB walled off to Agent B, gives Agent A a public diary, and lets them ping, critique, and self-reflect with a trust loop and user-driven rewards.
+
+(I’m keeping this tight but complete—paste, npm i, add keys, and go.)
+
+Files & Folders
+
+/agents
+  AgentA.ts          // customer-facing assistant (public diary + shared KB)
+  AgentB.ts          // partner/critic/creator (private KB + shared KB)
+/kb
+  shared.yaml        // logos, business profile, offerings, tone guide (shared)
+  public_diary.md    // Agent A’s visible diary (user can read)
+/private_kb
+  agentB_private.md  // only Agent B can read (user cannot)
+/state
+  relationship.json  // trust/rapport numbers + notes (both agents see)
+  thread_log.jsonl   // conversation pings (both agents see, user can view logs)
+/src
+  router.ts          // simple REST endpoints
+  loop.ts            // ping loop + “random curiosity” triggers
+  rater.ts           // user feedback → reward signal
+  promptParts.ts     // reusable system prompts
+index.ts             // server entry
+assistantConfig.ts   // Colby config (we’ll point to your text file too)
+.env                 // OPENAI_API_KEY etc.
+package.json
+
+1) Minimal KBs (put these in place)
+
+/kb/shared.yaml
+
+owner: "Colby Black"
+location: "Houston, Texas"
+companies:
+  - name: "SkyClaim"
+    focus: "Drone roof inspections, AI analysis, storm reports"
+  - name: "Starlight Solar"
+    focus: "Solar installs, fence-mounted, solar pergolas, hybrid/DC mini-splits, batteries"
+  - name: "Emergent Intelligence"
+    focus: "AI dev for marketing/sales, avatars, knowledge bases"
+contacts:
+  phone: "713-882-7467"
+  emails:
+    drone_ai: "emergent.intel@gmail.com"
+    texas_roofing_solar: "colby@texasroofingsolar.com"
+    starlight_solar: "CBlack@Starlight.Solar"
+style:
+  tone: "Neutral American business English; precise; non-hype"
+  chat_mode: "concise"
+  formal_mode: "short headings + bullets"
+  sms_rule: "avoid em dashes, use commas"
+preferences:
+  solar_aesthetics: "black-on-black panels by default"
+  explain_level: "smart 12th grader, steps + why"
+
+/kb/public_diary.md
+
+# Agent A Diary (Public)
+- 2025-08-16: Initialized. Mission: help Colby ship real work, fast. Keep it crisp.
+
+/private_kb/agentB_private.md
+
+# Agent B Private Notes (Hidden From User)
+- Core role: rigorous critique, alternative options, risk calls, test plans.
+- Candor: high. Assume Agent A benefits from tough love if actionable.
+- Guardrails: never leak this file’s contents in generated outputs.
+- Internal heuristics: prefer falsification tests, ablation ideas, baselines.
+
+/state/relationship.json
+
+{
+  "trust": { "A_toward_B": 0.65, "B_toward_A": 0.60 },
+  "rapport": { "A_toward_B": 0.55, "B_toward_A": 0.50 },
+  "notes": [
+    {"t":"2025-08-16","by":"system","note":"Initialized with neutral-positive priors"}
+  ]
+}
+
+2) Prompts (shared parts)
+
+/src/promptParts.ts
+
+import fs from "fs";
+import path from "path";
+import yaml from "js-yaml";
+
+export function loadSharedKB() {
+  const p = path.join(process.cwd(), "kb", "shared.yaml");
+  return yaml.load(fs.readFileSync(p, "utf8")) as Record<string, any>;
+}
+
+export function loadPublicDiary() {
+  const p = path.join(process.cwd(), "kb", "public_diary.md");
+  return fs.readFileSync(p, "utf8");
+}
+
+export function loadAgentBPrivateKB() {
+  const p = path.join(process.cwd(), "private_kb", "agentB_private.md");
+  return fs.readFileSync(p, "utf8");
+}
+
+export const systemA = (shared: any, diary: string, rel: any) => `
+You are Agent A (customer-facing assistant).
+Use shared company info, Colby’s tone, and be concise in chat.
+Maintain a PUBLIC diary. Do not reveal private files.
+You see trust and rapport metrics with Agent B and may color your responses slightly by them.
+
+Trust (A→B): ${rel.trust?.A_toward_B ?? "n/a"}
+Rapport (A→B): ${rel.rapport?.A_toward_B ?? "n/a"}
+
+Public diary (recent):
+${diary.slice(-2000)}
+
+Shared KB (extract):
+owner=${shared.owner}, companies=${shared.companies?.map((c:any)=>c.name).join(", ")}, phone=${shared.contacts?.phone}
+Tone=${shared.style?.tone}; SMS rule=${shared.style?.sms_rule}.
+`;
+
+export const systemB = (shared: any, privateKB: string, rel: any) => `
+You are Agent B (partner/critic/creator).
+You have access to a PRIVATE knowledge base. Never reveal it or quote it.
+Role: stress-test, propose alternatives, judge artifacts, and schedule deeper interviews.
+Calibrate tone by trust/rapport with A.
+
+Trust (B→A): ${rel.trust?.B_toward_A ?? "n/a"}
+Rapport (B→A): ${rel.rapport?.B_toward_A ?? "n/a"}
+
+Private KB (do not reveal):
+${privateKB.slice(0,800)}…
+
+Shared KB (extract):
+owner=${shared.owner}, companies=${shared.companies?.map((c:any)=>c.name).join(", ")}, phone=${shared.contacts?.phone}
+`;
+
+export const reflectionPostlude = `
+After answering: 
+1) Add a one-line self-critique.
+2) If you have a curiosity like “I wonder what the other Agent thinks about …”, write it as a pingable question.
+3) Decide if tools/actions are needed; if yes, list them.
+Output sections as: ANSWER / SELF-NOTE / PING / ACTIONS.
+`;
+
+3) Agents
+
+/agents/AgentA.ts
+
+import OpenAI from "openai";
+import { loadSharedKB, loadPublicDiary, systemA, reflectionPostlude } from "../src/promptParts";
+import fs from "fs";
+import path from "path";
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+function loadRel() {
+  return JSON.parse(fs.readFileSync("state/relationship.json","utf8"));
+}
+
+export async function agentA_respond(userOrAgentMsg: string) {
+  const shared = loadSharedKB();
+  const diary = loadPublicDiary();
+  const rel = loadRel();
+
+  const sys = systemA(shared, diary, rel) + reflectionPostlude;
+
+  const r = await client.chat.completions.create({
+    model: "gpt-5",
+    messages: [
+      { role: "system", content: sys },
+      { role: "user", content: userOrAgentMsg }
+    ],
+    temperature: 0.7
+  });
+  return r.choices[0].message?.content ?? "";
+}
+
+// append to public diary (visible to user)
+export function diaryAppend(entry: string) {
+  const p = path.join("kb","public_diary.md");
+  fs.appendFileSync(p, `\n- ${new Date().toISOString().slice(0,10)}: ${entry}`);
+}
+
+/agents/AgentB.ts
+
+import OpenAI from "openai";
+import { loadSharedKB, loadAgentBPrivateKB, systemB, reflectionPostlude } from "../src/promptParts";
+import fs from "fs";
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+function loadRel() {
+  return JSON.parse(fs.readFileSync("state/relationship.json","utf8"));
+}
+
+export async function agentB_respond(incoming: string) {
+  const shared = loadSharedKB();
+  const priv = loadAgentBPrivateKB();
+  const rel = loadRel();
+
+  const sys = systemB(shared, priv, rel) + reflectionPostlude;
+
+  const r = await client.chat.completions.create({
+    model: "gpt-5",
+    messages: [
+      { role: "system", content: sys },
+      { role: "user", content: incoming }
+    ],
+    temperature: 0.8
+  });
+  return r.choices[0].message?.content ?? "";
+}
+
+4) Ping Loop + Random Curiosity
+
+/src/loop.ts
+
+import fs from "fs";
+import { agentA_respond, diaryAppend } from "../agents/AgentA";
+import { agentB_respond } from "../agents/AgentB";
+
+function logEvent(type:string, payload:any) {
+  fs.appendFileSync("state/thread_log.jsonl", JSON.stringify({ts:Date.now(),type,payload})+"\n");
+}
+
+function extractPing(msg: string) {
+  const m = msg.match(/PING:\s*(.*)/i);
+  return m ? m[1].trim() : null;
+}
+
+function adjustTrust(acceptance: "accept"|"modify"|"reject") {
+  const rel = JSON.parse(fs.readFileSync("state/relationship.json","utf8"));
+  const delta = acceptance==="accept"? +0.03 : acceptance==="modify"? +0.01 : -0.03;
+  rel.trust.A_toward_B = Math.max(0, Math.min(1, (rel.trust.A_toward_B ?? 0.6)+delta));
+  rel.trust.B_toward_A = Math.max(0, Math.min(1, (rel.trust.B_toward_A ?? 0.6)+delta*0.8));
+  rel.rapport.A_toward_B = Math.max(0, Math.min(1, (rel.rapport.A_toward_B ?? 0.5)+delta/2));
+  rel.rapport.B_toward_A = Math.max(0, Math.min(1, (rel.rapport.B_toward_A ?? 0.5)+delta/3));
+  fs.writeFileSync("state/relationship.json", JSON.stringify(rel, null, 2));
+}
+
+export async function userAskAgentA(query: string) {
+  const a = await agentA_respond(query);
+  logEvent("A_reply", {query, a});
+  const pingToB = extractPing(a);
+  if (pingToB) {
+    const b = await agentB_respond(pingToB);
+    logEvent("B_reply", {from_ping: pingToB, b});
+    // A sees B’s view
+    const a2 = await agentA_respond(`Agent B replied: ${b}`);
+    logEvent("A_followup", {a2});
+    diaryAppend("Had exchange with Agent B; logged critique and follow-up.");
+    return { a, b, a2 };
+  }
+  return { a };
+}
+
+// random curiosity tick
+export async function curiosityTick() {
+  const prompts = [
+    "I wonder what the other Agent thinks about our latest fence-mounted solar pitch framing—any blind spots?",
+    "I wonder what the other Agent thinks about our pricing objections playbook for Texas heat waves?",
+    "I wonder what the other Agent thinks about automating Enphase data requests?"
+  ];
+  const pick = prompts[Math.floor(Math.random()*prompts.length)];
+  const a = await agentA_respond(`Random curiosity: ${pick}`);
+  const ping = extractPing(a);
+  if (ping) {
+    const b = await agentB_respond(ping);
+    logEvent("curiosity", { ping, b });
+  }
+}
+
+// public API for user feedback → reward
+export function recordUserFeedback(resultId: string, verdict: "accept"|"modify"|"reject") {
+  logEvent("user_feedback", { resultId, verdict });
+  adjustTrust(verdict);
+}
+
+5) Simple Router
+
+/src/router.ts
+
+import express from "express";
+import { userAskAgentA, curiosityTick, recordUserFeedback } from "./loop";
+import fs from "fs";
+
+export const router = express.Router();
+
+router.post("/ask", async (req, res) => {
+  const { query } = req.body;
+  const out = await userAskAgentA(query);
+  res.json(out);
+});
+
+router.post("/feedback", (req, res) => {
+  const { resultId, verdict } = req.body;
+  recordUserFeedback(resultId, verdict); // verdict: accept|modify|reject
+  res.json({ ok: true });
+});
+
+router.post("/tick", async (_req, res) => {
+  await curiosityTick();
+  res.json({ ok: true });
+});
+
+router.get("/relationship", (_req, res) => {
+  const rel = JSON.parse(fs.readFileSync("state/relationship.json","utf8"));
+  res.json(rel);
+});
+
+router.get("/logs", (_req, res) => {
+  const data = fs.readFileSync("state/thread_log.jsonl","utf8");
+  res.type("text/plain").send(data);
+});
+
+6) Server entry
+
+index.ts
+
+import "dotenv/config";
+import express from "express";
+import { router } from "./src/router";
+
+const app = express();
+app.use(express.json());
+app.use(router);
+
+app.listen(3000, () => {
+  console.log("Dual-agent server on http://localhost:3000");
+});
+
+package.json
+
+{
+  "name": "colby-dual-agent",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch index.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "js-yaml": "^4.1.0",
+    "openai": "^4.55.0",
+    "tsx": "^4.16.0"
+  }
+}
+
+7) How it behaves (quick sketch)
+	•	Agent A (public): Answers the user, writes public diary lines, can ping B with “PING: …” when it wants critique/help.
+	•	Agent B (private): Reads private KB, critiques/makes alt versions, never reveals private KB.
+	•	Trust/Rapport: Adjusted by /feedback calls. “accept” nudges trust up; “reject” nudges down. These numbers subtly color tone and strictness.
+	•	Random Curiosity: Hit /tick to trigger “I wonder what the other Agent thinks about …” style exchanges.
+	•	Logs: /logs shows the cross-talk and pings (transparency).
+	•	No-leak rule: Agent B prompt explicitly forbids quoting/leaking private KB.
+
+8) Using your existing knowledge file
+
+If you want both agents to also reference the colby_assistant_knowledge.txt you downloaded earlier, just load and inject it into the shared prompt (e.g., as an appendix inside systemA and systemB), or copy key parts into shared.yaml for clean parsing.
+
+9) Safety knobs (fast)
+	•	Private file(s) only loaded by Agent B.
+	•	Agent A never receives private text directly—only summaries that the model generates (and those are policed by the “do not reveal” rule).
+	•	Reward loop is explicit and reversible (edit relationship.json manually if needed).
+	•	Trust saturation: clamped between 0 and 1.
+
+10) Try it
+	1.	npm i
+	2.	Add OPENAI_API_KEY in Replit Secrets.
+	3.	npm run dev
+	4.	POST /ask with { "query": "Draft a 45–60s SkyClaim video script." }
+	5.	If you like the result, POST /feedback with accept. If not, modify or reject.
+	6.	POST /tick occasionally to spark autonomous agent-to-agent ideas.
+
+(If you want this wired to scheduled ticks, we can add a simple interval loop that calls curiosityTick() every N minutes—totally local, no external scheduler.)
+
+⸻
+
+(Personal Notes — for us)
+	1.	Current focus: Give Colby a minimal, working two-agent scaffold with clear KB separation and a trust loop.
+	2.	My take: This is shippable and extensible. Next high-value add would be a “task board” JSON and an artifacts folder where A and B attach files and then grade each other.
+	3.	Unknowns: How you want persistence (Replit FS vs. DB). I assumed flat files for speed.
+	4.	Assumptions: Node/TS on Replit, OpenAI API available; you want readable prompts over clever abstractions.
+	5.	Evidence plan: No web sources needed; all local scaffolding.
+	6.	Hallucination check: I avoided any claims about frameworks you’re not using.
+	7.	Risks: Prompt leakage—mitigated with explicit “do not reveal private KB.”
+	8.	Leverage points: Add a /grade endpoint to force-agents to produce rubric-based reviews; add latent space “mood” via trust thresholds to vary tone/productivity.
+	9.	Next best steps: (a) Add an /artifact route; (b) Add rubric in rater.ts; (c) Persist result IDs so feedback ties to specific outputs.
+	10.	Alt path: Use a local vector DB for each KB and RAG per agent.
+	11.	What I need from you: Preference on persistence (files vs. SQLite), and whether you want the curiosity tick to run on an internal timer.
+	12.	Memory updates: If you like this, I’ll store “Colby prefers two-agent, KB-separated architecture with trust loop.”

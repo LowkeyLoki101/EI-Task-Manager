@@ -1,0 +1,125 @@
+Yep—totally doable. The trick is: block Agent A at the code level from ever loading B’s file, while still giving you (the user) a route/UI to read both. Think “capability matrix”: agents get only what they need; you get everything.
+
+Here’s a lean pattern you can drop into your Replit project.
+
+1) Capability matrix (hard gate)
+
+// src/accessMatrix.ts
+export type Caller = "AgentA" | "AgentB" | "User";
+
+export const RESOURCES = {
+  SHARED_KB: "kb/shared.yaml",
+  PUBLIC_DIARY: "kb/public_diary.md",
+  B_PRIVATE: "private_kb/agentB_private.md",
+} as const;
+
+export const ACL: Record<Caller, string[]> = {
+  AgentA: [RESOURCES.SHARED_KB, RESOURCES.PUBLIC_DIARY],       // ❌ no B_PRIVATE
+  AgentB: [RESOURCES.SHARED_KB, RESOURCES.PUBLIC_DIARY, RESOURCES.B_PRIVATE],
+  User:   [RESOURCES.SHARED_KB, RESOURCES.PUBLIC_DIARY, RESOURCES.B_PRIVATE], // ✅ user can see all
+};
+
+2) One accessor to rule them all
+
+// src/kbAccess.ts
+import fs from "fs";
+import { ACL, Caller } from "./accessMatrix";
+
+export function readResource(caller: Caller, filePath: string): string {
+  const allowed = ACL[caller] ?? [];
+  if (!allowed.includes(filePath)) {
+    // hard fail: Agent A can’t touch B’s file
+    throw new Error(`Access denied for ${caller} to ${filePath}`);
+  }
+  return fs.readFileSync(filePath, "utf8");
+}
+
+3) Agents load KB through the gate (not directly)
+
+// agents/AgentA.ts (snippet)
+import OpenAI from "openai";
+import { readResource } from "../src/kbAccess";
+import { RESOURCES } from "../src/accessMatrix";
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+export async function agentA_respond(msg: string) {
+  const shared = readResource("AgentA","kb/shared.yaml");           // ✅
+  const diary  = readResource("AgentA","kb/public_diary.md");       // ✅
+  // readResource("AgentA","private_kb/agentB_private.md");         // ❌ would throw
+
+  const system = `
+You are Agent A (public-facing).
+Use shared KB + public diary. You cannot access Agent B's private file.
+${shared}\n\n[Public Diary]\n${diary}
+  `;
+  const r = await client.chat.completions.create({
+    model: "gpt-5",
+    messages: [{ role: "system", content: system }, { role: "user", content: msg }],
+  });
+  return r.choices[0].message?.content ?? "";
+}
+
+// agents/AgentB.ts (snippet)
+import OpenAI from "openai";
+import { readResource } from "../src/kbAccess";
+
+export async function agentB_respond(msg: string) {
+  const shared   = readResource("AgentB","kb/shared.yaml");          // ✅
+  const diary    = readResource("AgentB","kb/public_diary.md");      // ✅
+  const bPrivate = readResource("AgentB","private_kb/agentB_private.md"); // ✅
+
+  const system = `
+You are Agent B (partner/critic).
+You have a private KB for internal reasoning. Do not quote the file verbatim.
+${shared}\n\n[Public Diary]\n${diary}\n\n[Private KB — for your internal use only]\n${bPrivate}
+  `;
+  const r = await client.chat.completions.create({
+    model: "gpt-5",
+    messages: [{ role: "system", content: system }, { role: "user", content: msg }],
+  });
+  return r.choices[0].message?.content ?? "";
+}
+
+4) User can view both (without the model seeing them)
+
+Expose read-only endpoints that return the raw files straight to you (the human). These routes never pass the text into any model.
+
+// src/router.ts (snippet)
+import express from "express";
+import { readResource } from "./kbAccess";
+import { RESOURCES } from "./accessMatrix";
+
+export const router = express.Router();
+
+// User reads Agent B’s private KB directly (human-only visibility)
+router.get("/kb/b-private", (_req, res) => {
+  const content = readResource("User", RESOURCES.B_PRIVATE);  // ✅ allowed for User
+  res.type("text/plain").send(content);
+});
+
+// Also let the user fetch the others
+router.get("/kb/shared", (_req,res) => {
+  res.type("text/plain").send(readResource("User", RESOURCES.SHARED_KB));
+});
+router.get("/kb/diary", (_req,res) => {
+  res.type("text/plain").send(readResource("User", RESOURCES.PUBLIC_DIARY));
+});
+
+5) Extra leak-safety (recommended)
+	•	Never include agentB_private.md content in any request/response body that goes to Agent A.
+	•	When relaying messages between agents, strip file contents and only pass summaries the model generated (not the file text).
+	•	Add a simple guard on cross-talk:
+
+// src/sanitize.ts
+export function scrubForCrossTalk(text: string): string {
+  // Simple heuristic: drop large code blocks or file-like blobs
+  return text.length > 4000 ? text.slice(0, 4000) + "\n[truncated for cross-talk]" : text;
+}
+
+6) TL;DR
+	•	Yes: Agent A can be prevented from reading Agent B’s file.
+	•	Yes: You can still view both—via user-only endpoints/UI.
+	•	Enforcement is done in code (capability matrix + single accessor), not just “please don’t” prompt text. (Because models are persuasive; file I/O is decisive.)
+
+If you want, I’ll bolt this onto the dual-agent scaffold I gave earlier and hand you a zipped Replit-ready folder.
