@@ -273,8 +273,8 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   }
 
   return (
-    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-      <CardHeader className="pb-2">
+    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 flex flex-col h-[600px]">
+      <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-blue-600" />
@@ -324,7 +324,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col flex-1 min-h-0 space-y-4">
         {/* Memory/Relationship Status */}
         {memory && (
           <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
@@ -399,8 +399,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
           </div>
         )}
 
-        {/* Chat Messages */}
-        <ScrollArea className="h-96 w-full pr-4" ref={scrollAreaRef}>
+        {/* Chat Messages - Flexible growing area */}
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full w-full pr-4" ref={scrollAreaRef}>
           <div className="space-y-3">
             {isLoading ? (
               <div className="text-center text-sm text-gray-500 py-8">Loading conversation...</div>
@@ -469,11 +470,12 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
             )}
             <div ref={messagesEndRef} />
           </div>
-        </ScrollArea>
+          </ScrollArea>
+        </div>
 
-        {/* File Upload Preview */}
+        {/* File Upload Preview - Fixed position above input */}
         {uploadedFiles.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-2 flex-shrink-0">
             <div className="text-xs font-medium text-blue-700 dark:text-blue-300">
               Files to upload:
             </div>
@@ -499,8 +501,8 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
           </div>
         )}
 
-        {/* Message Input */}
-        <form onSubmit={handleSendMessage} className="space-y-2">
+        {/* Message Input - Always visible at bottom */}
+        <form onSubmit={handleSendMessage} className="flex-shrink-0">
           <div className="flex gap-2">
             <Input
               value={message}
