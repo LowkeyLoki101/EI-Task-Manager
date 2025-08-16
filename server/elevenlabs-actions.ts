@@ -7,6 +7,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import OpenAI from "openai";
+import { storage } from "./storage";
 
 // GPT-5 is now available and is the latest OpenAI model
 const openai = new OpenAI({ 
@@ -38,6 +39,113 @@ export function registerElevenLabsActions(app: Express) {
       message: "Test webhook working!",
       receivedData: req.body 
     });
+  });
+
+  // NEW: Conversation webhook - receives full conversation transcript from ElevenLabs
+  app.post("/api/actions/conversation", async (req, res) => {
+    try {
+      console.log('[ElevenLabs] CONVERSATION webhook called:', JSON.stringify(req.body, null, 2));
+      
+      const { 
+        conversation_id,
+        agent_id,
+        user_id,
+        transcript,
+        metadata,
+        messages = [],
+        sessionId: providedSessionId 
+      } = req.body;
+
+      // Extract sessionId from multiple possible sources
+      let sessionId = providedSessionId;
+      
+      if (!sessionId && metadata?.sessionId) {
+        sessionId = metadata.sessionId;
+      }
+      if (!sessionId && metadata?.session_id) {
+        sessionId = metadata.session_id;
+      }
+      
+      // Enhanced fallback logic - try dynamic variables from transcript
+      if (!sessionId && transcript) {
+        // Look for sessionId mentions in the conversation
+        const sessionMatch = transcript.match(/session[_-]?id[:\s]*([a-z0-9_]+)/i);
+        if (sessionMatch) {
+          sessionId = sessionMatch[1];
+          console.log('[ElevenLabs] Extracted sessionId from transcript:', sessionId);
+        }
+      }
+      
+      // If still no sessionId, try to get active session or create default
+      if (!sessionId) {
+        // Look for recent active session
+        try {
+          console.log('[ElevenLabs] Skipping recent session lookup - using fallback');
+        } catch (e) {
+          console.log('[ElevenLabs] Could not find recent session');
+        }
+      }
+      
+      // Ultimate fallback - create session ID
+      if (!sessionId) {
+        sessionId = `s_${Math.random().toString(36).substr(2, 11)}`;
+        console.log('[ElevenLabs] Created fallback sessionId:', sessionId);
+      }
+
+      console.log('[ElevenLabs] Final sessionId for conversation:', sessionId);
+
+      // Save the conversation
+      const conversation = await storage.createMessage({
+        sessionId,
+        message: transcript || "Voice conversation",
+        response: "Conversation processed",
+        metadata: {
+          conversationId: conversation_id,
+          agentId: agent_id,
+          userId: user_id,
+          elevenlabsTranscript: transcript,
+          elevenlabsMessages: messages,
+          elevenlabsMetadata: metadata
+        }
+      });
+
+      console.log('[ElevenLabs] Conversation saved:', conversation.id);
+
+      // Process transcript for task creation if there's meaningful content
+      let taskResults: any = { tasks: [], processed: false };
+      
+      if (transcript && transcript.trim().length > 10) {
+        try {
+          const opsManager = new OpsManager(sessionId);
+          taskResults = await opsManager.processIntent(transcript, { isVoiceMessage: true });
+          
+          if (taskResults.processed && taskResults.tasks && taskResults.tasks.length > 0) {
+            console.log(`[ElevenLabs] Created ${taskResults.tasks.length} tasks from voice conversation`);
+          } else if (taskResults.conversational) {
+            console.log('[ElevenLabs] Conversation was casual chat - no tasks created');
+          }
+        } catch (error) {
+          console.error('[ElevenLabs] Error processing transcript for tasks:', error);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: "Conversation saved and processed",
+        conversationId: conversation.id,
+        sessionId,
+        tasksCreated: taskResults.tasks?.length || 0,
+        processed: taskResults.processed
+      });
+
+    } catch (error) {
+      console.error('[ElevenLabs] Conversation webhook error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to save conversation",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   });
   
   // Actions (Agent → Replit)

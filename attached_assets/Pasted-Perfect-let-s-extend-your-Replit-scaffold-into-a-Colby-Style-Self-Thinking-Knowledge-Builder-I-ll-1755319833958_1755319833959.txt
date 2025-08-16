@@ -1,0 +1,124 @@
+Perfect — let’s extend your Replit scaffold into a Colby-Style Self-Thinking Knowledge Builder. I’ll map out exactly what gets added so you can drop it in and let it run.
+
+⸻
+
+🧩 New Features to Add
+
+1. Knowledge Base System
+	•	Directory: data/kb/
+	•	Files: JSON or Markdown nodes (each new research topic, simulation, or marketing insight gets stored).
+	•	Endpoint:
+	•	POST /api/kb → add new KB entries.
+	•	GET /api/kb → list KB entries.
+	•	GET /api/kb/:id → fetch single entry.
+
+KB Entry Schema (JSON):
+
+export interface KnowledgeEntry {
+  id: string;
+  timestamp: string;
+  source: 'diary' | 'search' | 'simulation' | 'marketing';
+  topic: string;
+  content: string;
+  tags: string[];
+  derivedTasks: string[];
+}
+
+
+⸻
+
+2. Colby-Style Lens Template
+
+Every diary entry goes through your 5-step cycle:
+	1.	Frame
+	2.	Reframe
+	3.	Meta-Lens
+	4.	Recursive Exploration (may trigger research or KB task)
+	5.	Closure
+
+New file: src/agent/LensTemplates.ts
+
+export const COLBY_LENS = [
+  "Frame the problem or idea directly.",
+  "Reframe it from a new perspective.",
+  "Step back with a meta-lens: why am I thinking about this?",
+  "Recursive exploration: what new questions or topics emerge?",
+  "Closure: what’s the working hypothesis or next step?"
+];
+
+The DiaryEngine can be updated so sometimes instead of using stems, it enforces this sequence.
+
+⸻
+
+3. Self-Question Pool + Evolver
+	•	Pool of periodic jolts (e.g., “What would surprise Colby if I found it?”).
+	•	Random trigger every X minutes.
+	•	Every ~N cycles, the agent modifies/creates new prompts (using LLM).
+
+File: src/agent/SelfQuestions.ts
+
+export interface SelfQuestion { text: string; created: string; }
+
+export let SELF_QUESTIONS: SelfQuestion[] = [
+  { text: "What’s a question I haven’t asked myself in a while?", created: new Date().toISOString() },
+  { text: "What would surprise Colby if I found it?", created: new Date().toISOString() },
+  { text: "If I wanted to make marketing content today, what story hook would I use?", created: new Date().toISOString() }
+];
+
+The evolver (SelfQuestionEvolver.ts) will:
+	•	Pick 1–2 old ones.
+	•	Mutate via LLM.
+	•	Append new ones.
+	•	Retire stale ones.
+
+⸻
+
+4. Research & Web Browsing Tasks
+
+When recursive exploration decides “needs lookup,” it spawns:
+	•	Task: “Search web for: ___”
+	•	Runs web.search() (already available to your agent).
+	•	Summarizes → writes new KB node.
+
+⸻
+
+5. Task Generation for Work
+
+When entries mention solar, AI, SkyClaim, Starlight Solar, etc. →
+Auto-create tasks like:
+	•	“Draft LinkedIn post on DC-DC heat pumps.”
+	•	“Simulate customer objection about fence-mounted solar panels.”
+	•	“Build FAQ doc from simulation.”
+
+Stored as tasks in your TaskTool.
+
+⸻
+
+🔧 Example Flow
+	1.	Trigger (random jolt): “What problem am I avoiding?”
+	2.	Lens Processing:
+	•	Frame: “Solar adoption in churches is low.”
+	•	Reframe: “But as resilience hubs, they’re valuable.”
+	•	Meta: “I’m circling resilience because of Texas grid fragility.”
+	•	Recursive: “Which states have the most rebates?” → spawn search task.
+	•	Closure: “Next step: add ‘church solar’ KB entry + draft marketing post.”
+	3.	Outputs:
+	•	New KB node: church_solar.json
+	•	New task: Draft blog: "Churches as Community Resilience Hubs"
+	•	Diary entry logged with lens-style structure.
+
+⸻
+
+🚀 Next Steps for Me to Deliver
+
+I can ship you a new zip update with:
+	•	/api/kb routes + storage
+	•	LensTemplates.ts
+	•	SelfQuestions.ts + evolver
+	•	DiaryEngine update (Colby-style lens path)
+	•	Hook into TaskTool for auto-generated work items
+	•	Research trigger pipeline using web.search()
+
+⸻
+
+👉 Do you want me to generate the full new zip package now (like I did with the diary kit), or would you prefer me to just give you the new/changed files so you can merge them into what you already have?
