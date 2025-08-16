@@ -19,6 +19,7 @@ import OpenAI from "openai";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { appendTranscript } from "./transcripts-helper";
 
 // GPT-5 is now available and is the latest OpenAI model
 const openai = new OpenAI({ 
@@ -32,6 +33,16 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Register status endpoint (no auth required)
+  const statusRouter = await import("./routes/status");
+  app.use('/api/status', statusRouter.default);
+  
+  // Register unified actions API with session management
+  const actionsRouter = await import("./routes/actions");
+  app.use('/api/actions', actionsRouter.default);
+  
+  // Register telemetry endpoint (no auth required)
+  app.use('/api/telemetry', actionsRouter.telemetryRouter);
   
   // Register ElevenLabs Actions API
   registerElevenLabsActions(app);
@@ -907,10 +918,22 @@ If they're just greeting you or making conversation, respond naturally. If they 
   // Supervisor Agent with GPT-5 Ops Manager
   app.post("/api/supervisor/ingest", async (req, res) => {
     try {
-      const { sessionId, conversation, builderMode } = req.body;
+      const { sessionId, conversation, builderMode, type, text, timestamp } = req.body;
       
       if (!sessionId) {
         return res.status(400).json({ error: "sessionId required" });
+      }
+
+      // Log transcript entry for session persistence
+      const evt = {
+        type: type || 'message.user',
+        text: text || conversation || 'Voice conversation',
+        timestamp: timestamp || Date.now(),
+        builderMode
+      };
+      
+      if (evt) {
+        appendTranscript(sessionId, evt);
       }
 
       // Log conversation for debugging

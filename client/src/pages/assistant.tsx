@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useSessionId } from "@/hooks/useSessionId";
+import { useSessionInit } from "@/hooks/useSessionInit";
+import { VoiceFallback } from "@/components/VoiceFallback";
 
 interface ElevenLabsWidget {
   init: (config: {
@@ -18,12 +19,12 @@ declare global {
 }
 
 export default function AssistantPage() {
-  const sessionId = useSessionId();
+  const { sessionId, isInitializing, error: sessionError } = useSessionInit();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || isInitializing) return;
 
     const slug = "task-builder";
 
@@ -124,7 +125,7 @@ export default function AssistantPage() {
     };
   }, [sessionId]);
 
-  if (isLoading) {
+  if (isInitializing || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" data-testid="loading-container">
         <div className="text-center space-y-4">
@@ -135,13 +136,14 @@ export default function AssistantPage() {
     );
   }
 
-  if (error) {
+  if (error || sessionError) {
+    const displayError = error || sessionError;
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" data-testid="error-container">
         <div className="text-center space-y-4 max-w-md">
           <div className="text-red-500 text-6xl">⚠️</div>
           <h2 className="text-xl font-semibold text-foreground">Voice Assistant Error</h2>
-          <p className="text-muted-foreground">{error}</p>
+          <p className="text-muted-foreground">{displayError}</p>
           <button 
             onClick={() => window.location.reload()} 
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
@@ -186,9 +188,37 @@ export default function AssistantPage() {
             <br />Agent ID: agent_8201k251883jf0hr1ym7d6dbymxc
             <br />Session: {sessionId}
             <br />Widget Status: {isLoading ? 'Loading...' : error ? 'Error' : 'Ready'}
-            {error && <><br />Error: {error}</>}
+            <br />Session Status: {isInitializing ? 'Initializing...' : sessionError ? 'Session Error' : 'Ready'}
+            {error && <><br />Widget Error: {error}</>}
+            {sessionError && <><br />Session Error: {sessionError}</>}
           </div>
         </div>
+
+        {/* Voice Fallback Component */}
+        <VoiceFallback 
+          className="mb-6"
+          onTextSubmit={async (text) => {
+            // Mirror function - sends conversation events to supervisor ingest
+            try {
+              await fetch('/api/supervisor/ingest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  sessionId,
+                  slug: 'task-builder',
+                  evt: {
+                    type: 'message.user',
+                    text,
+                    source: 'text_fallback',
+                    timestamp: Date.now()
+                  }
+                })
+              });
+            } catch (error) {
+              console.error('Mirror function error:', error);
+            }
+          }}
+        />
 
         {/* ElevenLabs Widget Container */}
         <div className="bg-card border rounded-lg p-6" data-testid="widget-container">

@@ -1,0 +1,222 @@
+Alright Colby — rapid triage and clean patches. You’ve got four separate fires here; we’ll stop the bleeding first, then harden.
+
+What the logs say (and what to do)
+	1.	OpenAI 429 (insufficient_quota)
+	•	Your /api/workstation/ai-action/:session is calling OpenAI repeatedly and getting rate-limited → cascading 500s.
+	•	Fix: add a 429 memory, backoff, and a circuit breaker so we don’t hammer when quota is out.
+	2.	n8n offline
+	•	Health check to http://localhost:5678 (or similar) is failing; your UI still tries to use it.
+	•	Fix: gate all n8n-dependent actions behind a connected flag; show a clear “n8n offline” badge.
+	3.	ReferenceError: require is not defined in knowledge-base-system.ts
+	•	You’re running ESM ("type":"module") but that file still uses require(...).
+	•	Fix: either convert to import … or shim with createRequire. I’ll give you both options; pick one.
+	4.	Empty transcripts / tasks
+	•	Not an error per se: your session is live but there’s nothing persisted yet. Make sure we write, and that sessionId is being passed and validated (use the cookie+sig gate we added).
+
+⸻
+
+1) OpenAI 429 — add circuit breaker + backoff (drop-in)
+
+Create server/ai-guard.ts:
+
+// server/ai-guard.ts
+let last429At = 0;
+let open = true;
+let failures = 0;
+
+export function breakerAllow(): boolean {
+  // If we got a 429 recently, hold off for 60s
+  const cooldown = 60_000;
+  if (Date.now() - last429At < cooldown) return false;
+  return open;
+}
+
+export function note429() {
+  last429At = Date.now();
+  failures++;
+  if (failures >= 3) open = false;          // open breaker = block calls
+  setTimeout(() => { open = true; failures = 0; }, 5 * 60_000); // auto half-open after 5m
+}
+
+export async function withBackoff<T>(fn: () => Promise<T>): Promise<T> {
+  let delay = 500;
+  for (let i = 0; i < 4; i++) {
+    try { return await fn(); }
+    catch (e: any) {
+      if (e?.status === 429 || e?.code === "insufficient_quota") {
+        note429();
+        await new Promise(r => setTimeout(r, delay));
+        delay *= 2;
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error("AI backoff exhausted");
+}
+
+Patch your OpenAI call site (seen in server/ai-workstation.ts:138) to use the guard:
+
+import { breakerAllow, withBackoff, note429 } from "./ai-guard";
+// ...
+if (!breakerAllow()) {
+  // Fast-fail with a friendly message; UI can show “AI paused (quota)”
+  return res.status(429).json({ error: "AI paused: quota/cooldown active" });
+}
+
+try {
+  const out = await withBackoff(async () => {
+    return await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL ?? "gpt-5",
+      messages,
+      temperature: 0.6
+    });
+  });
+  // ... respond with out
+} catch (err: any) {
+  if (err?.status === 429 || err?.code === "insufficient_quota") note429();
+  throw err;
+}
+
+Optional (nice-to-have): add a cheap fallback model via env like OPENAI_FALLBACK_MODEL=gpt-4o-mini and switch when breaker is open.
+
+⸻
+
+2) n8n offline — make it non-blocking
+
+Where you check n8n:
+
+// server/n8n.ts
+export async function checkN8N(baseUrl: string) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 1500);
+  try {
+    const r = await fetch(baseUrl + "/healthz", { signal: ctl.signal });
+    clearTimeout(t);
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
+In your route handlers that trigger n8n actions:
+
+const n8nOn = await checkN8N(process.env.N8N_BASE_URL || "http://localhost:5678");
+if (!n8nOn) {
+  // Log once; don’t 500 the whole action
+  console.warn("[N8N] offline; skipping workflow trigger");
+  // Either: res.json({ ok: true, n8n: "offline" }) or proceed with a local fallback
+}
+
+In UI: show a small grey pill “n8n: offline” so you’re not guessing.
+
+⸻
+
+3) ESM fix for require — choose A or B
+
+A) Convert to native imports (preferred)
+
+Before (failing):
+
+const fs = require("fs");
+const path = require("path");
+
+After:
+
+import fs from "fs";
+import path from "path";
+
+If you need JSON loading:
+
+import { readFile } from "fs/promises";
+// const data = require("./file.json");
+const data = JSON.parse(await readFile(new URL("./file.json", import.meta.url), "utf8"));
+
+B) Shim require in an ESM module (quick patch)
+
+At the top of server/knowledge-base-system.ts:
+
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+
+This lets existing require(...) lines work under "type":"module".
+Given the stack trace, the problematic line is around 108; update that file and any sibling modules using require.
+
+⸻
+
+4) Transcripts / tasks showing empty
+
+Add two things:
+
+a) Make sure your write path runs where transcripts arrive:
+
+// server/transcripts.ts (example)
+import fs from "fs"; import path from "path";
+export function appendTranscript(sessionId: string, line: any) {
+  const dir = path.join(process.cwd(), "data", "sessions", sessionId, "transcripts");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.appendFileSync(path.join(dir, "log.jsonl"), JSON.stringify(line) + "\n");
+}
+
+Call appendTranscript(sessionId, { ts: Date.now(), type, text }) from your /api/supervisor/ingest and/or your EL webhook.
+
+b) Verify session is attached (using the cookie+sig gate we added earlier).
+If the UI is still sending sessionId only via query/body, the server may be creating a different silo. Ensure the same sessionId (from cookie) is used for all /api/* calls.
+
+⸻
+
+5) Tiny quality-of-life fixes
+	•	Return structured errors in /api/workstation/ai-action:
+
+catch (e:any) {
+  const code = e?.status || e?.code || 500;
+  const kind = code===429 ? "insufficient_quota" : "upstream_error";
+  return res.status(code===429?429:500).json({ error: kind, detail: e?.message });
+}
+
+
+	•	Add /api/status so the UI can light up indicators:
+
+// returns { ai: "ok"|"cooldown", n8n: boolean, kb: "ok"|"error" }
+
+
+	•	KB read guard (avoid more ESM surprises):
+
+try { /* list entries */ } 
+catch (e) { 
+  console.error("[KnowledgeBase] list error", e); 
+  return res.status(200).json({ totalEntries: 0, entriesByType: {}, error: "kb_read_error" });
+}
+
+
+
+⸻
+
+Smoke test checklist (fast)
+	•	Hit /api/status → see { ai:"cooldown" } right after a 429, flips back after a minute.
+	•	Hit /api/n8n/status → { connected:false } and UI shows “n8n: offline”.
+	•	Call /api/knowledge-base/statistics → no 500, returns totals or kb_read_error not a crash.
+	•	Speak/type, then query /api/transcripts → now returns at least 1 line.
+
+⸻
+
+Copy-paste patch targets (by file)
+	•	server/ai-guard.ts (new)
+	•	server/ai-workstation.ts (wrap calls with guard/backoff)
+	•	server/n8n.ts (check + timeout)
+	•	server/knowledge-base-system.ts (ESM: imports or createRequire shim)
+	•	server/transcripts.ts (append helper)
+	•	server/routes/* (return structured JSON errors; use session gate)
+
+If you paste these and the errors persist, drop the exact file at the reported line numbers and I’ll inline-fix the imports or call sites.
+
+⸻
+
+(Personal Notes — for us)
+Current focus: stop error cascades (429), make n8n optional, fix ESM require, and ensure data actually writes.
+My take: the architecture’s good; this is glue work. The breaker/backoff prevents “hammer-the-API” self-sabotage, and the ESM fix kills those KB crashes.
+Unknowns: whether ai-workstation.ts triggers multiple parallel calls; if so, cap concurrency (e.g., a one-slot semaphore per session).
+Assumptions: "type":"module" in package.json; Express server; cookies from our session gate are in place.
+Risks: silent failures if we swallow errors—so I returned structured JSON with specific error codes.
+Leverage points: a /status endpoint lets the UI be honest (“AI paused”) instead of mysterious.
+Next best step(s): add these patches, reload, then send me any new stack traces (with line numbers). I’ll keep tightening until it purrs.

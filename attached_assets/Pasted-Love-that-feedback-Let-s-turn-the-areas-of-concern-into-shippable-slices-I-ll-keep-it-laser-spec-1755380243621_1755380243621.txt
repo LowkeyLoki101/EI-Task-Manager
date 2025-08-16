@@ -1,0 +1,246 @@
+Love that feedback. Let’s turn the “areas of concern” into shippable slices. I’ll keep it laser-specific so you can drop this into Replit right now.
+
+Slice A — Session hardening (server-validated, still simple)
+
+1) Issue a server session + bind to client
+
+Create server/session.ts:
+
+// server/session.ts
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+
+const SESS_DIR = path.join(process.cwd(), "data", "sessions");
+fs.mkdirSync(SESS_DIR, { recursive: true });
+
+export function newSessionId() {
+  return "ei_" + crypto.randomBytes(12).toString("hex");
+}
+export function sign(id: string) {
+  const secret = process.env.SESSION_HMAC_SECRET || "dev-secret";
+  return crypto.createHmac("sha256", secret).update(id).digest("base64url");
+}
+export function saveSession(id: string) {
+  const p = path.join(SESS_DIR, id + ".json");
+  if (!fs.existsSync(p)) fs.writeFileSync(p, JSON.stringify({ id, createdAt: Date.now() }));
+}
+export function validate(id?: string, sig?: string) {
+  if (!id || !sig) return false;
+  return sign(id) === sig;
+}
+
+Add route pages/api/session/init.ts (or server/routes/session.ts if Express):
+
+// POST /api/session/init
+// returns {sessionId, sig}; sets cookie "ei_session" (HttpOnly)
+import type { NextApiRequest, NextApiResponse } from "next";
+import { newSessionId, sign, saveSession } from "../../server/session";
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") return res.status(405).end();
+  const id = newSessionId();
+  const sig = sign(id);
+  saveSession(id);
+  res.setHeader("Set-Cookie", [
+    `ei_session=${id}; HttpOnly; SameSite=Lax; Path=/`,
+    `ei_sig=${sig}; HttpOnly; SameSite=Lax; Path=/`
+  ]);
+  return res.status(200).json({ sessionId: id, sig });
+}
+
+On the client (first load), call /api/session/init if there’s no ei_session cookie. Keep your existing localStorage.ei_session as a UI convenience, but the server trusts the cookie+sig pair.
+
+2) Gate every API call with server validation
+
+Add middleware server/mwSessionGate.ts:
+
+// Read cookies; validate HMAC; attach req.sessionId
+export function sessionGate(req: any, res: any, next: any) {
+  const cookies = Object.fromEntries(
+    (req.headers.cookie || "").split(";").map(s => s.trim().split("=")).filter(x=>x.length===2)
+  );
+  const id = cookies["ei_session"];
+  const sig = cookies["ei_sig"];
+  const { validate } = require("./session");
+  if (!validate(id, sig)) return res.status(401).json({ error: "Invalid or missing session" });
+  req.sessionId = id;
+  next();
+}
+
+Mount it before /api/tasks, /api/supervisor/*, /api/actions/*.
+Now localStorage spoofing can’t create phantom sessions.
+
+(If you’re on Next.js API routes, copy this function into each handler and do a quick check at the top; if you’re on Express, app.use(sessionGate) for your API prefix.)
+
+⸻
+
+Slice B — Flat-file storage that won’t bite you later
+
+1) Define a storage adapter interface
+
+Create server/storage.ts:
+
+export type Task = {
+  id: string; title: string; status: "todo"|"doing"|"done"|"blocked";
+  priority?: number;
+  context: "Computer"|"Phone"|"Physical"|"Any";
+  time_window: "Morning"|"Midday"|"Evening"|"Any";
+  steps: { id:string; title:string; status:"pending"|"running"|"blocked"|"done"; can_auto?: boolean }[];
+  resources?: { type:"youtube"|"file"|"link"; id?:string; title?:string; url?:string }[];
+  dueAt?: number; remind?: boolean;
+  meta: { createdAt:number; updatedAt:number };
+};
+
+export interface Storage {
+  readTasks(sessionId: string): Promise<Task[]>;
+  writeTasks(sessionId: string, tasks: Task[]): Promise<void>;
+  // add KB, proposals, etc. later using same pattern
+}
+
+2) Implement fs adapter with atomic writes + a tiny queue
+
+Create server/storage.fs.ts:
+
+import fs from "fs"; import path from "path"; import { Storage, Task } from "./storage";
+const ROOT = path.join(process.cwd(), "data", "sessions");
+fs.mkdirSync(ROOT, { recursive: true });
+// simple per-session write queue to avoid clobbers in bursts
+const queues = new Map<string, Promise<void>>();
+
+function withQueue(key: string, job: () => Promise<void>) {
+  const prev = queues.get(key) || Promise.resolve();
+  const next = prev.then(job, job);
+  queues.set(key, next.catch(()=>{}));
+  return next;
+}
+
+function fileFor(sessionId: string) {
+  const dir = path.join(ROOT, sessionId);
+  fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, "tasks.json");
+}
+
+export const fsStorage: Storage = {
+  async readTasks(sessionId) {
+    const f = fileFor(sessionId);
+    if (!fs.existsSync(f)) return [];
+    const j = JSON.parse(fs.readFileSync(f, "utf8"));
+    // migration-on-read defaults:
+    return (j.tasks || j || []).map((t: any) => ({
+      id: t.id, title: t.title, status: t.status ?? "todo",
+      priority: t.priority ?? 0,
+      context: t.context ?? "Any",
+      time_window: t.time_window ?? "Any",
+      steps: (t.steps || []).map((s: any) => ({
+        id: s.id ?? ("s_"+Math.random().toString(36).slice(2,8)),
+        title: s.title, status: s.status ?? "pending", can_auto: !!s.can_auto
+      })),
+      resources: t.resources || [],
+      dueAt: t.dueAt, remind: t.remind,
+      meta: t.meta ?? { createdAt: Date.now(), updatedAt: Date.now() }
+    }));
+  },
+  async writeTasks(sessionId, tasks) {
+    const f = fileFor(sessionId);
+    await withQueue(sessionId, async () => {
+      const tmp = f + ".tmp";
+      fs.writeFileSync(tmp, JSON.stringify({ tasks }, null, 2));
+      fs.renameSync(tmp, f); // atomic replace on POSIX
+    });
+  }
+};
+
+Later, a storage.drizzle.ts can implement the same interface and you’ll switch via const storage:Storage = fsStorage.
+
+⸻
+
+Slice C — Voice failure fallback UX (+ telemetry)
+
+1) Minimal fallback on the Assistant page
+	•	Add a MicStatus indicator that shows:
+	•	“Ready” after convai-ready
+	•	“Permission required” if no mic access
+	•	“Voice unavailable — type here” when convai-error fires repeatedly
+	•	Always render a text input beneath the widget; route to the same /api/supervisor/ingest pipeline. Users shouldn’t be blocked if audio bails.
+
+Example (React fragment for status + fallback):
+
+const [mic, setMic] = useState<"idle"|"ready"|"error"|"need-permission">("idle");
+useEffect(() => {
+  const el:any = document.getElementById("el-agent");
+  if (!el) return;
+  el.addEventListener("convai-ready", () => setMic("ready"));
+  el.addEventListener("convai-error", () => setMic("error"));
+}, []);
+
+return (
+  <>
+    <div className="mic-status">
+      {mic==="ready" && "🎤 Voice ready"}
+      {mic==="need-permission" && "⚠️ Tap to allow mic"}
+      {mic==="error" && "🛠 Voice down — type below"}
+    </div>
+    <form onSubmit={async e=>{
+      e.preventDefault();
+      const text = new FormData(e.currentTarget).get("q") as string;
+      if(!text) return;
+      await fetch("/api/supervisor/ingest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ type:"message.user", text })});
+      (e.currentTarget as any).reset();
+    }}>
+      <input name="q" placeholder="Type to continue if mic fails" />
+      <button>Send</button>
+    </form>
+  </>
+);
+
+2) Instrument the failure
+
+Add a tiny logger: when convai-error fires N times in 30s, POST /api/telemetry with { kind:"widget_error", detail }. Keep a text log at data/logs/widget.jsonl. That gives us real evidence if the widget flakes in the wild.
+
+⸻
+
+CSP/CORS (recap you can paste)
+
+CORS (Express example):
+
+import cors from "cors";
+app.use(cors({
+  origin: [/\.repl\.co$/, "https://unpkg.com"],
+  methods: ["GET","POST","PATCH","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization","x-api-key"]
+}));
+
+CSP (meta tag for index.html):
+
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+           script-src 'self' https://unpkg.com;
+           connect-src 'self' https://api.elevenlabs.io https://api.elevenlabs.*;
+           frame-src https://*.elevenlabs.io;
+           img-src 'self' data: https:;
+           style-src 'self' 'unsafe-inline'">
+
+
+⸻
+
+What to implement first (right now)
+	1.	Add Slice A (init route + sessionGate) and mount the middleware on your APIs.
+	2.	Swap your storage calls to fsStorage.readTasks/writeTasks.
+	3.	Add the fallback text box + status chip to /assistant.
+	4.	Keep your existing widget mount + allowlist (unchanged).
+
+Once that’s in, you’ve answered all three concerns from the Replit note:
+	•	Server-validated sessions ✅
+	•	Flat-file with a clean path to DB ✅
+	•	Clear fallback UX + telemetry for voice failures ✅
+
+If you want, I can also produce a tiny PR checklist (file-by-file) to sequence these changes, or paste a Next.js API-route version of the middleware if you’re not on Express.
+
+(Personal Notes — for us)
+Current focus: turning concerns into drop-ins.
+My take: this keeps MVP velocity while removing the three biggest foot-guns.
+Unknowns: Next vs Express in your repo; I wrote both styles.
+Assumptions: single process (Replit), so per-session write queue is enough.
+Risks: CSP typos; copy/paste the meta exactly.
+Next best steps: after these land, unify /api/actions/run and the proposals lane so the agent can safely evolve the app.

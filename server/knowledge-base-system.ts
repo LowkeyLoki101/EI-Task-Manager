@@ -105,7 +105,8 @@ export class KnowledgeBaseSystem {
 
   async listKbEntries(filters?: { source?: string; tags?: string[]; limit?: number }): Promise<KnowledgeEntry[]> {
     try {
-      const files = require('fs').readdirSync(this.kbDir).filter((f: string) => f.endsWith('.json'));
+      const fs = await import('fs');
+      const files = fs.readdirSync(this.kbDir).filter((f: string) => f.endsWith('.json'));
       const entries: KnowledgeEntry[] = [];
 
       for (const file of files) {

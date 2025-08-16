@@ -3,7 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
-    <!-- CSP removed to allow ElevenLabs widget full access -->
+    
+    <!-- Enhanced CSP for ElevenLabs widget -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' https://unpkg.com 'unsafe-inline';
+      connect-src 'self' https://api.elevenlabs.io https://api.elevenlabs.* wss://api.elevenlabs.io wss://api.elevenlabs.*;
+      frame-src https://*.elevenlabs.io;
+      img-src 'self' data: https:;
+      style-src 'self' 'unsafe-inline';
+      media-src 'self' blob: data:;
+      worker-src 'self' blob:;
+      child-src https://*.elevenlabs.io;
+    ">
+    
+    <!-- Permissions Policy for microphone access -->
+    <meta http-equiv="Permissions-Policy" content="microphone=*">
+    
+    <title>AI Assistant - Voice First Workbench</title>
   </head>
   <body>
     <div id="root"></div>

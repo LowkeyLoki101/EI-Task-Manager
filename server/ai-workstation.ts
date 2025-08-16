@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import OpenAI from "openai";
+import { breakerAllow, withBackoff, note429 } from "./ai-guard";
 import { storage } from "./storage";
 import { getAutopoieticDiary } from "./autopoietic-diary";
 import { KnowledgeBaseSystem } from "./knowledge-base-system";
@@ -135,11 +136,21 @@ Respond in JSON format only.`;
 
       const prompt = getPersonalizedPrompt(basePrompt);
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 500
+      // Check AI circuit breaker
+      if (!breakerAllow()) {
+        return res.status(429).json({ 
+          error: "insufficient_quota", 
+          detail: "AI paused: quota/cooldown active" 
+        });
+      }
+
+      const completion = await withBackoff(async () => {
+        return await openai.chat.completions.create({
+          model: process.env.OPENAI_MODEL ?? "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 500
+        });
       });
 
       const response = completion.choices[0]?.message?.content;

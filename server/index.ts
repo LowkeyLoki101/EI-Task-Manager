@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import realtimeRouter from "./realtime";
+import sessionRouter from "./routes/session";
 
 // Set NODE_ENV for proper production deployment behavior
 if (!process.env.NODE_ENV) {
@@ -88,6 +89,9 @@ app.use('/api/actions', (req, res, next) => {
   console.log(`[DEBUG] Headers:`, req.headers);
   next();
 });
+
+// Mount session routes (no auth required)
+app.use('/api/session', sessionRouter);
 
 // Mount realtime router
 app.use(realtimeRouter);
