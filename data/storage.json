@@ -27,12 +27,14 @@
         "context": "Gather all necessary materials and prepare notes/questions for the website development discussion for Apex Solutions",
         "timeWindow": "Tomorrow morning",
         "status": "today",
-        "sessionId": "s_y439m78bw1",
+        "sessionId": "s_njlk7hja5y9",
         "id": "38bc3e86-8ce5-4c62-99bb-031737841b6d",
         "description": null,
         "createdAt": "2025-08-12T07:10:29.144Z",
         "updatedAt": "2025-08-12T07:10:29.144Z",
-        "tags": [],
+        "tags": [
+          "real-work"
+        ],
         "priority": "medium",
         "category": "general",
         "resources": [],
@@ -46,12 +48,14 @@
         "context": "Modify the digital avatar to suit the existing QR code and ensure compatibility with the intended design",
         "timeWindow": "Flexible",
         "status": "today",
-        "sessionId": "s_y439m78bw1",
+        "sessionId": "s_njlk7hja5y9",
         "id": "aa33d86b-1683-4481-9e54-09f720a8d721",
         "description": null,
         "createdAt": "2025-08-12T07:10:29.145Z",
         "updatedAt": "2025-08-12T07:10:29.145Z",
-        "tags": [],
+        "tags": [
+          "real-work"
+        ],
         "priority": "medium",
         "category": "general",
         "resources": [],
@@ -65,12 +69,14 @@
         "context": "Create a web application that converts YouTube links to QR codes and adds a print-ready border",
         "timeWindow": "Flexible",
         "status": "today",
-        "sessionId": "s_y439m78bw1",
+        "sessionId": "s_njlk7hja5y9",
         "id": "497d825d-683f-4028-a3fc-7bfe81339001",
         "description": null,
         "createdAt": "2025-08-12T07:10:29.145Z",
         "updatedAt": "2025-08-12T07:10:29.145Z",
-        "tags": [],
+        "tags": [
+          "real-work"
+        ],
         "priority": "medium",
         "category": "general",
         "resources": [],
@@ -84,10 +90,12 @@
         "context": "context=Go over the meeting agenda and gather necessary documents and notes for discussion",
         "timeWindow": "timeWindow=Before the meeting",
         "status": "today",
-        "sessionId": "s_y439m78bw1",
+        "sessionId": "s_njlk7hja5y9",
         "id": "b94b6529-3230-4a6e-829a-1b9ea4223db6",
         "description": null,
-        "tags": [],
+        "tags": [
+          "real-work"
+        ],
         "priority": "medium",
         "category": "general",
         "dueDate": null,
@@ -100,14 +108,16 @@
     [
       "3d5b2b69-5ebd-48f5-a5f5-6a62fd2a5b97",
       {
-        "sessionId": "s_y439m78bw1",
+        "sessionId": "s_njlk7hja5y9",
         "title": "Clean Task Test",
         "context": "computer",
         "timeWindow": "any",
         "status": "today",
         "id": "3d5b2b69-5ebd-48f5-a5f5-6a62fd2a5b97",
         "description": null,
-        "tags": [],
+        "tags": [
+          "real-work"
+        ],
         "priority": "medium",
         "category": "general",
         "dueDate": null,
