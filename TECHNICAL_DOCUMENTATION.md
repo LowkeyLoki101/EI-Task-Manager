@@ -105,14 +105,17 @@ The platform serves as a central hub in a distributed AI agent network, enabling
   - Currently managing 356+ active tasks
   - Pattern-based organization
 
-### 7. Microservice Integration Network
+### 7. Microservice Integration Network v2.0
 **Location**: `server/microservice-connector.ts`, `server/microservice-routes.ts`
-- **Purpose**: Cross-service AI collaboration hub
+- **Purpose**: Cross-service AI collaboration hub with smart auto-detection
 - **Features**:
+  - Smart Integration Hub detection with multiple candidate URLs
+  - Fallback mode for standalone operation when Hub unavailable
+  - Direct service connections to known services (TaskPilot, EI-Task-Manager)
   - Task delegation to specialized AI agents
   - Shared research capabilities
   - Service discovery and registration
-  - Integration hub connectivity
+  - Zero-configuration setup
 
 ### 8. Pattern Organization System
 **Location**: `server/pattern-organizer.ts`
