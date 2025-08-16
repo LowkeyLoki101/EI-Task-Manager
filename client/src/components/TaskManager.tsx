@@ -139,12 +139,19 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'done': return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'doing': return <Clock className="h-5 w-5 text-blue-500" />;
-      default: return <Circle className="h-5 w-5 text-gray-400" />;
+  const getCheckboxIcon = (status: string) => {
+    if (status === 'done') {
+      return (
+        <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors">
+          <CheckCircle className="h-4 w-4 text-white" />
+        </div>
+      );
     }
+    return (
+      <div className="w-6 h-6 rounded-full border-2 border-gray-400 hover:border-green-500 cursor-pointer transition-colors flex items-center justify-center hover:bg-green-50">
+        <Circle className="h-3 w-3 text-transparent" />
+      </div>
+    );
   };
 
   const getContextColor = (context: string) => {
@@ -214,10 +221,11 @@ export default function TaskManager({ sessionId, onVideoSelect }: TaskManagerPro
                   <div className="flex items-start space-x-3 flex-1">
                     <button
                       onClick={() => handleTaskComplete(task.id, task.status)}
-                      className="mt-1 hover:scale-110 transition-transform"
+                      className="mt-1 flex items-center justify-center"
                       data-testid={`task-complete-${task.id}`}
+                      title={task.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                     >
-                      {getStatusIcon(task.status)}
+                      {getCheckboxIcon(task.status)}
                     </button>
                     
                     <div className="flex-1">

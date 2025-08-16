@@ -144,12 +144,22 @@ export default function CompactTaskManager({ sessionId, onVideoSelect }: Compact
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'done': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'doing': return <Clock className="h-4 w-4 text-blue-500" />;
-      default: return <Circle className="h-4 w-4 text-gray-400" />;
+  const getCheckboxIcon = (status: string, size: 'sm' | 'md' = 'md') => {
+    const sizeClasses = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
+    const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-3 w-3';
+    
+    if (status === 'done') {
+      return (
+        <div className={`${sizeClasses} rounded-full bg-green-500 flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors`}>
+          <CheckCircle className={`${iconSize} text-white`} />
+        </div>
+      );
     }
+    return (
+      <div className={`${sizeClasses} rounded-full border-2 border-gray-400 hover:border-green-500 cursor-pointer transition-colors flex items-center justify-center hover:bg-green-50`}>
+        <Circle className={`${iconSize} text-transparent`} />
+      </div>
+    );
   };
 
   const getContextColor = (context: string) => {
@@ -191,7 +201,7 @@ export default function CompactTaskManager({ sessionId, onVideoSelect }: Compact
               <div className="flex gap-2">
                 {tasks.slice(0, 3).map((task) => (
                   <div key={task.id} className="flex items-center gap-1">
-                    {getStatusIcon(task.status)}
+                    {getCheckboxIcon(task.status, 'sm')}
                     <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-24">
                       {task.title}
                     </span>
@@ -241,10 +251,11 @@ export default function CompactTaskManager({ sessionId, onVideoSelect }: Compact
                     <div className="flex items-center gap-2 flex-1">
                       <button
                         onClick={() => handleTaskComplete(task.id, task.status)}
-                        className="hover:scale-110 transition-transform"
+                        className="flex items-center justify-center"
                         data-testid={`compact-task-complete-${task.id}`}
+                        title={task.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                       >
-                        {getStatusIcon(task.status)}
+                        {getCheckboxIcon(task.status)}
                       </button>
                       
                       <span className={`font-medium ${task.status === 'done' ? 'line-through text-gray-500' : ''}`}>
