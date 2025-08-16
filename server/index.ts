@@ -3,6 +3,11 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import realtimeRouter from "./realtime";
 
+// Set NODE_ENV for proper production deployment behavior
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = process.env.REPL_DEPLOYMENT ? 'production' : 'development';
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -87,36 +92,97 @@ app.use('/api/actions', (req, res, next) => {
 // Mount realtime router
 app.use(realtimeRouter);
 
+// Graceful server startup with proper error handling
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    log('Starting server initialization...');
+    
+    // Register routes and get HTTP server instance
+    const server = await registerRoutes(app);
+    log('Routes registered successfully');
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      
+      // Log error for debugging but don't crash the app
+      console.error(`[ERROR] ${req.method} ${req.path}:`, {
+        status,
+        message,
+        stack: err.stack,
+        timestamp: new Date().toISOString()
+      });
 
-    res.status(status).json({ message });
-    throw err;
-  });
+      res.status(status).json({ message });
+      // Removed throw err to prevent app crashes in production
+    });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    // Setup vite in development or serve static files in production
+    // Use NODE_ENV for proper environment detection
+    const isProduction = process.env.NODE_ENV === 'production';
+    log(`Environment: ${process.env.NODE_ENV || 'development'} (isProduction: ${isProduction})`);
+    
+    if (isProduction) {
+      log('Setting up static file serving for production');
+      serveStatic(app);
+    } else {
+      log('Setting up Vite development server');
+      await setupVite(app, server);
+    }
+    log('Frontend setup completed');
+
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Other ports are firewalled. Default to 5000 if not specified.
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = parseInt(process.env.PORT || '5000', 10);
+    
+    // Start the server with proper error handling
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`✅ Server successfully started`);
+      log(`🌐 Serving on http://0.0.0.0:${port}`);
+      log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      log(`🚀 Server is ready to accept connections`);
+    });
+    
+    // Handle server errors
+    server.on('error', (error: any) => {
+      console.error('❌ Server error:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${port} is already in use`);
+      }
+      process.exit(1);
+    });
+    
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace available');
+    process.exit(1);
   }
-
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 })();
+
+// Handle uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
