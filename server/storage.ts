@@ -158,6 +158,7 @@ export class MemStorage implements IStorage {
   private artifacts: Map<string, Artifact>;
   private memories: Map<string, Memory>;
   private conversations: Map<string, Conversation>;
+  private diaryEntries: Map<string, DiaryEntry>;
   private installations: Map<string, Installation>;
   private proposals: Map<string, Proposal>;
   private files: Map<string, File>;
