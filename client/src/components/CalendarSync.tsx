@@ -23,7 +23,7 @@ interface CalendarSyncProps {
 }
 
 export default function CalendarSync({ sessionId }: CalendarSyncProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // Default to expanded for better visibility
   const [appleId, setAppleId] = useState('');
   const [appPassword, setAppPassword] = useState('');
   const [showSetup, setShowSetup] = useState(false);

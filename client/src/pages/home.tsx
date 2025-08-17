@@ -17,7 +17,8 @@ import ProjectManager from '../components/ProjectManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
-import { Code, BookOpen, Brain } from 'lucide-react';
+import { Code, BookOpen, Brain, Calendar } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import Workstation from '../components/Workstation';
 
 export default function HomePage() {
@@ -170,8 +171,15 @@ export default function HomePage() {
             <WorkflowSuggestions sessionId={sessionId} />
           </div>
 
-          {/* iPhone Calendar Integration */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          {/* Calendar & Scheduling - Enhanced Visibility */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg shadow-lg p-6 border border-blue-200 dark:border-blue-700">
+            <div className="flex items-center mb-4">
+              <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Calendar & Task Scheduling
+              </h3>
+              <Badge variant="secondary" className="ml-2">Sync Available</Badge>
+            </div>
             <CalendarSync sessionId={sessionId} />
           </div>
 

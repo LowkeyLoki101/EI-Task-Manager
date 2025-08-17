@@ -9889,6 +9889,26 @@
         "createdAt": "2025-08-17T18:09:07.924Z",
         "updatedAt": "2025-08-17T18:09:07.924Z"
       }
+    ],
+    [
+      "e826f085-a22a-4858-a734-539b243c7b96",
+      {
+        "sessionId": "s_njlk7hja5y9",
+        "title": "Test Policy Enforcement - Should Be Blocked",
+        "context": "computer",
+        "timeWindow": "any",
+        "status": "today",
+        "id": "e826f085-a22a-4858-a734-539b243c7b96",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "category": "general",
+        "dueDate": null,
+        "resources": [],
+        "notes": null,
+        "createdAt": "2025-08-17T18:26:17.217Z",
+        "updatedAt": "2025-08-17T18:26:17.217Z"
+      }
     ]
   ],
   "steps": [

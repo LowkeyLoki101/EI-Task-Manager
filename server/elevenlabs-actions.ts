@@ -278,6 +278,40 @@ export function registerElevenLabsActions(app: Express) {
       
       // Debug: Log what we got for sessionId
       console.log('[ElevenLabs] Received sessionId:', sessionId, 'Type:', typeof sessionId);
+
+      // ⚠️ TASK CREATION POLICY ENFORCEMENT ⚠️
+      // Extract sessionId first before checking limits
+      if (!sessionId) {
+        sessionId = actionData.sessionId || 
+                   req.headers['x-session-id'] || 
+                   req.query.sessionId ||
+                   req.body.session_id ||
+                   actionData.session_id ||
+                   's_njlk7hja5y9'; // fallback to current session
+      }
+      
+      // Check current incomplete task count before creating new tasks
+      const currentTasks = await storage.listTasks(sessionId);
+      const incompleteTasks = currentTasks.filter(task => 
+        task.status !== 'done' && task.status !== 'completed'
+      );
+      
+      const MAX_INCOMPLETE_TASKS = 5;
+      if (incompleteTasks.length >= MAX_INCOMPLETE_TASKS) {
+        console.log(`[ElevenLabs] ❌ Task creation blocked: ${incompleteTasks.length} incomplete tasks exist`);
+        return res.status(429).json({ 
+          error: 'Task creation limit reached',
+          message: `Cannot create new tasks. You have ${incompleteTasks.length} incomplete tasks. Please complete existing tasks before creating new ones.`,
+          incompleteTasks: incompleteTasks.length,
+          maxAllowed: MAX_INCOMPLETE_TASKS,
+          suggestion: 'Focus on completing current tasks to unlock task creation. Mark tasks as completed or convert them to knowledge base entries.',
+          currentIncompleteTasks: incompleteTasks.map(task => ({
+            id: task.id,
+            title: task.title,
+            status: task.status
+          }))
+        });
+      }
       
       // Clean up parameter names from ElevenLabs agent data
       const cleanField = (value: any, prefix: string) => {
