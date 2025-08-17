@@ -70,12 +70,19 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
 
-  // Fetch Knowledge Base entries
+  // Fetch Knowledge Base entries (using same endpoint as Workstation)
   const { data: knowledgeBaseData } = useQuery({
-    queryKey: ['/api/knowledge-base/search', sessionId],
+    queryKey: ['/api/kb/entries', sessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/knowledge-base/search?sessionId=${sessionId}&limit=20`);
-      return response.json();
+      const response = await fetch(`/api/kb/entries?sessionId=${sessionId}&limit=20`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch knowledge base entries');
+      }
+      const result = await response.json();
+      return {
+        results: result.entries || [],
+        total: result.total || (result.entries || []).length
+      };
     },
     refetchInterval: 10000,
   });
