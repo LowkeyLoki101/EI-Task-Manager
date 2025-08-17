@@ -80,11 +80,17 @@ export function KnowledgeBasePanel({ sessionId }: KnowledgeBasePanelProps) {
 
   const entries = searchResults?.results || [];
 
-  console.log('[KnowledgeBasePanel] Rendering state:', {
-    isSearching,
-    entriesCount: entries.length,
-    searchResults,
-  });
+  // ENHANCED DEBUGGING - Find exactly why entries aren't showing
+  console.log('[KnowledgeBasePanel] === DETAILED DEBUG ===');
+  console.log('[KnowledgeBasePanel] searchResults:', searchResults);
+  console.log('[KnowledgeBasePanel] searchResults?.results:', searchResults?.results);
+  console.log('[KnowledgeBasePanel] entries variable:', entries);
+  console.log('[KnowledgeBasePanel] entries.length:', entries.length);
+  console.log('[KnowledgeBasePanel] typeof entries:', typeof entries);
+  console.log('[KnowledgeBasePanel] Array.isArray(entries):', Array.isArray(entries));
+  console.log('[KnowledgeBasePanel] isSearching:', isSearching);
+  console.log('[KnowledgeBasePanel] Condition check - entries.length > 0:', entries.length > 0);
+  console.log('[KnowledgeBasePanel] =====================');
 
   // Loading state
   if (isSearching && entries.length === 0) {
