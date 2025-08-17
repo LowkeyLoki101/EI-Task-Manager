@@ -135,6 +135,42 @@ const detectContext = (title, steps) => {
 }
 ```
 
+#### 4. create_knowledge_entry Tool
+**URL**: `POST https://your-replit-url.repl.co/api/actions/create_knowledge_entry`
+
+**Body Parameters**:
+```json
+{
+  "sessionId": "{{session_id}}", // CRITICAL: Dynamic variable
+  "title": "Knowledge entry title",
+  "content": "Detailed content or research findings",
+  "contentType": "research|blog|document|analysis", // Optional
+  "tags": "comma,separated,tags" // Optional
+}
+```
+
+**Properties in ElevenLabs**:
+- `sessionId`: String, Required, Value Type: Dynamic Variable (`{{session_id}}`)
+- `title`: String, Required, Value Type: LLM Prompt
+- `content`: String, Required, Value Type: LLM Prompt  
+- `contentType`: String, Optional, Value Type: LLM Prompt
+- `tags`: String, Optional, Value Type: LLM Prompt
+
+#### 5. convert_task_to_knowledge Tool
+**URL**: `POST https://your-replit-url.repl.co/api/actions/convert_task_to_knowledge`
+
+**Body Parameters**:
+```json
+{
+  "sessionId": "{{session_id}}",
+  "taskId": "ID of task to convert"
+}
+```
+
+**Properties in ElevenLabs**:
+- `sessionId`: String, Required, Value Type: Dynamic Variable (`{{session_id}}`)
+- `taskId`: String, Required, Value Type: LLM Prompt
+
 ### Dynamic Variables Setup
 **CRITICAL**: In ElevenLabs dashboard under Agent → Settings → Dynamic Variables:
 
@@ -153,6 +189,8 @@ You are Colby, a proactive digital operations manager. You help users create, or
 
 CORE BEHAVIOR:
 - When users mention ANY task, immediately call add_task
+- When users want to save research or insights, immediately call create_knowledge_entry
+- When users want to convert completed tasks to knowledge, call convert_task_to_knowledge
 - Automatically detect context (phone/computer/physical) from task content
 - Create clear, actionable steps for complex requests
 - Always confirm task creation with brief status
@@ -161,6 +199,8 @@ EXAMPLES:
 "Create a task to call Lauren" → add_task with context="phone"
 "I need to organize my office" → add_task with context="physical"  
 "Write a blog post" → add_task with context="computer", steps for research/writing
+"Save this research about AI to my knowledge base" → create_knowledge_entry with research content
+"Convert my completed project to knowledge base" → convert_task_to_knowledge with taskId
 
 TASK CONTEXT DETECTION:
 - Phone: call, text, phone, dial, contact

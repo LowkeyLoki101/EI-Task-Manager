@@ -1,0 +1,28 @@
+{
+  "id": "eb04f2a4-e6d3-4338-a904-ee3ccb3089ef",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The primary issue is identifying key trends and disruptions currently impacting your industry. This involves recognizing technological advancements, regulatory changes, and shifts in consumer behavior that could affect market dynamics and your business operations. By focusing on these aspects, you can better anticipate challenges and opportunities, allowing for strategic planning and adaptation.",
+  "reframeStep": "Instead of focusing solely on external trends and disruptions, consider reframing the question to explore internal capabilities and strengths that can be leveraged amidst industry changes. What unique assets or competencies does your organization possess that could be amplified to navigate or even lead these changes? By shifting the perspective inward, you might identify innovative ways to adapt and thrive, turning potential disruptions into opportunities for growth.",
+  "metaLensStep": null,
+  "recursiveStep": "What emerging technologies or business models could potentially disrupt the current industry landscape that I should investigate further? How might social or environmental trends influence consumer preferences and regulatory policies, and what steps can I take to align my business with these shifts? Additionally, how can I deepen my understanding of competitors' strategies to anticipate their moves and develop a proactive response?",
+  "closureStep": "Based on the insights gathered, my working hypothesis is that emerging technologies and changing consumer behaviors are key areas of disruption in my industry. My next step is to conduct a thorough analysis of these technologies and trends, perhaps by setting up a dedicated team to monitor and evaluate their impacts. Additionally, I'll explore ways to leverage my organization's unique strengths to adapt quickly and effectively to these changes, ensuring we stay ahead of the curve.",
+  "generatedTasks": [
+    "Conduct a thorough analysis of emerging technologies in renewable energy storage.",
+    "Set up a dedicated team to monitor and evaluate the impact of ESG trends on consumer behavior and regulations.",
+    "Develop a competitive analysis framework to anticipate competitors' strategies and inform market strategy."
+  ],
+  "generatedKbEntries": [
+    "Emerging technologies in renewable energy storage",
+    "Impact of ESG trends on consumer behavior and regulations",
+    "Competitive analysis tools and frameworks for market strategy"
+  ],
+  "generatedResearch": [
+    "emerging technologies in renewable energy storage",
+    "impact of ESG trends on consumer behavior and regulations",
+    "competitive analysis tools for market strategy"
+  ],
+  "completed": "2025-08-17T18:00:54.977Z",
+  "createdAt": "2025-08-17T18:00:43.766Z",
+  "meta_lensStep": "You're thinking about what's happening in your industry because staying informed is crucial for maintaining a competitive edge and ensuring your business remains relevant. This pattern of focusing on external factors may indicate a tendency to react to industry changes rather than proactively shaping them. By consistently seeking external insights, you might be repeating a reactive approach instead of fostering innovation and leveraging internal strengths to set trends in the industry."
+}

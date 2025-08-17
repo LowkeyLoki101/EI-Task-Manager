@@ -150,6 +150,124 @@ export function registerElevenLabsActions(app: Express) {
   
   // Actions (Agent → Replit)
   
+  // create_knowledge_entry{ title, content, contentType?, tags? }
+  app.post("/api/actions/create_knowledge_entry", async (req, res) => {
+    try {
+      console.log('[ElevenLabs] create_knowledge_entry webhook called:', JSON.stringify(req.body, null, 2));
+      
+      let { sessionId, ...actionData } = req.body;
+      
+      // Extract sessionId from various sources if not provided
+      if (!sessionId) {
+        sessionId = actionData.sessionId || 
+                   req.headers['x-session-id'] || 
+                   req.query.sessionId ||
+                   req.body.session_id ||
+                   actionData.session_id ||
+                   's_njlk7hja5y9'; // fallback to current session
+      }
+
+      // Validate required fields
+      if (!actionData.title || !actionData.content) {
+        return res.status(400).json({ 
+          error: 'Title and content are required for knowledge base entries',
+          received: actionData
+        });
+      }
+
+      // Create knowledge base entry
+      const response = await fetch('http://localhost:5000/api/kb/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          title: actionData.title,
+          content: actionData.content,
+          source: 'ai-research',
+          contentType: actionData.contentType || 'research',
+          tags: actionData.tags ? actionData.tags.split(',').map(t => t.trim()) : ['ai-created'],
+          metadata: {
+            createdViaElevenLabs: true,
+            elevenlabsAgent: true,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`[ElevenLabs] ✅ Created knowledge base entry: ${actionData.title}`);
+        
+        res.json({
+          success: true,
+          message: `Knowledge base entry "${actionData.title}" created successfully`,
+          entryId: result.entry.id,
+          contentType: result.entry.contentType
+        });
+      } else {
+        console.error('[ElevenLabs] Failed to create knowledge base entry:', await response.text());
+        res.status(500).json({ error: 'Failed to create knowledge base entry' });
+      }
+    } catch (error) {
+      console.error('[ElevenLabs] create_knowledge_entry error:', error);
+      res.status(500).json({ error: 'Failed to process knowledge base request' });
+    }
+  });
+
+  // convert_task_to_knowledge{ taskId }
+  app.post("/api/actions/convert_task_to_knowledge", async (req, res) => {
+    try {
+      console.log('[ElevenLabs] convert_task_to_knowledge webhook called:', JSON.stringify(req.body, null, 2));
+      
+      let { sessionId, ...actionData } = req.body;
+      
+      // Extract sessionId from various sources if not provided
+      if (!sessionId) {
+        sessionId = actionData.sessionId || 
+                   req.headers['x-session-id'] || 
+                   req.query.sessionId ||
+                   req.body.session_id ||
+                   actionData.session_id ||
+                   's_njlk7hja5y9'; // fallback to current session
+      }
+
+      if (!actionData.taskId) {
+        return res.status(400).json({ 
+          error: 'Task ID is required for conversion',
+          received: actionData
+        });
+      }
+
+      // Call the task-to-knowledge conversion API
+      const response = await fetch('http://localhost:5000/api/kb/convert-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: actionData.taskId,
+          sessionId
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`[ElevenLabs] ✅ Converted task to knowledge base: ${result.task.title}`);
+        
+        res.json({
+          success: true,
+          message: `Task "${result.task.title}" converted to knowledge base successfully`,
+          entryId: result.entry.id,
+          taskTitle: result.task.title
+        });
+      } else {
+        console.error('[ElevenLabs] Failed to convert task:', await response.text());
+        res.status(500).json({ error: 'Failed to convert task to knowledge base' });
+      }
+    } catch (error) {
+      console.error('[ElevenLabs] convert_task_to_knowledge error:', error);
+      res.status(500).json({ error: 'Failed to process task conversion request' });
+    }
+  });
+
   // add_task{ title, context?, time_window?, steps? }
   app.post("/api/actions/add_task", async (req, res) => {
     try {

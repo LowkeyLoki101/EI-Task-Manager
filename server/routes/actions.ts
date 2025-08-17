@@ -4,8 +4,28 @@ import { storage } from "../storage";
 
 const actionsRouter = Router();
 
-// Apply session gate to all action routes
-actionsRouter.use(sessionGate);
+// Apply session gate to most action routes, but exclude ElevenLabs webhook endpoints
+// ElevenLabs webhooks should bypass authentication
+const bypassSessionPaths = [
+  '/create_knowledge_entry',
+  '/convert_task_to_knowledge',
+  '/add_task',
+  '/update_step_status', 
+  '/get_todo_list',
+  '/test',
+  '/conversation'
+];
+
+actionsRouter.use((req, res, next) => {
+  // Skip session validation for ElevenLabs webhook endpoints
+  if (bypassSessionPaths.includes(req.path)) {
+    console.log(`[Actions] Bypassing session gate for ElevenLabs webhook: ${req.path}`);
+    return next();
+  }
+  
+  // Apply session gate to all other routes
+  return sessionGate(req, res, next);
+});
 
 // Unified actions endpoint - fan out by action type
 actionsRouter.post("/run", async (req: Request, res: Response) => {

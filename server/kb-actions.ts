@@ -87,7 +87,7 @@ export function registerKnowledgeBaseActions(app: Express) {
       
       // Get task from storage
       const { storage } = await import('./storage');
-      const tasks = await storage.getTasks(sessionId);
+      const tasks = await storage.listTasks(sessionId);
       const task = tasks.find(t => t.id === taskId);
       
       if (!task) {
