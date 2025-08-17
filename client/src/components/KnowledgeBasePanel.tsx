@@ -61,29 +61,28 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
 
   // Fetch knowledge base entries
   const { data: searchResults, isLoading: isSearching } = useQuery({
-    queryKey: ['/api/kb/entries', effectiveSessionId, selectedType, searchQuery],
+    queryKey: ['/api/kb/search', effectiveSessionId, selectedType, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams({
         sessionId: effectiveSessionId,
-        q: searchQuery,
-        limit: '50'
+        query: searchQuery,
+        type: selectedType === 'all' ? '' : selectedType
       });
-      if (selectedType !== 'all') {
-        params.set('contentType', selectedType);
-      }
-      const response = await fetch(`/api/kb/entries?${params}`);
+      console.log('[KnowledgeBasePanel] Fetching with params:', params.toString());
+      const response = await fetch(`/api/kb/search?${params}`);
       if (!response.ok) throw new Error('Failed to search knowledge base');
       const result = await response.json();
-      return { results: result.entries || [] };
+      console.log('[KnowledgeBasePanel] API response:', result);
+      return { results: result.results || [] };
     },
     refetchInterval: 5000, // Auto-refresh every 5 seconds
   });
 
   // Fetch statistics
   const { data: stats } = useQuery({
-    queryKey: ['/api/kb/stats', effectiveSessionId],
+    queryKey: ['/api/kb/statistics', effectiveSessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/kb/stats?sessionId=${effectiveSessionId}`);
+      const response = await fetch(`/api/kb/statistics?sessionId=${effectiveSessionId}`);
       if (!response.ok) throw new Error('Failed to get statistics');
       return response.json();
     },
@@ -105,6 +104,13 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
 
   const entries = searchResults?.results || [];
 
+  console.log('[KnowledgeBasePanel] Rendering state:', {
+    isSearching,
+    entriesCount: entries.length,
+    searchResults,
+    stats
+  });
+
   // Fallback UI for debugging if data isn't loading
   if (isSearching && entries.length === 0) {
     return (
@@ -118,15 +124,27 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
     );
   }
 
-  // Fallback for when no entries are found
-  if (!isSearching && entries.length === 0) {
+  // Force display for debugging - always show SOMETHING
+  if (entries.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center bg-slate-900 text-white">
-        <div className="text-center">
-          <Database className="h-8 w-8 mx-auto mb-2 text-amber-400" />
-          <p className="text-sm">No knowledge entries found</p>
-          <p className="text-xs text-gray-400">SessionId: {effectiveSessionId}</p>
-          <p className="text-xs text-gray-400">Stats: {stats?.totalEntries || 0} total entries</p>
+      <div className="h-full flex flex-col items-center justify-center bg-slate-900 text-white p-4">
+        <div className="text-center space-y-2">
+          <Database className="h-8 w-8 mx-auto mb-2 text-amber-400 animate-pulse" />
+          <p className="text-sm font-medium">Knowledge Base Debug</p>
+          <div className="text-xs text-gray-300 space-y-1">
+            <p>SessionId: {effectiveSessionId}</p>
+            <p>Loading: {isSearching ? 'Yes' : 'No'}</p>
+            <p>Stats: {stats?.totalEntries || 'Loading...'} total entries</p>
+            <p>Entries: {entries.length} found</p>
+          </div>
+          <div className="mt-4">
+            <button 
+              onClick={() => window.open('/knowledge-base', '_blank')}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm"
+            >
+              Open Full Page View
+            </button>
+          </div>
         </div>
       </div>
     );
