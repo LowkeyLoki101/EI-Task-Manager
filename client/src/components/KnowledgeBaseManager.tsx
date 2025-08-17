@@ -83,6 +83,7 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
     category: "",
     priority: "medium" as const
   });
+  const [entryUploadFile, setEntryUploadFile] = useState<File | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -104,9 +105,12 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
         throw new Error('Failed to search knowledge base');
       }
       const result = await response.json();
+      console.log('API Response:', result); // Debug log
+      // Handle different response structures
+      const entries = result.results || result.entries || result || [];
       return {
-        results: result.entries || [],
-        total: result.total || (result.entries || []).length
+        results: Array.isArray(entries) ? entries : [],
+        total: result.total || entries.length
       };
     },
     enabled: !!sessionId,
@@ -194,11 +198,71 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
     },
   });
 
-  const handleAddEntry = () => {
-    if (!newEntry.title || !newEntry.content) {
+  const handleAddEntry = async () => {
+    if (!newEntry.title && !entryUploadFile) {
       toast({
         title: "Error",
-        description: "Title and content are required",
+        description: "Title is required, or upload a file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If there's a file upload for document type, upload it first
+    if (entryUploadFile && newEntry.type === 'document') {
+      try {
+        const formData = new FormData();
+        formData.append('file', entryUploadFile);
+        formData.append('sessionId', sessionId);
+        
+        const uploadResponse = await fetch('/api/knowledge-base/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('File upload failed');
+        }
+
+        const uploadResult = await uploadResponse.json();
+        
+        toast({
+          title: "Success",
+          description: `"${entryUploadFile.name}" has been uploaded and processed`,
+        });
+        
+        // Refresh the knowledge base
+        queryClient.invalidateQueries({ queryKey: ['/api/kb/entries'] });
+        
+        // Reset form
+        setNewEntry({
+          title: "",
+          content: "",
+          type: "document",
+          tags: "",
+          category: "",
+          priority: "medium"
+        });
+        setEntryUploadFile(null);
+        setShowAddDialog(false);
+        
+        return;
+        
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to upload file",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Regular entry creation (no file upload)
+    if (!newEntry.content) {
+      toast({
+        title: "Error",
+        description: "Content is required when not uploading a file",
         variant: "destructive",
       });
       return;
@@ -409,13 +473,30 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
                     data-testid="input-entry-tags"
                   />
                 </div>
+                {newEntry.type === 'document' && (
+                  <div>
+                    <Label htmlFor="document-file">Document File (optional)</Label>
+                    <Input
+                      id="document-file"
+                      type="file"
+                      onChange={(e) => setEntryUploadFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.txt,.md,.js,.ts,.py,.jsx,.tsx,.json,.xml,.html,.css,.sql"
+                      data-testid="input-document-file"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Upload a document file to automatically extract content, or enter content manually below
+                    </p>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="content">Content</Label>
                   <Textarea
                     id="content"
                     value={newEntry.content}
                     onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Enter the content..."
+                    placeholder={newEntry.type === 'document' && entryUploadFile ? 
+                      "Content will be extracted from uploaded file..." : 
+                      "Enter the content..."}
                     className="min-h-[200px]"
                     data-testid="textarea-entry-content"
                   />
