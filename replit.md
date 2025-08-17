@@ -4,6 +4,19 @@
 Emergent Intelligence is an AI-powered project management platform designed to streamline project workflows through advanced AI capabilities. It integrates task management, calendar synchronization, research assistance, and a central knowledge base. The platform features a triple voice system, n8n automation, an autonomous chat system with persistent memory, and a GPT-5 diary system for relationship building and idea generation. A key feature is its role as a central hub in a distributed AI agent network, enabling cross-service collaboration, task delegation to specialized AI agents, and shared research capabilities. The system supports conversational task creation, automated workflow suggestions, cross-device calendar sync, and AI-powered research, with a focus on building relationships and coordinating AI agents across a network. It also includes an autopoietic (self-growing) diary system that autonomously thinks, researches, and builds knowledge, incorporating a 5-step thinking methodology (Colby-Style Lens Processing) and an evolving self-question pool. This system can generate actionable business tasks from its thinking cycles and visually displays its cognitive processes in real-time within an AI workstation.
 
 ## Recent System Updates (August 17, 2025)
+
+### Documentation Consolidation (10:34 PM)
+- **✅ Moved all documentation to docs/ folder**: Consolidated AI_WORKSTATION_TRACE_ROUTES.md, ARCHITECTURE.md, TECHNICAL_DOCUMENTATION.md, SYSTEM_STATUS.md, and ElevenLabs guides
+- **✅ Created CURRENT_ARCHITECTURE.md**: Documented critical parallel pathway violations and layering issues  
+- **✅ Created TROUBLESHOOTING_GUIDE.md**: Comprehensive guide for fixing common issues with step-by-step solutions
+- **✅ Updated docs/README.md**: Complete documentation index with navigation and current system state
+
+### Critical Issues Discovered
+- **🚨 Parallel Knowledge Base Implementations**: Two separate KB systems (KnowledgeBasePage.tsx vs KnowledgeBasePanel.tsx) violating single registry principle
+- **✅ Fixed Workstation Visibility**: Increased z-index from 10 to 50, added bright amber borders, confirmed +/- height adjustment buttons working
+- **📝 Documented Layering Solution**: Chat window was overlapping Workstation, now properly layered with z-index management
+
+## Recent System Updates (Previous)
 - **🚨 CRITICAL FIXES IMPLEMENTED**: Comprehensive task completion workflow system
 - **✅ Task Detail Modal**: Rich task interaction with AI focus capability, notes, tools, manual completion
 - **✅ Task Completion System**: 5-stage completion workflow (Research → Planning → Execution → Knowledge → Publication)  
