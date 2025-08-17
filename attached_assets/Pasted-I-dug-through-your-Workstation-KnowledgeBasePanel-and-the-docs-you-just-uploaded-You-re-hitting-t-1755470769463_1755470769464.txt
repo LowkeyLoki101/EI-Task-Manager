@@ -1,0 +1,127 @@
+I dug through your Workstation, KnowledgeBasePanel, and the docs you just uploaded. You’re hitting the exact “Parallel Pathway” + layering issue both your architecture and troubleshooting docs warn about.
+
+Here’s the breakdown:
+
+⸻
+
+🔍 Why it looks blank
+	1.	Dual implementations
+	•	Full page → KnowledgeBaseManager.tsx
+	•	Workstation tool → KnowledgeBasePanel.tsx
+They don’t share code, so the Workstation often mounts the “simplified” panel which either:
+	•	Doesn’t actually query /api/knowledge-base/search
+	•	Or swallows errors with no fallback
+→ Result: UI renders nothing, feels blank ￼ ￼.
+	2.	Visibility clipping
+Your Workstation container still uses:
+
+style={{
+  height: `${height}px`,
+  maxHeight: `${height}px`,
+  overflow: 'hidden',
+  zIndex: 10
+}}
+
+That means anything inside taller than the container just disappears. The Troubleshooting Guide literally says: set z-index ≥ 50 and make sure overflow isn’t clipping the panel ￼.
+
+	3.	No error boundary
+If the KB panel throws (wrong import, bad fetch), you don’t see it — just a blank slate.
+
+⸻
+
+✅ How to fix it
+
+1. Use the same KB component everywhere
+
+In Workstation.tsx replace the panel mapping:
+
+{
+  id: 'knowledge',
+  name: 'Knowledge Base',
+  icon: Database,
+  component: KnowledgeBasePanel
+}
+
+With:
+
+import { KnowledgeBaseManager } from './KnowledgeBaseManager';
+
+{
+  id: 'knowledge',
+  name: 'Knowledge Base',
+  icon: Database,
+  component: KnowledgeBaseManager
+}
+
+That way both /knowledge-base page and Workstation tool render from the same source of truth. Your troubleshooting doc gives this exact snippet as the solution ￼.
+
+⸻
+
+2. Make sure the panel actually fetches entries
+
+If you keep KnowledgeBasePanel for now, ensure it queries properly:
+
+const { data: searchResults, error, isLoading } = useQuery({
+  queryKey: ['/api/knowledge-base/search'],
+  queryFn: async () => {
+    const res = await fetch('/api/knowledge-base/search');
+    if (!res.ok) throw new Error(`Failed: ${res.status}`);
+    return res.json();
+  }
+});
+
+if (isLoading) return <div>Loading KB…</div>;
+if (error) return <div className="text-red-400">Error: {(error as Error).message}</div>;
+if (!searchResults?.entries?.length) return <div>No entries found</div>;
+
+Without this, you get “API returns 107 entries but UI shows empty” — the exact symptom in your guide ￼.
+
+⸻
+
+3. Fix the container styling
+
+Update your Workstation wrapper:
+
+style={{
+  height: `${height}px`,
+  maxHeight: `${height}px`,
+  overflow: 'visible',   // instead of hidden
+  zIndex: 9999,          // instead of 10
+  position: 'relative'
+}}
+
+The docs say 50 is enough, but I’d push to 9999 so the KB isn’t hiding under your landing page text ￼ ￼.
+
+⸻
+
+4. Wrap panels in an error boundary
+
+So if something fails, you’ll see the problem instead of a silent blank:
+
+class ErrorBoundary extends React.Component {
+  state = { hasError: false, msg: '' };
+  static getDerivedStateFromError(err) {
+    return { hasError: true, msg: err.message };
+  }
+  render() {
+    return this.state.hasError
+      ? <div className="p-4 text-red-400">Panel error: {this.state.msg}</div>
+      : this.props.children;
+  }
+}
+
+
+⸻
+
+🔧 Quick test
+	1.	Click the Knowledge Base button.
+	2.	Watch the Network tab: confirm /api/knowledge-base/search fires.
+	3.	If it still looks blank → check the console. With the ErrorBoundary you’ll now see the thrown error instead of nothing.
+
+⸻
+
+⚡ My read: You’re not actually “losing” the data — it’s that the Workstation is using a watered-down KB panel that either isn’t fetching or is clipped by CSS. Swap in the KnowledgeBaseManager everywhere, bump the z-index, and add an error boundary. That’ll give you a visible panel instead of the ghost town you’ve been staring at.
+
+⸻
+
+Do you want me to rewrite your Workstation.tsx tool mapping + container styles with the unified KB fix already applied?

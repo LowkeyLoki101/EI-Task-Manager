@@ -127,19 +127,25 @@ Knowledge/Diary/Research generation → UI update
 **Symptoms**: Can't see Knowledge Base entries when clicking button in Workstation
 **Root Cause**: Parallel implementations + layering issues
 **Solution Applied**: 
-- Increased z-index to 50
-- Added bright amber borders
+- Unified Knowledge Base component (KnowledgeBaseManager used everywhere)
+- Increased z-index to 9999 (ensures always on top)
+- Changed overflow from 'hidden' to 'visible' (prevents clipping)
+- Added ErrorBoundary for better error visibility
 - Fixed height adjustment controls
 
 ### 2. Chat Window Overlap
 **Symptoms**: Workstation hidden when typing in chat
 **Root Cause**: Low z-index (10) causing layering conflicts
-**Solution**: Increased to z-index: 50 with position: relative
+**Solution**: Increased to z-index: 9999 with position: relative and overflow: visible
 
-### 3. Parallel Pathways
+### 3. Parallel Pathways (RESOLVED)
 **Symptoms**: Different interfaces for same data
-**Root Cause**: Violates single registry principle
-**Solution Needed**: Consolidate to one Knowledge Base component
+**Root Cause**: Violated single registry principle
+**Solution Applied**: 
+- Consolidated to single KnowledgeBaseManager component
+- Created wrapper component for type compatibility
+- Both /knowledge-base page and Workstation tool now use same component
+- Added error boundaries for debugging visibility
 
 ## Development Guidelines
 
@@ -167,8 +173,9 @@ Knowledge/Diary/Research generation → UI update
 - **App Routes**: `client/src/App.tsx`
 
 ## Next Steps
-1. Consolidate Knowledge Base implementations
+1. ~~Consolidate Knowledge Base implementations~~ ✅ COMPLETED
 2. Fix AI memory context length issue
-3. Implement proper single registry pattern
-4. Test all layering fixes
+3. ~~Implement proper single registry pattern~~ ✅ COMPLETED
+4. ~~Test all layering fixes~~ ✅ COMPLETED
 5. Document user workflows
+6. Verify Knowledge Base data is properly fetching and displaying

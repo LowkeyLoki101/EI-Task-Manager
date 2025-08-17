@@ -8,8 +8,50 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from "@tanstack/react-query";
 import { ResearchScratchpad } from './ResearchScratchpad';
-import { KnowledgeBasePanel } from './KnowledgeBasePanel';
+import { KnowledgeBaseManager } from './KnowledgeBaseManager';
 import ContentCreationPanel from './ContentCreationPanel';
+import React from 'react';
+
+// Error Boundary for catching panel errors
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; errorMsg: string }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, errorMsg: '' };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, errorMsg: error.message };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[Panel Error]', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 bg-red-900/20 border border-red-500 rounded-lg">
+          <p className="text-red-400 font-semibold">Panel Error:</p>
+          <p className="text-red-300 text-sm mt-1">{this.state.errorMsg}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Wrapper component to handle the type mismatch for KnowledgeBaseManager
+const KnowledgeBasePanelWrapper: React.ComponentType<{ payload?: any; onUpdate?: (data: any) => void; sessionId?: string }> = ({ sessionId }) => {
+  if (!sessionId) return <div className="p-4 text-amber-400">Session ID required for Knowledge Base</div>;
+  return (
+    <ErrorBoundary>
+      <KnowledgeBaseManager sessionId={sessionId} />
+    </ErrorBoundary>
+  );
+};
 
 interface WorkstationTool {
   id: string;
@@ -80,7 +122,7 @@ const tools: WorkstationTool[] = [
     id: 'knowledge',
     name: 'Knowledge Base',
     icon: Database,
-    component: KnowledgeBasePanel
+    component: KnowledgeBasePanelWrapper
   },
   {
     id: 'content',
@@ -302,8 +344,8 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       style={{ 
         height: `${height}px`,
         maxHeight: `${height}px`,
-        overflow: 'hidden',
-        zIndex: 50,  // Increased from 10 to stay above chat
+        overflow: 'visible',  // Changed from 'hidden' to 'visible' to prevent clipping
+        zIndex: 9999,  // Increased to 9999 to ensure it's always on top
         position: 'relative'  // Ensure it creates stacking context
       }}
     >
