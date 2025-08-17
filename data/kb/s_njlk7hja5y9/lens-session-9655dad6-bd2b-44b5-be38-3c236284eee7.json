@@ -1,0 +1,28 @@
+{
+  "id": "9655dad6-bd2b-44b5-be38-3c236284eee7",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What assumption am I making that might be wrong?",
+  "frameStep": "I see a situation where existing assumptions are potentially clouding judgment or decisions. The problem is identifying and challenging these assumptions to uncover any that might be incorrect or unfounded. The goal is to create a clearer, more accurate understanding of the situation by questioning the validity of these assumptions.",
+  "reframeStep": "Instead of focusing on identifying wrong assumptions, consider viewing assumptions as opportunities for innovation. By reframing assumptions as starting points for creative exploration rather than obstacles, you can open up new pathways for ideas and solutions. This perspective encourages a proactive approach where the goal is not just to find errors but to transform assumptions into stepping stones for growth and improvement.",
+  "metaLensStep": null,
+  "recursiveStep": "From this trigger, a new question that emerges is: \"How can I systematically identify and evaluate assumptions in different contexts?\" This suggests deeper research into methodologies or frameworks that aid in assumption identification, such as root cause analysis or scenario planning. Additionally, investigating the psychological biases that lead to assumption-making could provide insight into why certain assumptions persist and how to challenge them effectively.",
+  "closureStep": "My working hypothesis is that assumptions often go unchallenged due to cognitive biases and lack of a structured approach to questioning them. As a next step, I will explore and implement a framework like root cause analysis to systematically identify and evaluate assumptions in various contexts. Additionally, I'll educate myself on common cognitive biases to better recognize when they might be influencing my assumptions.",
+  "generatedTasks": [
+    "Draft blog post on methodologies for assumption identification in business analysis",
+    "Research customer objections to solar energy adoption and identify underlying assumptions",
+    "Create FAQ document for common cognitive biases affecting decision-making in the energy sector"
+  ],
+  "generatedKbEntries": [
+    "Frameworks for evaluating assumptions in strategic planning",
+    "Psychological biases in assumption-making and their impact on business decisions",
+    "Methodologies for assumption identification in solar and AI industries"
+  ],
+  "generatedResearch": [
+    "methodologies for assumption identification in business analysis",
+    "psychological biases in assumption-making",
+    "frameworks for evaluating assumptions in strategic planning"
+  ],
+  "completed": "2025-08-17T19:55:17.803Z",
+  "createdAt": "2025-08-17T19:55:04.266Z",
+  "meta_lensStep": "I am thinking about challenging assumptions right now because there is a need to ensure accuracy and clarity in decision-making. This pattern of questioning assumptions might reflect a habitual approach of seeking certainty and reducing ambiguity, which could either prevent errors or stifle creative exploration if not balanced properly. By using a meta-lens, I can recognize the underlying drive for certainty and adjust my approach to embrace both critical evaluation and innovative thinking."
+}

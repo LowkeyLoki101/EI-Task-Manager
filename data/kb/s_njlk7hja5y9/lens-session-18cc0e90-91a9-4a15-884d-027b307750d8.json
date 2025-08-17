@@ -1,0 +1,16 @@
+{
+  "id": "18cc0e90-91a9-4a15-884d-027b307750d8",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What assumption am I making that might be wrong?",
+  "frameStep": "The problem at hand is questioning the validity of an assumption. I see a need to identify and clearly articulate the specific assumption that may be faulty. The task is to critically evaluate the basis of this assumption to determine whether it is based on outdated information, biased perspectives, or a lack of evidence.",
+  "reframeStep": "Instead of focusing solely on identifying a potentially incorrect assumption, consider the broader context in which this assumption exists. What if the assumption itself is not inherently wrong, but rather its application or relevance has shifted due to new circumstances or information? By examining the assumption's role within a larger framework, you might discover that it's not about the assumption being wrong or right, but about how it interacts with evolving factors or how it aligns with current goals.",
+  "metaLensStep": null,
+  "recursiveStep": "By applying the recursive lens, consider questioning not just the original assumption, but also the assumptions underlying the reasoning for why it might be wrong. Are there secondary assumptions about the context, stakeholders, or consequences that need to be examined? Additionally, explore the methods and criteria used to evaluate the assumption's validity—are these themselves based on assumptions that warrant further scrutiny? This recursive questioning can reveal hidden layers of assumptions that may also impact decision-making.",
+  "closureStep": "My working hypothesis is that the assumption in question may not be intrinsically incorrect, but its relevance or application might have shifted due to new information or changing circumstances. As a next step, I will gather recent data and insights related to the assumption's context and evaluate how these factors might influence its current validity. This will involve consulting with stakeholders or experts to gain a broader perspective and ensure that the assumption aligns with present-day realities and objectives.",
+  "generatedTasks": [],
+  "generatedKbEntries": [],
+  "generatedResearch": [],
+  "completed": "2025-08-17T19:56:25.231Z",
+  "createdAt": "2025-08-17T19:56:12.619Z",
+  "meta_lensStep": "I am thinking about this assumption right now because it is crucial to ensure that my decisions and actions are based on accurate and relevant information. The pattern I might be repeating in my approach is a tendency to overly question assumptions without considering the possibility of their contextual relevance or adaptability. By applying a meta-lens, I can recognize the broader impact of these assumptions and assess whether they need revision or a shift in perspective rather than outright dismissal."
+}
