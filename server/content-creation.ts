@@ -199,26 +199,69 @@ Make it compelling and shareable while maintaining professional quality.`;
       timestamp: new Date()
     });
 
-    // Save to blog system if it's a blog post
-    if (contentType === 'blog') {
-      await storage.createBlogPost({
+    // Save ALL content to knowledge base as drafts first (Content Draft Cache)
+    try {
+      const { saveKnowledgeEntry } = await import('./kb-storage');
+      
+      await saveKnowledgeEntry({
         sessionId,
-        title: extractTitle(generatedContent) || `AI-Generated Content: ${topic}`,
-        slug: generateSlug(extractTitle(generatedContent) || topic),
-        excerpt: extractExcerpt(generatedContent),
+        topic: extractTitle(generatedContent) || topic,
         content: generatedContent,
+        source: 'content-draft',
         status: 'draft',
-        source: 'ai-research',
-        tags: ['ai-generated', 'content-creation', ...platforms],
+        contentType: contentType as any,
+        platforms: platforms,
+        approvalStatus: 'pending',
+        draftData: {
+          characterCounts: platforms.reduce((acc, platform) => {
+            acc[platform] = generatedContent.length;
+            return acc;
+          }, {} as Record<string, number>),
+          platforms,
+          originalTopic: topic,
+          creationSteps: session.steps
+        },
+        tags: ['ai-generated', 'content-creation', contentType, ...platforms],
         metadata: {
           platforms,
           topic,
           generatedAt: new Date().toISOString(),
           sessionId,
-          workstationMode: 'content-creation'
-        },
-        publishedAt: null
+          workstationMode: 'content-creation',
+          contentType
+        }
       });
+    } catch (error) {
+      console.warn('[Content Creation] Failed to save to knowledge base:', error);
+    }
+
+    console.log(`[Content Creation] ✅ Saved ${contentType} content to knowledge base as draft for approval`);
+    
+    // Only create blog post directly if auto-approval is enabled and it's high quality
+    if (contentType === 'blog') {
+      const qualityScore = await assessContentQuality(generatedContent);
+      if (qualityScore > 0.8) {
+        await storage.createBlogPost({
+          sessionId,
+          title: extractTitle(generatedContent) || `AI-Generated Content: ${topic}`,
+          slug: generateSlug(extractTitle(generatedContent) || topic),
+          excerpt: extractExcerpt(generatedContent),
+          content: generatedContent,
+          status: 'draft',
+          source: 'ai-research',
+          tags: ['ai-generated', 'content-creation', ...platforms],
+          metadata: {
+            platforms,
+            topic,
+            generatedAt: new Date().toISOString(),
+            sessionId,
+            workstationMode: 'content-creation',
+            autoApproved: true,
+            qualityScore
+          },
+          publishedAt: null
+        });
+      }
     }
 
     // Mark session complete
@@ -271,6 +314,20 @@ function extractTitle(content: string): string | null {
 
 function extractExcerpt(content: string): string {
   return content.split('\n').find(line => line.length > 50)?.substring(0, 200) + '...' || '';
+}
+
+// AI Content Quality Assessment
+async function assessContentQuality(content: string): Promise<number> {
+  const wordCount = content.split(' ').length;
+  const hasGoodStructure = content.includes('\n') || content.includes('.');
+  const isReasonableLength = wordCount > 50 && wordCount < 2000;
+  
+  let score = 0.5;
+  if (wordCount > 100) score += 0.2;
+  if (hasGoodStructure) score += 0.2;
+  if (isReasonableLength) score += 0.1;
+  
+  return Math.min(score, 1.0);
 }
 
 function generateSlug(title: string): string {

@@ -92,6 +92,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerContentCreationRoutes } = await import("./content-creation");
   registerContentCreationRoutes(app);
   
+  // Register Content Workflow Routes - Draft Cache & Approval System
+  const { registerContentWorkflowRoutes } = await import("./content-workflow");
+  registerContentWorkflowRoutes(app);
+  
+  // Register Knowledge Base Actions - Direct AI Integration
+  const { registerKnowledgeBaseActions } = await import("./kb-actions");
+  registerKnowledgeBaseActions(app);
+  
   // Register audio transcription routes
   const { registerTranscriptionRoutes } = await import("./transcription");
   registerTranscriptionRoutes(app);

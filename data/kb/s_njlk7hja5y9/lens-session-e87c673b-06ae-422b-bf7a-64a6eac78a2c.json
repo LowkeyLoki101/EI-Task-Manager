@@ -1,0 +1,28 @@
+{
+  "id": "e87c673b-06ae-422b-bf7a-64a6eac78a2c",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The problem is identifying significant trends and developments in your industry that could impact your business or career. This involves staying informed about technological advancements, regulatory changes, and shifts in consumer behavior that are currently shaping the industry landscape. Being aware of these factors is crucial for strategic planning and maintaining a competitive edge.",
+  "reframeStep": "Instead of focusing solely on current trends and developments, consider reframing the question to explore emerging opportunities and potential disruptions in your industry. This perspective shifts the focus from merely reacting to changes to proactively identifying areas where you can innovate or differentiate yourself. By looking at where the industry might be heading and what new possibilities are opening up, you position yourself to lead rather than follow.",
+  "metaLensStep": null,
+  "recursiveStep": "By recursively exploring the question, consider what specific emerging technologies or methodologies could disrupt your industry in the near future. Additionally, investigate how global trends like sustainability or digital transformation might redefine industry standards. Delve into which new skill sets or collaborations could be pivotal in adapting to these changes, and what strategic partnerships or innovations could be developed to stay ahead.",
+  "closureStep": "My working hypothesis is that emerging technologies and methodologies, along with global trends like sustainability and digital transformation, are likely to redefine my industry. The next step is to actively research and monitor these areas for specific developments and innovations. This involves subscribing to industry journals, attending relevant conferences, and networking with thought leaders to stay informed and strategically positioned to take advantage of these changes.",
+  "generatedTasks": [
+    "Research and draft a report on emerging technologies in renewable energy storage",
+    "Create a presentation on the impact of AI on digital transformation in manufacturing",
+    "Identify potential strategic partnerships for sustainability in supply chain management"
+  ],
+  "generatedKbEntries": [
+    "Emerging technologies in renewable energy storage",
+    "AI applications in digital transformation for manufacturing",
+    "Strategic partnerships for sustainability in supply chains"
+  ],
+  "generatedResearch": [
+    "emerging technologies in renewable energy storage",
+    "impact of AI on digital transformation in manufacturing",
+    "strategic partnerships for sustainability in supply chain management"
+  ],
+  "completed": "2025-08-17T16:58:48.509Z",
+  "createdAt": "2025-08-17T16:58:38.866Z",
+  "meta_lensStep": "You're thinking about this right now because you're keen to maintain a competitive edge and ensure your business or career remains relevant in a rapidly changing environment. The pattern you might be repeating is focusing primarily on current trends without considering broader strategic insights. By using a meta-lens, you can shift your approach to not only track industry changes but also to anticipate future shifts and proactively adapt, thus enhancing your ability to innovate and lead."
+}

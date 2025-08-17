@@ -113,8 +113,9 @@ REQUIRED ACTIONS (choose ONE every time):
 2. RESEARCH: research + payload: {searchQuery: "specific query about solar/drone/AI industry"}
 3. CREATE CONTENT: content + payload: {contentType: "blog|social", platforms: ["twitter", "linkedin"], topic: "specific topic"}
 4. CREATE DOCS: docs + payload: {title: "specific title", content: "actual content"}  
-5. ANALYZE: diary + payload: {reflection: "specific insight"} + lensStep: "frame"
-6. FIND VIDEOS: media + payload: {searchQuery: "specific tutorial or demo"}
+5. SAVE KNOWLEDGE: knowledge + payload: {title: "specific title", content: "structured content", contentType: "research|blog|document"}
+6. ANALYZE: diary + payload: {reflection: "specific insight"} + lensStep: "frame"
+7. FIND VIDEOS: media + payload: {searchQuery: "specific tutorial or demo"}
 
 SPECIFIC DIRECTIVES:
 - If any task mentions "research X" → use RESEARCH tool immediately with searchQuery: "X"
@@ -129,7 +130,7 @@ BUSINESS CONTEXT:
 
 NEVER respond with generic "reflecting" - always take specific tool-based action.
 
-Output format: {"tool": "organize|research|content|docs|diary|media", "thinking": "what I'm doing now", "payload": {...}}
+Output format: {"tool": "organize|research|content|docs|knowledge|diary|media", "thinking": "what I'm doing now", "payload": {...}}
 
 ${toolUsageInfo}
 
@@ -195,6 +196,60 @@ Respond in JSON format only.`;
             });
           } catch (error) {
             console.error('[AI Workstation] Autopoietic diary integration failed:', error);
+          }
+        }
+        
+        // Process knowledge base tool actions (direct knowledge saving)
+        if (action.tool === 'knowledge' && action.payload?.title) {
+          try {
+            console.log(`[AI Workstation] Saving to knowledge base: ${action.payload.title}`);
+            
+            // Call knowledge base creation API
+            const response = await fetch('http://localhost:5000/api/kb/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId,
+                title: action.payload.title,
+                content: action.payload.content,
+                source: 'ai-research',
+                contentType: action.payload.contentType || 'research',
+                tags: ['ai-generated', 'workstation'],
+                metadata: {
+                  workstationAction: true,
+                  aiThinking: action.thinking,
+                  timestamp: new Date().toISOString()
+                }
+              })
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              console.log(`[AI Workstation] ✅ Saved to knowledge base: ${action.payload.title}`);
+              
+              // Store result for scratchpad display
+              const kbResult = {
+                id: `kb_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                sessionId,
+                type: 'knowledge-base',
+                title: action.payload.title,
+                content: action.payload.content.substring(0, 300) + '...',
+                contentType: action.payload.contentType || 'research',
+                status: 'saved',
+                timestamp: new Date(),
+                thinking: action.thinking
+              };
+              
+              // Store in memory for immediate display
+              if (!(global as any).workstationKnowledge) {
+                (global as any).workstationKnowledge = new Map();
+              }
+              (global as any).workstationKnowledge.set(kbResult.id, kbResult);
+            } else {
+              console.error('[AI Workstation] Failed to save to knowledge base:', await response.text());
+            }
+          } catch (error) {
+            console.error('[AI Workstation] Knowledge base action failed:', error);
           }
         }
         

@@ -7,9 +7,21 @@ export const knowledgeEntries = pgTable("knowledge_entries", {
   id: varchar("id").primaryKey(),
   sessionId: varchar("session_id").notNull(),
   timestamp: timestamp("timestamp").defaultNow(),
-  source: varchar("source", { enum: ["diary", "search", "simulation", "marketing", "research"] }).notNull(),
+  source: varchar("source", { enum: ["diary", "search", "simulation", "marketing", "research", "content-draft", "ai-creation"] }).notNull(),
   topic: text("topic").notNull(),
   content: text("content").notNull(),
+  // Enhanced content workflow fields
+  status: varchar("status", { enum: ["active", "draft", "approved", "rejected", "archived"] }).default("active").notNull(),
+  contentType: varchar("content_type", { enum: ["research", "blog", "social", "newsletter", "document"] }),
+  platforms: jsonb("platforms").$type<string[]>().default([]), // target platforms for content
+  approvalStatus: varchar("approval_status", { enum: ["pending", "approved", "rejected", "auto-approved"] }).default("pending"),
+  approvedBy: varchar("approved_by"), // 'ai' or 'human' or user ID
+  draftData: jsonb("draft_data").$type<{
+    characterCounts?: Record<string, number>;
+    platforms?: string[];
+    originalTopic?: string;
+    creationSteps?: any[];
+  }>().default({}),
   tags: jsonb("tags").$type<string[]>().default([]),
   derivedTasks: jsonb("derived_tasks").$type<string[]>().default([]),
   metadata: jsonb("metadata").$type<Record<string, any>>().default({}),
