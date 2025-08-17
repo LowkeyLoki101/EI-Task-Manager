@@ -70,27 +70,27 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
 
-  // Fetch Knowledge Base entries (using same endpoint as Workstation)
+  // Fetch Knowledge Base entries (using correct working endpoint)
   const { data: knowledgeBaseData } = useQuery({
-    queryKey: ['/api/kb/entries', sessionId],
+    queryKey: ['/api/knowledge-base/search', sessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/kb/entries?sessionId=${sessionId}&limit=20`);
+      const response = await fetch(`/api/knowledge-base/search?sessionId=${sessionId}&query=&type=&limit=20`);
       if (!response.ok) {
         throw new Error('Failed to fetch knowledge base entries');
       }
       const result = await response.json();
       return {
-        results: result.entries || [],
-        total: result.total || (result.entries || []).length
+        results: result.results || [],
+        total: result.total || (result.results || []).length
       };
     },
     refetchInterval: 10000,
   });
 
   const { data: kbStats } = useQuery({
-    queryKey: ['/api/kb/stats', sessionId],
+    queryKey: ['/api/knowledge-base/statistics', sessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/kb/stats?sessionId=${sessionId}`);
+      const response = await fetch(`/api/knowledge-base/statistics?sessionId=${sessionId}`);
       return response.json();
     },
     refetchInterval: 10000,
@@ -253,24 +253,25 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
 
       {/* Knowledge Base Section */}
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5 text-green-600" />
             <h2 className="text-xl font-semibold">Knowledge Base</h2>
             <Badge variant="secondary">{kbStats?.totalEntries || 0} entries</Badge>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button 
               onClick={() => setShowKnowledgeBase(!showKnowledgeBase)} 
               size="sm" 
               variant="outline"
+              className="w-full sm:w-auto"
             >
               <Search className="w-4 h-4 mr-2" />
               {showKnowledgeBase ? 'Hide' : 'Browse'} Entries
             </Button>
             <a 
               href="/knowledge-base" 
-              className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 transition-colors"
+              className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 transition-colors w-full sm:w-auto"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
               Full Page View
