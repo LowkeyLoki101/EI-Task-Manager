@@ -298,12 +298,13 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
   return (
     <div 
       ref={workstationRef}
-      className={`relative bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 border border-amber-500/30 rounded-lg shadow-2xl backdrop-blur-sm ${className}`}
+      className={`relative bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 border-2 border-amber-500/50 rounded-lg shadow-2xl backdrop-blur-sm ring-2 ring-amber-400/20 ${className}`}
       style={{ 
         height: `${height}px`,
         maxHeight: `${height}px`,
         overflow: 'hidden',
-        zIndex: 10
+        zIndex: 50,  // Increased from 10 to stay above chat
+        position: 'relative'  // Ensure it creates stacking context
       }}
     >
       {/* Header */}
