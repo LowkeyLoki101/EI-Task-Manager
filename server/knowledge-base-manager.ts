@@ -265,6 +265,15 @@ export class KnowledgeBaseManager {
       .slice(0, 50); // Limit results
   }
 
+  // Simple search wrapper method for routes
+  async search(sessionId: string, query: string = '', type: string = 'all'): Promise<KnowledgeBaseEntry[]> {
+    const filters: any = {};
+    if (type && type !== 'all') {
+      filters.type = type;
+    }
+    return this.searchEntries(query, sessionId, filters);
+  }
+
   // Export to zip file
   async exportToZip(sessionId: string, description?: string): Promise<string> {
     const exportId = randomUUID();

@@ -61,7 +61,7 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
 
   // Fetch knowledge base entries
   const { data: searchResults, isLoading: isSearching } = useQuery({
-    queryKey: ['/api/kb/search', effectiveSessionId, selectedType, searchQuery],
+    queryKey: ['/api/knowledge-base/search', effectiveSessionId, selectedType, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams({
         sessionId: effectiveSessionId,
@@ -69,7 +69,7 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
         type: selectedType === 'all' ? '' : selectedType
       });
       console.log('[KnowledgeBasePanel] Fetching with params:', params.toString());
-      const response = await fetch(`/api/kb/search?${params}`);
+      const response = await fetch(`/api/knowledge-base/search?${params}`);
       if (!response.ok) {
         console.error('[KnowledgeBasePanel] API Error:', response.status, response.statusText);
         throw new Error('Failed to search knowledge base');
@@ -87,9 +87,9 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
 
   // Fetch statistics
   const { data: stats } = useQuery({
-    queryKey: ['/api/kb/statistics', effectiveSessionId],
+    queryKey: ['/api/knowledge-base/statistics', effectiveSessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/kb/statistics?sessionId=${effectiveSessionId}`);
+      const response = await fetch(`/api/knowledge-base/statistics?sessionId=${effectiveSessionId}`);
       if (!response.ok) throw new Error('Failed to get statistics');
       return response.json();
     },
