@@ -40,7 +40,7 @@ style={{
 - Click Knowledge Base button but nothing shows
 
 #### Diagnosis
-Dual implementation problem - check which KB component is being used:
+Dual implementation problem - check which Knowledge Base component is being used:
 - Full page: `KnowledgeBasePage.tsx` → `KnowledgeBaseManager.tsx`
 - Workstation: `KnowledgeBasePanel.tsx`
 

@@ -60,12 +60,12 @@ Node.js + Express + TypeScript
 │   ├── autonomous-chat.ts       → GPT-5 chat system
 │   ├── autopoietic-diary.ts     → Self-growing diary
 │   ├── gpt-diary.ts            → GPT diary with memory
-│   └── knowledge-base-manager.ts → KB content management
+│   └── knowledge-base-manager.ts → Knowledge Base content management
 │
 └── Storage
     ├── In-memory with JSON persistence
     ├── PostgreSQL ready (Drizzle ORM)
-    └── 107 KB entries, 433 tasks, 29 blogs
+    └── 107 Knowledge Base entries, 433 tasks, 29 blogs
 ```
 
 ## AI Workstation Component Structure
@@ -124,7 +124,7 @@ Knowledge/Diary/Research generation → UI update
 ## Known Issues & Solutions
 
 ### 1. Knowledge Base Display Issue
-**Symptoms**: Can't see KB entries when clicking button in Workstation
+**Symptoms**: Can't see Knowledge Base entries when clicking button in Workstation
 **Root Cause**: Parallel implementations + layering issues
 **Solution Applied**: 
 - Increased z-index to 50
@@ -139,7 +139,7 @@ Knowledge/Diary/Research generation → UI update
 ### 3. Parallel Pathways
 **Symptoms**: Different interfaces for same data
 **Root Cause**: Violates single registry principle
-**Solution Needed**: Consolidate to one KB component
+**Solution Needed**: Consolidate to one Knowledge Base component
 
 ## Development Guidelines
 
@@ -160,10 +160,10 @@ Knowledge/Diary/Research generation → UI update
 
 ## File Locations Reference
 - **Workstation**: `client/src/components/Workstation.tsx`
-- **KB Manager**: `client/src/components/KnowledgeBaseManager.tsx`
-- **KB Panel**: `client/src/components/KnowledgeBasePanel.tsx`
+- **Knowledge Base Manager**: `client/src/components/KnowledgeBaseManager.tsx`
+- **Knowledge Base Panel**: `client/src/components/KnowledgeBasePanel.tsx`
 - **Home Page**: `client/src/pages/home.tsx`
-- **KB Page**: `client/src/pages/KnowledgeBasePage.tsx`
+- **Knowledge Base Page**: `client/src/pages/KnowledgeBasePage.tsx`
 - **App Routes**: `client/src/App.tsx`
 
 ## Next Steps

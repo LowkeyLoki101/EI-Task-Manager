@@ -103,7 +103,7 @@ export function registerAutopoieticRoutes(app: Express) {
         entry
       });
     } catch (error) {
-      console.error('[AutopoieticRoutes] Error creating KB entry:', error);
+      console.error('[AutopoieticRoutes] Error creating Knowledge Base entry:', error);
       res.status(500).json({
         error: "Failed to create knowledge base entry",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -129,7 +129,7 @@ export function registerAutopoieticRoutes(app: Express) {
         count: entries.length
       });
     } catch (error) {
-      console.error('[AutopoieticRoutes] Error listing KB entries:', error);
+      console.error('[AutopoieticRoutes] Error listing Knowledge Base entries:', error);
       res.status(500).json({
         error: "Failed to list knowledge base entries",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -150,7 +150,7 @@ export function registerAutopoieticRoutes(app: Express) {
 
       res.json({ entry });
     } catch (error) {
-      console.error('[AutopoieticRoutes] Error getting KB entry:', error);
+      console.error('[AutopoieticRoutes] Error getting Knowledge Base entry:', error);
       res.status(500).json({
         error: "Failed to get knowledge base entry",
         details: error instanceof Error ? error.message : 'Unknown error'
