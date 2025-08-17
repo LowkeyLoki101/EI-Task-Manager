@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Knowledge Base Access Guide</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: white; }
+        .highlight-box { 
+            border: 4px solid #ff0000; 
+            background: rgba(255, 0, 0, 0.2);
+            position: absolute;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .instruction { 
+            background: #333; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-left: 4px solid #ff6b35;
+        }
+        .option { 
+            background: #444; 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Knowledge Base Access Guide</h1>
+    
+    <div class="instruction">
+        <h2>Option 1: AI Workstation Knowledge Base Tool</h2>
+        <div class="option">
+            <strong>Where to find it:</strong> In the AI Workstation panel (dark metallic container)
+            <br><strong>What to click:</strong> Look for the <strong>Database icon (🗄️)</strong> in the row of tool buttons
+            <br><strong>Button label:</strong> "Knowledge Base"
+            <br><strong>Location:</strong> Should be the 7th button from the left in the workstation tools
+        </div>
+    </div>
+
+    <div class="instruction">
+        <h2>Option 2: Full Knowledge Base Page</h2>
+        <div class="option">
+            <strong>Where to find it:</strong> Type in browser address bar or navigate to:
+            <br><strong>URL:</strong> <code>/knowledge-base</code>
+            <br><strong>What you'll see:</strong> Full-screen knowledge management interface showing all 94 entries
+        </div>
+    </div>
+
+    <div class="instruction">
+        <h2>Troubleshooting</h2>
+        <div class="option">
+            If the workstation Knowledge Base tool shows empty or won't load:
+            <br>1. Try refreshing the page
+            <br>2. Use the full page option: <code>/knowledge-base</code>
+            <br>3. Check that you're in "Human" mode (blue indicator) in the workstation
+        </div>
+    </div>
+
+    <script>
+        // This would highlight elements if we could inject it into the main page
+        function addHighlightBox(element, label) {
+            const rect = element.getBoundingClientRect();
+            const box = document.createElement('div');
+            box.className = 'highlight-box';
+            box.style.left = rect.left + 'px';
+            box.style.top = rect.top + 'px';
+            box.style.width = rect.width + 'px';
+            box.style.height = rect.height + 'px';
+            document.body.appendChild(box);
+        }
+    </script>
+</body>
+</html>
