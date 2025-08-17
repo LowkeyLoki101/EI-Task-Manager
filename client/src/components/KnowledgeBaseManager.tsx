@@ -90,24 +90,21 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
 
   // Search knowledge base
   const { data: searchResults, isLoading: searchLoading } = useQuery<SearchResults>({
-    queryKey: ['/api/kb/entries', sessionId, searchQuery, selectedType],
+    queryKey: ['/api/knowledge-base/search', sessionId, searchQuery, selectedType],
     queryFn: async () => {
       const params = new URLSearchParams({
         sessionId: sessionId,
-        q: searchQuery,
-        limit: "50"
+        query: searchQuery || '',
+        type: selectedType === 'all' ? '' : selectedType
       });
-      if (selectedType !== 'all') {
-        params.set('contentType', selectedType);
-      }
-      const response = await fetch(`/api/kb/entries?${params}`);
+      const response = await fetch(`/api/knowledge-base/search?${params}`);
       if (!response.ok) {
         throw new Error('Failed to search knowledge base');
       }
       const result = await response.json();
       console.log('API Response:', result); // Debug log
-      // Handle different response structures
-      const entries = result.results || result.entries || result || [];
+      // Handle the correct response structure from /api/knowledge-base/search
+      const entries = result.results || [];
       return {
         results: Array.isArray(entries) ? entries : [],
         total: result.total || entries.length
@@ -119,9 +116,9 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
 
   // Get statistics
   const { data: statistics } = useQuery<Statistics>({
-    queryKey: ['/api/kb/stats', sessionId],
+    queryKey: ['/api/knowledge-base/statistics', sessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/kb/stats?sessionId=${sessionId}`);
+      const response = await fetch(`/api/knowledge-base/statistics?sessionId=${sessionId}`);
       if (!response.ok) throw new Error('Failed to get statistics');
       return response.json();
     },
@@ -232,7 +229,7 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
         });
         
         // Refresh the knowledge base
-        queryClient.invalidateQueries({ queryKey: ['/api/kb/entries'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/search'] });
         
         // Reset form
         setNewEntry({
