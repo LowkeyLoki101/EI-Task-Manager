@@ -102,15 +102,16 @@ export function KnowledgeBasePanel({ sessionId }: KnowledgeBasePanelProps) {
   // Main interface with data
   if (entries.length > 0) {
     return (
-      <div className="h-full flex flex-col bg-slate-900 text-white">
+      <div className="h-full flex flex-col bg-slate-900">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-700">
+        <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5 text-green-400" />
-            <h2 className="text-lg font-semibold">Knowledge Base</h2>
+            <h2 className="text-lg font-semibold text-white">Knowledge Base</h2>
+            <span className="text-xs px-2 py-1 bg-green-600 text-white rounded">CONNECTED</span>
           </div>
-          <div className="text-xs text-slate-400">
-            {entries.length} entries
+          <div className="text-sm text-green-400 font-bold">
+            {entries.length} entries loaded
           </div>
         </div>
 
@@ -139,28 +140,28 @@ export function KnowledgeBasePanel({ sessionId }: KnowledgeBasePanelProps) {
           </div>
         </div>
 
-        {/* Entries List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        {/* Entries List - Fixed visibility */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-900">
           {entries.map((entry: KnowledgeBaseEntry) => {
             const IconComponent = typeIcons[entry.type as keyof typeof typeIcons] || FileText;
             return (
               <div
                 key={entry.id}
                 onClick={() => setSelectedEntry(entry)}
-                className="p-3 bg-slate-800 rounded-lg hover:bg-slate-700 cursor-pointer transition-colors"
+                className="p-3 bg-slate-800 border border-slate-600 rounded-lg hover:bg-slate-700 hover:border-blue-500 cursor-pointer transition-all"
               >
                 <div className="flex items-start gap-3">
                   <IconComponent className="h-4 w-4 mt-1 text-blue-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm truncate">{entry.title}</h3>
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                    <h3 className="font-medium text-sm text-white truncate">{entry.title}</h3>
+                    <p className="text-xs text-gray-300 mt-1 line-clamp-2">
                       {entry.content.substring(0, 120)}...
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs px-2 py-1 bg-blue-600 rounded text-white">
+                      <span className="text-xs px-2 py-1 bg-blue-600 rounded text-white font-semibold">
                         {entry.type}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-400">
                         {formatDate(entry.updatedAt)}
                       </span>
                     </div>

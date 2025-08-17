@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        button {
+            background: #333;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #444;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #0f0;
+            background: #111;
+        }
+        .entry {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #333;
+            background: #0a0a0a;
+        }
+        .error {
+            color: #f00;
+            border-color: #f00;
+        }
+        .success {
+            color: #0f0;
+            border-color: #0f0;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Knowledge Base API Test</h1>
+        
+        <div class="status" id="status">Ready to test...</div>
+        
+        <div>
+            <button onclick="testAPI()">Test Knowledge Base API</button>
+            <button onclick="testSearch('task')">Search Tasks</button>
+            <button onclick="testSearch('conversation')">Search Conversations</button>
+            <button onclick="testSearch('all')">Search All</button>
+            <button onclick="clearResults()">Clear</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const sessionId = 's_njlk7hja5y9';
+        
+        async function testAPI() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            
+            status.innerHTML = '⏳ Testing Knowledge Base API...';
+            status.className = 'status';
+            
+            try {
+                const response = await fetch(`/api/knowledge-base/search?sessionId=${sessionId}&query=&type=`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    status.innerHTML = `✅ API Working! Found ${data.results?.length || 0} entries`;
+                    status.className = 'status success';
+                    
+                    if (data.results && data.results.length > 0) {
+                        results.innerHTML = '<h3>Sample Entries:</h3>';
+                        data.results.slice(0, 5).forEach(entry => {
+                            results.innerHTML += `
+                                <div class="entry">
+                                    <strong>${entry.title}</strong><br>
+                                    Type: ${entry.type}<br>
+                                    Content: ${entry.content.substring(0, 100)}...<br>
+                                    Updated: ${new Date(entry.updatedAt).toLocaleString()}
+                                </div>
+                            `;
+                        });
+                        
+                        results.innerHTML += `<pre>Full Response:\n${JSON.stringify(data, null, 2)}</pre>`;
+                    }
+                } else {
+                    throw new Error(`API returned ${response.status}: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                status.innerHTML = `❌ Error: ${error.message}`;
+                status.className = 'status error';
+                results.innerHTML = `<pre class="error">${error.stack}</pre>`;
+            }
+        }
+        
+        async function testSearch(type) {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            
+            status.innerHTML = `⏳ Searching for ${type}...`;
+            status.className = 'status';
+            
+            try {
+                const url = `/api/knowledge-base/search?sessionId=${sessionId}&query=&type=${type}`;
+                console.log('Fetching:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const count = data.results?.length || 0;
+                    status.innerHTML = `✅ Found ${count} ${type} entries`;
+                    status.className = 'status success';
+                    
+                    if (data.results && data.results.length > 0) {
+                        results.innerHTML = `<h3>${type.toUpperCase()} Entries:</h3>`;
+                        data.results.slice(0, 10).forEach(entry => {
+                            results.innerHTML += `
+                                <div class="entry">
+                                    <strong>${entry.title}</strong> [${entry.type}]<br>
+                                    ${entry.content.substring(0, 150)}...
+                                </div>
+                            `;
+                        });
+                    } else {
+                        results.innerHTML = `<p>No ${type} entries found</p>`;
+                    }
+                } else {
+                    throw new Error(`API returned ${response.status}`);
+                }
+            } catch (error) {
+                status.innerHTML = `❌ Error: ${error.message}`;
+                status.className = 'status error';
+                results.innerHTML = `<pre class="error">${error.stack}</pre>`;
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('status').innerHTML = 'Ready to test...';
+            document.getElementById('status').className = 'status';
+        }
+        
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            console.log('Knowledge Base Test Page Loaded');
+            console.log('Session ID:', sessionId);
+        });
+    </script>
+</body>
+</html>

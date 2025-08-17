@@ -516,6 +516,12 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
           const handleClick = () => {
             if (workstationState.mode === 'off') return;
             console.log(`[Workstation] Switching to ${tool.name} tool, current mode: ${workstationState.mode}`);
+            
+            // Add specific logging for Knowledge Base
+            if (tool.id === 'knowledge') {
+              console.log('[Workstation] Knowledge Base button clicked - loading entries...');
+            }
+            
             setActiveTool(tool.id);
             setCurrentPayload(null); // Clear any AI payload when user manually switches
             if (workstationState.mode === 'human' || workstationState.mode === 'hybrid') {
