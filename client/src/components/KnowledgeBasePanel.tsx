@@ -57,7 +57,7 @@ export function KnowledgeBasePanel({ sessionId }: KnowledgeBasePanelProps) {
 
   // SIMPLE RENDER - Always show the interface, just like Diary panel
   return (
-    <div className="h-full p-4 bg-gradient-to-b from-slate-800/20 to-gray-900/20">
+    <div className="h-full p-4 bg-gradient-to-b from-slate-800/20 to-gray-900/20" style={{ border: '3px solid red' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
