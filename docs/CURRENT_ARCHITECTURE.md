@@ -3,7 +3,35 @@
 
 ## 🚨 Critical Architecture Issues
 
-### 1. **Parallel Pathway Violation - Knowledge Base**
+### 1. **Parallel Pathway Violation - Knowledge Base** (RESOLVED - Aug 17, 2025) 
+**Status**: ✅ RESOLVED  
+**Impact**: High - Complete system non-functionality
+**Root Cause**: Two parallel knowledge base systems with conflicting APIs
+
+#### The Problem
+- **System A** (knowledge-base-manager.ts): Contains 108 loaded entries, uses `/api/knowledge-base/*` routes
+- **System B** (knowledge-base-system.ts): Session-based system, uses `/api/kb/*` routes  
+- **Frontend**: Was calling System B routes while data existed in System A
+
+#### What We Thought vs Reality
+**Initial Diagnosis**: SessionId consistency issues, frontend display problems
+**Actual Problem**: API endpoint routing mismatch between systems
+**Why We Missed It**: 
+- Focused on sessionId parameters instead of fundamental API route differences
+- Assumed frontend display issue rather than backend data source mismatch  
+- Server logs showed "108 entries loaded" but didn't correlate this with API endpoints
+- Different response structures (results vs entries) masked the routing problem
+
+#### Resolution
+- Frontend redirected to use System A endpoints (`/api/knowledge-base/search`)
+- API parameter mapping corrected (sessionId, query, type format)
+- Cache invalidation updated for correct endpoint paths
+- Response structure handling updated (results vs entries vs count vs total)
+
+#### Lesson Learned
+**Critical**: Always verify which system holds the actual data before debugging frontend display issues. Two systems can coexist with identical functionality but different API contracts.
+
+### 2. **UI Component Duplication** (ONGOING)
 **Problem**: Two separate Knowledge Base implementations violating "single registry" principle
 - **System 1**: Full page at `/knowledge-base` route → `KnowledgeBasePage.tsx` → uses `KnowledgeBaseManager.tsx`
 - **System 2**: Workstation panel → `KnowledgeBasePanel.tsx` (simplified view)
@@ -11,7 +39,7 @@
 - **User Requirement**: "Single registries for their stuff that humans and AI and tools all go to"
 - **Resolution Needed**: Consolidate to one Knowledge Base component used everywhere
 
-### 2. **Layering & Visibility Issues**
+### 3. **Layering & Visibility Issues**
 **Problem**: AI Workstation getting hidden behind chat interface
 - **Original Issue**: When expanded, Workstation overlapped with chat when typing
 - **First Fix**: Hidden the Workstation to prevent overlap

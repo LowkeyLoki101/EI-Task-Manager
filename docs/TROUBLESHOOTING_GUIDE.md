@@ -32,39 +32,99 @@ style={{
 
 ---
 
-### 2. Knowledge Base Entries Not Displaying
+### 2. Knowledge Base Entries Not Displaying (RESOLVED - Aug 17, 2025)
 
 #### Symptoms
 - API returns 107 entries but UI shows empty
 - Different displays in Workstation vs full page
 - Click Knowledge Base button but nothing shows
 
-#### Diagnosis
-Dual implementation problem - check which Knowledge Base component is being used:
-- Full page: `KnowledgeBasePage.tsx` → `KnowledgeBaseManager.tsx`
-- Workstation: `KnowledgeBasePanel.tsx`
+#### Root Cause Analysis
+**What We Thought**: Frontend component issues, dual implementations
+**Actual Problem**: Parallel backend systems with different API endpoints
+- **System A** (working): knowledge-base-manager.ts with 108 entries → `/api/knowledge-base/*`
+- **System B** (empty): knowledge-base-system.ts with per-session data → `/api/kb/*`
+- **Frontend**: Was calling System B while data existed in System A
 
-#### Solution
-Ensure the Workstation panel properly queries the API:
+#### Why This Was Missed Initially
+1. **Focused on symptoms not sources**: Assumed frontend display bugs rather than API routing
+2. **Ignored server startup logs**: "Loaded 108 entries" message indicated working system
+3. **Different response formats**: `results` vs `entries` vs `count` vs `total` masked the issue
+4. **SessionId red herring**: Spent time on sessionId consistency when real issue was endpoint mismatch
+
+#### Solution (IMPLEMENTED)
 ```typescript
-// In KnowledgeBasePanel.tsx
+// Fixed in KnowledgeBaseManager.tsx
 const { data: searchResults } = useQuery({
-  queryKey: [`/api/knowledge-base/search`],
+  queryKey: ['/api/knowledge-base/search', sessionId, searchQuery, selectedType],
   queryFn: async () => {
-    const response = await fetch(`/api/knowledge-base/search`);
-    return response.json();
+    const params = new URLSearchParams({
+      sessionId: sessionId,
+      query: searchQuery || '',
+      type: selectedType === 'all' ? '' : selectedType
+    });
+    const response = await fetch(`/api/knowledge-base/search?${params}`);
+    const result = await response.json();
+    return {
+      results: result.results || [],
+      total: result.total || 0
+    };
   }
 });
 ```
 
+#### Lesson Learned
+**Always verify which backend system contains the actual data before debugging frontend issues.**
+
 #### Verification
-1. Check browser console for API calls
-2. Verify `/api/knowledge-base/search` returns data
-3. Look for entries with amber text in panel
+1. Check browser console shows `/api/knowledge-base/search` calls (not `/api/kb/entries`)
+2. Server logs show "Loaded 108 entries" on startup
+3. API response structure uses `results` and `total` properties
 
 ---
 
-### 3. Chat Window Overlapping Workstation
+### 3. Parallel Systems Debugging Framework
+
+#### How to Identify Parallel System Issues
+**Warning Signs**:
+- API returns data but frontend shows empty
+- Server logs indicate successful operations but UI fails  
+- Multiple components doing similar things
+- Different API endpoint patterns for same functionality
+
+#### Investigation Steps
+1. **Check server logs for data loading messages**:
+   ```bash
+   grep -i "loaded.*entries" logs/
+   # Look for: "[KnowledgeBase] Loaded 108 entries"
+   ```
+
+2. **Map API endpoints to actual data sources**:
+   ```bash
+   curl -s "http://localhost:5000/api/knowledge-base/search?sessionId=test" | jq '.total'
+   curl -s "http://localhost:5000/api/kb/entries/test" | jq '.count'
+   ```
+
+3. **Trace frontend API calls in browser console**:
+   - Look for which endpoints are being called
+   - Check response structures (results vs entries vs data)
+   - Verify parameter formats match backend expectations
+
+4. **Verify data location**:
+   ```bash
+   find . -name "*.json" | grep -i knowledge
+   ls -la data/
+   ```
+
+#### Resolution Pattern
+1. Identify which system has the actual data
+2. Update frontend to use correct API endpoints  
+3. Fix parameter mapping and response structure handling
+4. Update cache invalidation to match new endpoints
+
+---
+
+### 4. Chat Window Overlapping Workstation
 
 #### Symptoms
 - Workstation hidden when clicking in chat input
