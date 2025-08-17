@@ -56,6 +56,9 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  console.log('[KnowledgeBasePanel] Rendering with sessionId:', effectiveSessionId);
+  console.log('[KnowledgeBasePanel] Payload:', payload);
+
   // Fetch knowledge base entries
   const { data: searchResults, isLoading: isSearching } = useQuery({
     queryKey: ['/api/kb/entries', effectiveSessionId, selectedType, searchQuery],
@@ -102,10 +105,37 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
 
   const entries = searchResults?.results || [];
 
+  // Fallback UI for debugging if data isn't loading
+  if (isSearching && entries.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center bg-slate-900 text-white">
+        <div className="text-center">
+          <Database className="h-8 w-8 mx-auto mb-2 text-blue-400 animate-pulse" />
+          <p className="text-sm">Loading knowledge base...</p>
+          <p className="text-xs text-gray-400">SessionId: {effectiveSessionId}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback for when no entries are found
+  if (!isSearching && entries.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center bg-slate-900 text-white">
+        <div className="text-center">
+          <Database className="h-8 w-8 mx-auto mb-2 text-amber-400" />
+          <p className="text-sm">No knowledge entries found</p>
+          <p className="text-xs text-gray-400">SessionId: {effectiveSessionId}</p>
+          <p className="text-xs text-gray-400">Stats: {stats?.totalEntries || 0} total entries</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
+    <div className="h-full flex flex-col bg-slate-900 text-white border border-amber-500/20">
       {/* Header */}
-      <div className="flex-none p-4 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex-none p-4 border-b border-amber-500/20 bg-slate-800/50">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5 text-blue-600" />
