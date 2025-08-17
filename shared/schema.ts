@@ -74,21 +74,7 @@ export const conversations = pgTable("conversations", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
-// AI Job Queue for intelligent quota management
-export const aiJobs = pgTable("ai_jobs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  type: text("type").notNull(), // 'kb.ingest', 'diary.entry', 'autopoietic.tick', 'supervisor.analysis'
-  payload: json("payload").notNull(),
-  state: text("state", { enum: ['queued', 'running', 'completed', 'failed', 'delayed'] }).default('queued').notNull(),
-  attempts: integer("attempts").default(0).notNull(),
-  maxAttempts: integer("max_attempts").default(5).notNull(),
-  priority: integer("priority").default(5).notNull(), // 1 highest, 10 lowest
-  scheduledAt: timestamp("scheduled_at").defaultNow().notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  lastError: text("last_error"),
-  result: json("result"), // Store successful results
-});
+// Production-grade AI Job Queue will be defined later in the file
 
 // Diary entries for tracking AI thoughts and reflections
 export const diaryEntries = pgTable("diary_entries", {
@@ -366,6 +352,44 @@ export const postOpsUpdateActionSchema = z.object({
     change: z.record(z.any()),
   })),
 });
+
+// Production-grade AI Job Queue System
+export const aiJobs = pgTable("ai_jobs", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  payload: json("payload").notNull(),
+  state: text("state").notNull().default("queued"), // queued|running|done|failed
+  attempts: integer("attempts").notNull().default(0),
+  maxAttempts: integer("max_attempts").notNull().default(5),
+  priority: integer("priority").notNull().default(5), // 1 high .. 10 low
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  lastError: text("last_error"),
+});
+
+export const aiOutbox = pgTable("ai_outbox", {
+  id: text("id").primaryKey(),
+  jobId: text("job_id").notNull(),
+  type: text("type").notNull(),
+  content: json("content").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const insertAiJobSchema = createInsertSchema(aiJobs).omit({ 
+  id: true,
+  createdAt: true, 
+  updatedAt: true 
+});
+export const insertAiOutboxSchema = createInsertSchema(aiOutbox).omit({ 
+  id: true,
+  createdAt: true 
+});
+
+export type AiJob = typeof aiJobs.$inferSelect;
+export type AiOutbox = typeof aiOutbox.$inferSelect;
+export type InsertAiJob = z.infer<typeof insertAiJobSchema>;
+export type InsertAiOutbox = z.infer<typeof insertAiOutboxSchema>;
 
 export type AddTaskAction = z.infer<typeof addTaskActionSchema>;
 export type UpdateStepStatusAction = z.infer<typeof updateStepStatusActionSchema>;
