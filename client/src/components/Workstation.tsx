@@ -2,13 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, FileText, Brain, Monitor, Search, Youtube, Database,
   Maximize2, Minimize2, Grid3x3, ChevronLeft, ChevronRight,
-  Download, ExternalLink, Plus, Minus, Eye, Lightbulb, ArrowRight
+  Download, ExternalLink, Plus, Minus, Eye, Lightbulb, ArrowRight, PenTool
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from "@tanstack/react-query";
 import { ResearchScratchpad } from './ResearchScratchpad';
 import { KnowledgeBasePanel } from './KnowledgeBasePanel';
+import ContentCreationPanel from './ContentCreationPanel';
 
 interface WorkstationTool {
   id: string;
@@ -80,6 +81,12 @@ const tools: WorkstationTool[] = [
     name: 'Knowledge Base',
     icon: Database,
     component: KnowledgeBasePanel
+  },
+  {
+    id: 'content',
+    name: 'Content Creator',
+    icon: PenTool,
+    component: ContentCreationPanel
   }
 ];
 

@@ -111,9 +111,10 @@ FORBIDDEN: You cannot use "reflect", "reflecting", "planning" or "thinking" with
 REQUIRED ACTIONS (choose ONE every time):
 1. ORGANIZE: organize + payload: {action: "auto-organize-projects", sessionId: "${sessionId}"} [Run every 10th action to maintain project structure]
 2. RESEARCH: research + payload: {searchQuery: "specific query about solar/drone/AI industry"}
-3. CREATE CONTENT: docs + payload: {title: "specific title", content: "actual content"}  
-4. ANALYZE: diary + payload: {reflection: "specific insight"} + lensStep: "frame"
-5. FIND VIDEOS: media + payload: {searchQuery: "specific tutorial or demo"}
+3. CREATE CONTENT: content + payload: {contentType: "blog|social", platforms: ["twitter", "linkedin"], topic: "specific topic"}
+4. CREATE DOCS: docs + payload: {title: "specific title", content: "actual content"}  
+5. ANALYZE: diary + payload: {reflection: "specific insight"} + lensStep: "frame"
+6. FIND VIDEOS: media + payload: {searchQuery: "specific tutorial or demo"}
 
 SPECIFIC DIRECTIVES:
 - If any task mentions "research X" → use RESEARCH tool immediately with searchQuery: "X"
@@ -128,7 +129,7 @@ BUSINESS CONTEXT:
 
 NEVER respond with generic "reflecting" - always take specific tool-based action.
 
-Output format: {"tool": "organize|research|docs|diary|media", "thinking": "what I'm doing now", "payload": {...}}
+Output format: {"tool": "organize|research|content|docs|diary|media", "thinking": "what I'm doing now", "payload": {...}}
 
 ${toolUsageInfo}
 
@@ -194,6 +195,40 @@ Respond in JSON format only.`;
             });
           } catch (error) {
             console.error('[AI Workstation] Autopoietic diary integration failed:', error);
+          }
+        }
+        
+        // Process content creation tool actions (live AI content creation)
+        if (action.tool === 'content' && action.payload?.contentType) {
+          try {
+            console.log(`[AI Workstation] Starting content creation: ${action.payload.contentType} for ${action.payload.platforms?.join(', ')}`);
+            
+            // Trigger live content creation
+            const { registerContentCreationRoutes } = await import('./content-creation');
+            
+            // Store content creation result for scratchpad display IMMEDIATELY
+            const contentResult = {
+              id: `content_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              sessionId,
+              type: 'content-creation',
+              contentType: action.payload.contentType,
+              platforms: action.payload.platforms || ['twitter'],
+              topic: action.payload.topic || 'AI and Business Innovation',
+              status: 'creating',
+              timestamp: new Date(),
+              thinking: action.thinking
+            };
+            
+            // Store in memory for immediate display
+            if (!(global as any).workstationContent) {
+              (global as any).workstationContent = new Map();
+            }
+            (global as any).workstationContent.set(contentResult.id, contentResult);
+            
+            console.log(`[AI Workstation] ✅ Content creation initiated: ${action.payload.contentType}`);
+            
+          } catch (error) {
+            console.error('[AI Workstation] Content creation failed:', error);
           }
         }
         

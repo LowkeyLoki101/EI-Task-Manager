@@ -88,6 +88,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerBlogRoutes } = await import("./blog-routes");
   registerBlogRoutes(app);
   
+  // Register Content Creation Routes - Live AI Content Creation
+  const { registerContentCreationRoutes } = await import("./content-creation");
+  registerContentCreationRoutes(app);
+  
   // Register audio transcription routes
   const { registerTranscriptionRoutes } = await import("./transcription");
   registerTranscriptionRoutes(app);
