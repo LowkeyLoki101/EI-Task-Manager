@@ -9869,6 +9869,26 @@
         "createdAt": "2025-08-17T18:06:59.692Z",
         "updatedAt": "2025-08-17T18:06:59.692Z"
       }
+    ],
+    [
+      "edbe3a3e-90f0-4a93-83d8-88b7efe0ac2f",
+      {
+        "sessionId": "s_njlk7hja5y9",
+        "title": "Test Task Auth Check",
+        "context": "computer",
+        "timeWindow": "any",
+        "status": "today",
+        "id": "edbe3a3e-90f0-4a93-83d8-88b7efe0ac2f",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "category": "general",
+        "dueDate": null,
+        "resources": [],
+        "notes": null,
+        "createdAt": "2025-08-17T18:09:07.924Z",
+        "updatedAt": "2025-08-17T18:09:07.924Z"
+      }
     ]
   ],
   "steps": [
