@@ -105,7 +105,6 @@ export default function HomePage() {
             <div className="flex items-center gap-2 sm:gap-4">
               <a 
                 href="/knowledge-base" 
-                target="_blank"
                 className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 transition-colors"
                 title="Comprehensive knowledge base with metadata, search, export/import"
               >

@@ -270,8 +270,6 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
             </Button>
             <a 
               href="/knowledge-base" 
-              target="_blank" 
-              rel="noopener noreferrer"
               className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 transition-colors"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
@@ -291,7 +289,7 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
             <CardContent className="max-h-80 overflow-y-auto">
               {knowledgeBaseData?.results?.length > 0 ? (
                 <div className="space-y-3">
-                  {knowledgeBaseData.results.slice(0, 10).map((entry: any) => (
+                  {knowledgeBaseData.results?.slice(0, 10).map((entry: any) => (
                     <div key={entry.id} className="p-3 bg-white/80 dark:bg-gray-800/80 rounded-lg border border-green-200 dark:border-green-800">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
