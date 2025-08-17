@@ -70,9 +70,16 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
       });
       console.log('[KnowledgeBasePanel] Fetching with params:', params.toString());
       const response = await fetch(`/api/kb/search?${params}`);
-      if (!response.ok) throw new Error('Failed to search knowledge base');
+      if (!response.ok) {
+        console.error('[KnowledgeBasePanel] API Error:', response.status, response.statusText);
+        throw new Error('Failed to search knowledge base');
+      }
       const result = await response.json();
-      console.log('[KnowledgeBasePanel] API response:', result);
+      console.log('[KnowledgeBasePanel] Full API response:', JSON.stringify(result, null, 2));
+      console.log('[KnowledgeBasePanel] Results array length:', result.results?.length || 0);
+      if (result.results && result.results.length > 0) {
+        console.log('[KnowledgeBasePanel] First entry sample:', result.results[0]);
+      }
       return { results: result.results || [] };
     },
     refetchInterval: 5000, // Auto-refresh every 5 seconds
@@ -124,26 +131,57 @@ export function KnowledgeBasePanel({ sessionId, payload, onUpdate }: KnowledgeBa
     );
   }
 
-  // Force display for debugging - always show SOMETHING
+  // Debug interface when no entries are found
   if (entries.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-slate-900 text-white p-4">
-        <div className="text-center space-y-2">
-          <Database className="h-8 w-8 mx-auto mb-2 text-amber-400 animate-pulse" />
-          <p className="text-sm font-medium">Knowledge Base Debug</p>
-          <div className="text-xs text-gray-300 space-y-1">
-            <p>SessionId: {effectiveSessionId}</p>
-            <p>Loading: {isSearching ? 'Yes' : 'No'}</p>
-            <p>Stats: {stats?.totalEntries || 'Loading...'} total entries</p>
-            <p>Entries: {entries.length} found</p>
+      <div className="h-full flex flex-col bg-slate-900 text-white">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-700">
+          <div className="flex items-center gap-2">
+            <Database className="h-5 w-5 text-amber-400" />
+            <h2 className="text-lg font-semibold">Knowledge Base</h2>
           </div>
-          <div className="mt-4">
+          <div className="text-xs text-slate-400">
+            {stats?.totalEntries || '?'} entries available
+          </div>
+        </div>
+
+        {/* Debug Content */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <Database className="h-12 w-12 mb-4 text-amber-400 animate-pulse" />
+          
+          <div className="text-center space-y-3 mb-6">
+            <p className="text-lg font-medium">Connecting to Knowledge Base...</p>
+            <div className="text-sm text-gray-300 space-y-1">
+              <p>Session: {effectiveSessionId}</p>
+              <p>Status: {isSearching ? 'Loading...' : 'Ready'}</p>
+              <p>Server Entries: {stats?.totalEntries || 'Loading...'}</p>
+              <p>Found: {entries.length} entries</p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 w-full max-w-sm">
             <button 
               onClick={() => window.open('/knowledge-base', '_blank')}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm"
+              className="w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
             >
-              Open Full Page View
+              📖 Open Full Knowledge Base
             </button>
+            
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+            >
+              🔄 Refresh Connection
+            </button>
+          </div>
+
+          {/* Status Message */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-slate-500">
+              If this persists, try the full page view above
+            </p>
           </div>
         </div>
       </div>
