@@ -551,12 +551,20 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       {/* Content Area */}
       <div className="flex-1 overflow-hidden relative">
         <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
-          {activeToolComponent && (
+          {activeToolComponent ? (
             <activeToolComponent.component 
               payload={currentPayload}
               onUpdate={setCurrentPayload}
               sessionId={sessionId}
             />
+          ) : (
+            <div className="h-full flex items-center justify-center bg-gradient-to-b from-slate-800/20 to-gray-900/20">
+              <div className="text-center text-amber-200/80 text-sm">
+                <div className="text-red-400 mb-2">DEBUG: Tool not found</div>
+                <div className="text-xs">Active tool: {activeTool}</div>
+                <div className="text-xs">Available tools: {tools.map(t => t.id).join(', ')}</div>
+              </div>
+            </div>
           )}
         </div>
       </div>
