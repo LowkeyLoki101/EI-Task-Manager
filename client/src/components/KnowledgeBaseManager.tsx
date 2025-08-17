@@ -89,14 +89,40 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
 
   // Search knowledge base
   const { data: searchResults, isLoading: searchLoading } = useQuery<SearchResults>({
-    queryKey: ['/api/knowledge-base/search', sessionId, searchQuery, selectedType],
+    queryKey: ['/api/kb/entries', sessionId, searchQuery, selectedType],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        sessionId: sessionId,
+        q: searchQuery,
+        limit: "50"
+      });
+      if (selectedType !== 'all') {
+        params.set('contentType', selectedType);
+      }
+      const response = await fetch(`/api/kb/entries?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to search knowledge base');
+      }
+      const result = await response.json();
+      return {
+        results: result.entries || [],
+        total: result.total || (result.entries || []).length
+      };
+    },
     enabled: !!sessionId,
+    refetchInterval: 5000,
   });
 
   // Get statistics
   const { data: statistics } = useQuery<Statistics>({
-    queryKey: ['/api/knowledge-base/statistics', sessionId],
+    queryKey: ['/api/kb/stats', sessionId],
+    queryFn: async () => {
+      const response = await fetch(`/api/kb/stats?sessionId=${sessionId}`);
+      if (!response.ok) throw new Error('Failed to get statistics');
+      return response.json();
+    },
     enabled: !!sessionId,
+    refetchInterval: 10000,
   });
 
   // Get available exports
@@ -129,8 +155,8 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
         category: "",
         priority: "medium"
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/search'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/statistics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/kb/entries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/kb/stats'] });
     },
     onError: (error) => {
       toast({
@@ -157,7 +183,7 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
         title: "Export Complete",
         description: `Knowledge base exported as ${data.filename}`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/exports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/kb/exports'] });
     },
     onError: () => {
       toast({
