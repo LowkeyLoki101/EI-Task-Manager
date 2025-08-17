@@ -24,12 +24,14 @@ Emergent Intelligence is an AI-powered project management platform designed to s
 - **✅ ELEVENLABS AI TOOL INTEGRATION**: Fixed authentication bypass for ElevenLabs webhooks - Conversational AI (Colby) now has full access to knowledge base and advanced tools
 - **✅ TASK CREATION POLICY**: Implemented 5-task completion enforcement - AI cannot create new tasks when 5+ incomplete tasks exist, forcing completion workflow
 - **✅ CALENDAR VISIBILITY**: Enhanced calendar component visibility with expanded default view and prominent styling for better user engagement
+- **✅ WORKSPACE ORGANIZATION**: Collapsed setup/maintenance interfaces (Workflow Automation, Calendar Setup, n8n) into collapsible "Settings & Setup" section for cleaner daily workspace
 - **📊 Current Scale**: 432+ tasks identified, task creation policy active to enforce completion workflows
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Interface design: Clean, mobile-first interface without technical backend details exposed to users. Single voice interface only.
 Chat behavior: No disruptive auto-scrolling when user is typing - allow natural interaction without forcing scroll position changes.
+Workspace organization: Daily-use tools prominent, setup/maintenance interfaces collapsed behind "Settings & Setup" section to reduce clutter.
 
 ## Development Methodology
 **Self-Diagnostic & Improvement Framework**: All code generation, editing, and refactoring must follow the 6-step framework:

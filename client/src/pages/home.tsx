@@ -17,13 +17,15 @@ import ProjectManager from '../components/ProjectManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
-import { Code, BookOpen, Brain, Calendar } from 'lucide-react';
+import { Code, BookOpen, Brain, Calendar, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import Workstation from '../components/Workstation';
 
 export default function HomePage() {
   const sessionId = useSessionId();
   const [builderMode, setBuilderMode] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   
   // Listen for ElevenLabs widget events
   useElevenLabsEvents();
@@ -166,28 +168,56 @@ export default function HomePage() {
             <ProjectManager sessionId={sessionId} />
           </div>
 
-          {/* Workflow Suggestions - Where the user can see automation features */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <WorkflowSuggestions sessionId={sessionId} />
-          </div>
+          {/* Settings & Setup - Collapsible Section */}
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <Button
+              variant="ghost"
+              onClick={() => setShowSettings(!showSettings)}
+              className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg"
+            >
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Settings & Setup
+                </span>
+                <Badge variant="outline" className="text-xs">
+                  3 tools
+                </Badge>
+              </div>
+              {showSettings ? (
+                <ChevronUp className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              )}
+            </Button>
+            
+            {showSettings && (
+              <div className="px-4 pb-4 space-y-4">
+                {/* Workflow Suggestions */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
+                  <WorkflowSuggestions sessionId={sessionId} />
+                </div>
 
-          {/* Calendar & Scheduling - Enhanced Visibility */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg shadow-lg p-6 border border-blue-200 dark:border-blue-700">
-            <div className="flex items-center mb-4">
-              <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Calendar & Task Scheduling
-              </h3>
-              <Badge variant="secondary" className="ml-2">Sync Available</Badge>
-            </div>
-            <CalendarSync sessionId={sessionId} />
-          </div>
+                {/* Calendar & Scheduling */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg shadow-sm p-4 border border-blue-200 dark:border-blue-700">
+                  <div className="flex items-center mb-4">
+                    <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Calendar & Task Scheduling
+                    </h3>
+                    <Badge variant="secondary" className="ml-2">Sync Available</Badge>
+                  </div>
+                  <CalendarSync sessionId={sessionId} />
+                </div>
 
-          {/* n8n Workflow Automation */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <WorkflowVisualizer 
-              sessionId={sessionId} 
-            />
+                {/* n8n Workflow Automation */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
+                  <WorkflowVisualizer 
+                    sessionId={sessionId} 
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* GPT-5 Supervisor - Analysis & Insights Only */}
