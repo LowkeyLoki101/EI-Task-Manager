@@ -16,7 +16,11 @@ import {
   Lightbulb,
   Zap,
   FileText,
-  Target
+  Target,
+  Database,
+  ExternalLink,
+  Search,
+  BookOpen
 } from 'lucide-react';
 import type { Task } from '@shared/schema';
 import TaskDetailModal from './TaskDetailModal';
@@ -64,6 +68,26 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
+
+  // Fetch Knowledge Base entries
+  const { data: knowledgeBaseData } = useQuery({
+    queryKey: ['/api/knowledge-base/search', sessionId],
+    queryFn: async () => {
+      const response = await fetch(`/api/knowledge-base/search?sessionId=${sessionId}&limit=20`);
+      return response.json();
+    },
+    refetchInterval: 10000,
+  });
+
+  const { data: kbStats } = useQuery({
+    queryKey: ['/api/kb/stats', sessionId],
+    queryFn: async () => {
+      const response = await fetch(`/api/kb/stats?sessionId=${sessionId}`);
+      return response.json();
+    },
+    refetchInterval: 10000,
+  });
 
   // Fetch tasks and automatically organize into projects
   const { data: tasksResponse = { tasks: [] }, isLoading } = useQuery({
@@ -218,6 +242,86 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Knowledge Base Section */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Database className="h-5 w-5 text-green-600" />
+            <h2 className="text-xl font-semibold">Knowledge Base</h2>
+            <Badge variant="secondary">{kbStats?.totalEntries || 0} entries</Badge>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowKnowledgeBase(!showKnowledgeBase)} 
+              size="sm" 
+              variant="outline"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              {showKnowledgeBase ? 'Hide' : 'Browse'} Entries
+            </Button>
+            <a 
+              href="/knowledge-base" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Full Page View
+            </a>
+          </div>
+        </div>
+
+        {showKnowledgeBase && (
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-800 dark:text-green-200">
+                <BookOpen className="h-5 w-5" />
+                Recent Knowledge Base Entries
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="max-h-80 overflow-y-auto">
+              {knowledgeBaseData?.results?.length > 0 ? (
+                <div className="space-y-3">
+                  {knowledgeBaseData.results.slice(0, 10).map((entry: any) => (
+                    <div key={entry.id} className="p-3 bg-white/80 dark:bg-gray-800/80 rounded-lg border border-green-200 dark:border-green-800">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-green-900 dark:text-green-100 mb-1">
+                            {entry.title}
+                          </h4>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
+                            {entry.content?.substring(0, 150)}...
+                          </p>
+                          <div className="flex items-center gap-2 text-xs">
+                            <Badge variant="outline" className="bg-green-100 dark:bg-green-900">
+                              {entry.type}
+                            </Badge>
+                            <span className="text-gray-500">
+                              {new Date(entry.createdAt).toLocaleDateString()}
+                            </span>
+                            {entry.metadata?.category && (
+                              <span className="text-gray-500">
+                                • {entry.metadata.category}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <Database className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No Knowledge Base entries found</p>
+                  <p className="text-sm">Complete tasks to automatically build your knowledge base</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Project Cards */}
