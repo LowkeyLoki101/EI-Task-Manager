@@ -616,77 +616,87 @@ export function DirectChatInterface() {
           </div>
         )}
 
-        {/* Input Area - Full Width Text Field */}
-        <div className="space-y-4">
-          {/* Text Input - Big Rectangle Taking Full Width */}
-          <div className="w-full">
-            <Textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask GPT-5 anything, create tasks, upload documents, or use voice recording..."
-              className="min-h-[140px] w-full resize-none text-base leading-relaxed px-4 py-4 rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
-              disabled={isLoading}
-              data-testid="chat-input"
-            />
-          </div>
-          
-          {/* Action Buttons - All Below Text Area */}
-          <div className="flex flex-col gap-3">
-            {/* Top Row: File and Voice Actions */}
-            <div className="flex flex-wrap gap-3">
-              <Button
-                size="default"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading || isRecording}
-                data-testid="upload-button"
-                className="flex items-center gap-2 flex-1 min-w-0 sm:flex-none"
-              >
-                <Upload className="w-4 h-4" />
-                <span>Upload File</span>
-              </Button>
-              <Button
-                size="default"
-                variant={isRecording ? "destructive" : "outline"}
-                onClick={isRecording ? stopRecording : startRecording}
-                disabled={isLoading || voiceReady}
-                data-testid="record-button"
-                className={`flex items-center gap-2 flex-1 min-w-0 sm:flex-none ${isRecording ? "animate-pulse" : ""}`}
-                title="Record & Transcribe"
-              >
-                {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                <span>{isRecording ? "Stop Recording" : "Record Audio"}</span>
-              </Button>
-              <Button
-                size="default"
-                variant={voiceReady ? "destructive" : "outline"}
-                onClick={voiceReady ? stopGPTVoice : startGPTVoice}
-                disabled={isLoading || voiceConnecting || isRecording}
-                data-testid="voice-chat-button"
-                className={`flex items-center gap-2 flex-1 min-w-0 sm:flex-none ${voiceReady ? "animate-pulse" : voiceConnecting ? "animate-pulse" : ""}`}
-                title="GPT Voice Chat"
-              >
-                {voiceReady ? <PhoneOff className="w-4 h-4" /> : voiceConnecting ? <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div> : <Phone className="w-4 h-4" />}
-                <span>
-                  {voiceReady ? "End Voice Chat" : voiceConnecting ? "Connecting..." : "Start Voice Chat"}
-                </span>
-              </Button>
+        {/* Input Area - Expandable Text + Send Button */}
+        <div className="space-y-3">
+          {/* Text Input + Send Button - Flex Container */}
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Textarea
+                ref={(el) => {
+                  if (el) {
+                    // Auto-resize functionality
+                    const handleInput = () => {
+                      el.style.height = 'auto';
+                      el.style.height = `${Math.min(el.scrollHeight, 200)}px`; // Max 200px height
+                    };
+                    el.addEventListener('input', handleInput);
+                    // Initial resize
+                    handleInput();
+                  }
+                }}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask GPT-5 anything, create tasks, upload documents..."
+                className="min-h-[40px] max-h-[200px] w-full resize-none text-base leading-relaxed px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 overflow-hidden"
+                disabled={isLoading}
+                data-testid="chat-input"
+                rows={1}
+              />
             </div>
             
-            {/* Bottom Row: Send Button - Prominent */}
-            <div className="flex justify-end">
-              <Button
-                size="lg"
-                onClick={sendMessage}
-                disabled={isLoading || isRecording || voiceReady || (!inputMessage.trim() && uploadedFiles.length === 0)}
-                data-testid="send-button"
-                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-3 px-8 py-3 text-lg font-medium"
-              >
-                <Send className="w-5 h-5" />
-                <span>Send Message</span>
-              </Button>
-            </div>
+            {/* Send Button - Inline with textarea */}
+            <Button
+              size="lg"
+              onClick={sendMessage}
+              disabled={isLoading || isRecording || voiceReady || (!inputMessage.trim() && uploadedFiles.length === 0)}
+              data-testid="send-button"
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-3 h-auto flex-shrink-0"
+            >
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">Send</span>
+            </Button>
+          </div>
+          
+          {/* Action Buttons - Below Input Area */}
+          <div className="flex flex-wrap gap-2 justify-start">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading || isRecording}
+              data-testid="upload-button"
+              className="flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Upload File</span>
+            </Button>
+            <Button
+              size="sm"
+              variant={isRecording ? "destructive" : "outline"}
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isLoading || voiceReady}
+              data-testid="record-button"
+              className={`flex items-center gap-2 ${isRecording ? "animate-pulse" : ""}`}
+              title="Record & Transcribe"
+            >
+              {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              <span>{isRecording ? "Stop" : "Record"}</span>
+            </Button>
+            <Button
+              size="sm"
+              variant={voiceReady ? "destructive" : "outline"}
+              onClick={voiceReady ? stopGPTVoice : startGPTVoice}
+              disabled={isLoading || voiceConnecting || isRecording}
+              data-testid="voice-chat-button"
+              className={`flex items-center gap-2 ${voiceReady ? "animate-pulse" : voiceConnecting ? "animate-pulse" : ""}`}
+              title="GPT Voice Chat"
+            >
+              {voiceReady ? <PhoneOff className="w-4 h-4" /> : voiceConnecting ? <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div> : <Phone className="w-4 h-4" />}
+              <span>
+                {voiceReady ? "End Voice" : voiceConnecting ? "Connecting..." : "Voice Chat"}
+              </span>
+            </Button>
           </div>
         </div>
 
