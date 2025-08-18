@@ -73,6 +73,7 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<KnowledgeBaseEntry | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [newEntry, setNewEntry] = useState({
@@ -734,7 +735,12 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
             {entries.map((entry: KnowledgeBaseEntry) => {
               const IconComponent = typeIcons[entry.type];
               return (
-                <Card key={entry.id} data-testid={`entry-${entry.id}`}>
+                <Card 
+                  key={entry.id} 
+                  data-testid={`entry-${entry.id}`}
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => setSelectedEntry(entry)}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
@@ -781,6 +787,89 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
           </div>
         )}
       </div>
+
+      {/* Entry Detail Modal */}
+      {selectedEntry && (
+        <Dialog open={!!selectedEntry} onOpenChange={() => setSelectedEntry(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  {(() => {
+                    const IconComponent = typeIcons[selectedEntry.type];
+                    return <IconComponent className="w-6 h-6 mt-1 text-gray-500" />;
+                  })()}
+                  <div>
+                    <DialogTitle className="text-xl">{selectedEntry.title}</DialogTitle>
+                    <p className="text-sm text-gray-500">
+                      {selectedEntry.metadata.category} • {new Date(selectedEntry.createdAt).toLocaleDateString()}
+                      {selectedEntry.updatedAt !== selectedEntry.createdAt && (
+                        <span> • Updated {new Date(selectedEntry.updatedAt).toLocaleDateString()}</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="secondary">{selectedEntry.type}</Badge>
+              </div>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Tags */}
+              {selectedEntry.metadata.tags.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Tags</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedEntry.metadata.tags.map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Content */}
+              <div>
+                <h4 className="text-sm font-medium mb-2">Content</h4>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm font-mono">
+                    {selectedEntry.content}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Metadata */}
+              {selectedEntry.metadata.source && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Source</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {selectedEntry.metadata.source}
+                  </p>
+                </div>
+              )}
+
+              {/* Custom Fields */}
+              {selectedEntry.metadata.customFields && Object.keys(selectedEntry.metadata.customFields).length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Additional Information</h4>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                    <pre className="text-xs text-gray-600 dark:text-gray-300">
+                      {JSON.stringify(selectedEntry.metadata.customFields, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* Session ID */}
+              <div className="text-xs text-gray-400 pt-2 border-t">
+                <p>Session: {selectedEntry.sessionId}</p>
+                <p>ID: {selectedEntry.id}</p>
+                {selectedEntry.version && <p>Version: {selectedEntry.version}</p>}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
