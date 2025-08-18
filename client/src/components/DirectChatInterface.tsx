@@ -540,15 +540,15 @@ export function DirectChatInterface() {
                 {message.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
               
-              <div className={`flex-1 max-w-[80%] ${
+              <div className={`flex-1 min-w-0 ${
                 message.role === 'user' ? 'text-right' : 'text-left'
               }`}>
-                <div className={`inline-block p-3 rounded-lg ${
+                <div className={`inline-block p-3 rounded-lg max-w-full ${
                   message.role === 'user'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white dark:bg-gray-800 border'
                 }`}>
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</p>
                   {message.files && message.files.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-blue-400">
                       <div className="flex items-center gap-1 text-xs opacity-75">
@@ -710,9 +710,7 @@ export function DirectChatInterface() {
           data-testid="file-input"
         />
 
-        <div className="text-xs text-gray-500 text-center">
-          Powered by GPT-5 • Upload documents up to 10MB • Voice recording & GPT Voice Chat • Creates tasks automatically
-        </div>
+
       </CardContent>
     </Card>
   );
