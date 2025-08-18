@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Search, Download, Upload, Plus, FileText, MessageSquare, Code, BookOpen, Zap, BarChart3, File, X, CheckCircle } from "lucide-react";
+import { Search, Download, Upload, Plus, FileText, MessageSquare, Code, BookOpen, Zap, BarChart3, File, FolderOpen, X, CheckCircle } from "lucide-react";
 
 interface KnowledgeBaseEntry {
   id: string;
@@ -308,6 +308,37 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
     }
   }, []);
 
+  const handleFolderSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      const supportedFiles = files.filter(file => {
+        const extension = file.name.toLowerCase();
+        return extension.includes('.pdf') || extension.includes('.doc') || 
+               extension.includes('.docx') || extension.includes('.txt') ||
+               extension.includes('.md') || extension.includes('.js') ||
+               extension.includes('.ts') || extension.includes('.py') ||
+               extension.includes('.jsx') || extension.includes('.tsx') ||
+               extension.includes('.json') || extension.includes('.xml') ||
+               extension.includes('.html') || extension.includes('.css') ||
+               extension.includes('.sql');
+      });
+      
+      if (supportedFiles.length > 0) {
+        handleFiles(supportedFiles);
+        toast({
+          title: "Folder Upload",
+          description: `Processing ${supportedFiles.length} files from folder`,
+        });
+      } else {
+        toast({
+          title: "No Supported Files",
+          description: "No supported files found in the selected folder",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [toast]);
+
   const handleFiles = useCallback((files: File[]) => {
     const newUploadFiles: UploadFile[] = files.map(file => ({
       file,
@@ -541,9 +572,12 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
                   data-testid="file-drop-zone"
                 >
                   <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-lg mb-2">Drag & drop files here</p>
+                  <p className="text-lg mb-2">Drag & drop files or folders here</p>
                   <p className="text-sm text-gray-500 mb-4">
                     Supports: PDF, DOC, DOCX, TXT, MD, JS, TS, PY, and more
+                  </p>
+                  <p className="text-xs text-gray-400 mb-4">
+                    When uploading folders, all supported files will be processed automatically
                   </p>
                   <input
                     type="file"
@@ -553,14 +587,33 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
                     onChange={handleFileSelect}
                     accept=".pdf,.doc,.docx,.txt,.md,.js,.ts,.py,.jsx,.tsx,.json,.xml,.html,.css,.sql"
                   />
-                  <Button
-                    variant="outline"
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                    data-testid="button-select-files"
-                  >
-                    <File className="w-4 h-4 mr-2" />
-                    Select Files
-                  </Button>
+                  <input
+                    type="file"
+                    className="hidden"
+                    id="folder-upload"
+                    onChange={handleFolderSelect}
+                    {...({ webkitdirectory: "true" } as any)}
+                    directory=""
+                    multiple
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                      data-testid="button-select-files"
+                    >
+                      <File className="w-4 h-4 mr-2" />
+                      Select Files
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('folder-upload')?.click()}
+                      data-testid="button-select-folder"
+                    >
+                      <FolderOpen className="w-4 h-4 mr-2" />
+                      Select Folder
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Upload Progress */}
