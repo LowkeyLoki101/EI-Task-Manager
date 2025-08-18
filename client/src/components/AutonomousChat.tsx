@@ -340,13 +340,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
       
       <CardContent className="flex flex-col flex-1 min-h-0 space-y-4">
         {/* Memory/Relationship Status */}
-        {memory && (
+        {memory && memory.knowledgeBase.automationPatterns.length > 0 && (
           <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-            <div>💭 Communication: {memory.personalityProfile.communicationStyle}</div>
-            <div>🧠 Skills: {memory.knowledgeBase.technicalSkills.slice(0, 3).join(', ')}</div>
-            {memory.knowledgeBase.automationPatterns.length > 0 && (
-              <div>⚡ Automation: {memory.knowledgeBase.automationPatterns.slice(0, 2).join(', ')}</div>
-            )}
+            <div>⚡ Automation: {memory.knowledgeBase.automationPatterns.slice(0, 2).join(', ')}</div>
           </div>
         )}
 
