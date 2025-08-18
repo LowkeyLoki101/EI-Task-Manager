@@ -350,9 +350,9 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-amber-500/20 bg-gradient-to-r from-slate-800/50 to-gray-700/50">
-        <div className="flex items-center gap-3">
-          <div className={`w-3 h-3 rounded-full shadow-lg ${
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border-b border-amber-500/20 bg-gradient-to-r from-slate-800/50 to-gray-700/50 gap-2">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className={`w-3 h-3 rounded-full shadow-lg flex-shrink-0 ${
             workstationState.mode === 'ai' 
               ? 'bg-amber-400 animate-pulse shadow-amber-400/50' 
               : workstationState.mode === 'hybrid'
@@ -361,8 +361,8 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
               ? 'bg-blue-400 shadow-blue-400/50'
               : 'bg-gray-400 shadow-gray-400/50'
           }`}></div>
-          <div>
-            <h3 className="text-sm font-bold text-amber-100">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-amber-100 truncate">
               AI WORKSTATION
               <span className={`ml-2 text-xs px-2 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${
                 workstationState.mode === 'ai' 
@@ -414,13 +414,13 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
         </div>
         
         {/* Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 justify-end sm:justify-start">
           {/* AI/Human Mode Toggle */}
           <Button 
             variant="ghost" 
             size="sm"
             onClick={toggleMode}
-            className={`text-xs px-3 border ${
+            className={`text-xs px-2 sm:px-3 border whitespace-nowrap ${
               workstationState.mode === 'ai' 
                 ? 'border-amber-500/40 text-amber-300 hover:bg-amber-900/20' 
                 : workstationState.mode === 'hybrid'
@@ -430,9 +430,16 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
                 : 'border-gray-500/40 text-gray-400 hover:bg-gray-900/20'
             }`}
           >
-            {workstationState.mode === 'off' ? 'Turn On' : 
-             workstationState.mode === 'human' ? 'Enable Hybrid' : 
-             workstationState.mode === 'hybrid' ? 'Enable AI' : 'Turn Off'}
+            <span className="hidden sm:inline">
+              {workstationState.mode === 'off' ? 'Turn On' : 
+               workstationState.mode === 'human' ? 'Enable Hybrid' : 
+               workstationState.mode === 'hybrid' ? 'Enable AI' : 'Turn Off'}
+            </span>
+            <span className="sm:hidden">
+              {workstationState.mode === 'off' ? 'On' : 
+               workstationState.mode === 'human' ? 'Hybrid' : 
+               workstationState.mode === 'hybrid' ? 'AI' : 'Off'}
+            </span>
           </Button>
           
           {/* Fractal Organization Control */}
@@ -458,14 +465,19 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
                 setIsOrganizing(false);
               }
             }}
-            className="text-xs px-3 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-900/20"
+            className="text-xs px-2 sm:px-3 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-900/20 whitespace-nowrap"
             disabled={isOrganizing}
           >
-            {isOrganizing ? 'Organizing...' : 'Organize Tasks'}
+            <span className="hidden sm:inline">
+              {isOrganizing ? 'Organizing...' : 'Organize Tasks'}
+            </span>
+            <span className="sm:hidden">
+              {isOrganizing ? 'Org...' : 'Organize'}
+            </span>
           </Button>
           
-          {/* Height Controls */}
-          <div className="flex items-center gap-1">
+          {/* Height Controls - Hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-1">
             <Button 
               variant="ghost" 
               size="sm"
@@ -484,8 +496,8 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
             </Button>
           </div>
 
-          {/* Layout Controls */}
-          <div className="flex items-center gap-1 border-l border-amber-500/20 pl-2">
+          {/* Layout Controls - Hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-1 border-l border-amber-500/20 pl-2">
             <Button 
               variant={layout === 'solo' ? 'secondary' : 'ghost'}
               size="sm"
