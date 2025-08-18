@@ -299,12 +299,13 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               </Badge>
             )}
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 items-center">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setShowDiary(!showDiary)}
               data-testid="toggle-diary"
+              className="h-8 w-8 p-0"
             >
               <FileText className="h-4 w-4" />
             </Button>
@@ -314,6 +315,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               onClick={() => generateIdeasMutation.mutate(`Session: ${sessionId}, Current tasks and projects`)}
               disabled={generateIdeasMutation.isPending}
               data-testid="generate-ideas"
+              className="h-8 w-8 p-0"
             >
               <Lightbulb className="h-4 w-4" />
             </Button>
@@ -323,6 +325,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               onClick={() => window.open('/code-analysis', '_blank')}
               data-testid="code-analysis"
               title="Open Code Analysis (GPT-5 powered)"
+              className="h-8 w-8 p-0"
             >
               <Code className="h-4 w-4" />
             </Button>
@@ -331,6 +334,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               size="sm" 
               onClick={() => setIsExpanded(false)}
               data-testid="collapse-chat"
+              className="h-8 w-8 p-0 flex items-center justify-center"
             >
               ✕
             </Button>
