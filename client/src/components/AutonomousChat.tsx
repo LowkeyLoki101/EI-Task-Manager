@@ -516,8 +516,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         )}
 
         {/* Message Input - Always visible at bottom */}
-        <form onSubmit={handleSendMessage} className="flex-shrink-0">
-          <div className="flex gap-2">
+        <form onSubmit={handleSendMessage} className="flex-shrink-0 space-y-3">
+          {/* Full Width Text Area */}
+          <div className="w-full">
             <Input
               value={message}
               onChange={handleInputChange}
@@ -525,41 +526,49 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               onBlur={handleInputBlur}
               placeholder="Ask Colby to help with tasks, research, automation..."
               disabled={sendMessageMutation.isPending}
-              className="flex-1"
+              className="w-full h-16 text-base px-4 py-3 resize-none rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
               data-testid="chat-input"
             />
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              multiple
-              accept="image/*,.pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp"
-              className="hidden"
-            />
-            <Button 
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={sendMessageMutation.isPending}
-              data-testid="upload-file"
-            >
-              <Upload className="h-4 w-4" />
-            </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Dialog open={showHelp} onOpenChange={setShowHelp}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-10 w-10 p-0 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                        data-testid="help-button"
-                      >
-                        <HelpCircle className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
+          </div>
+          
+          {/* Buttons Below Text Area */}
+          <div className="flex flex-col gap-3">
+            {/* Top Row: Action Buttons */}
+            <div className="flex gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                multiple
+                accept="image/*,.pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp"
+                className="hidden"
+              />
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sendMessageMutation.isPending}
+                data-testid="upload-file"
+                className="flex items-center gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Upload File</span>
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Dialog open={showHelp} onOpenChange={setShowHelp}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          type="button"
+                          variant="ghost"
+                          className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          data-testid="help-button"
+                        >
+                          <HelpCircle className="h-4 w-4" />
+                          <span>Help</span>
+                        </Button>
+                      </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
@@ -597,13 +606,21 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <Button 
-              type="submit" 
-              disabled={(!message.trim() && uploadedFiles.length === 0) || sendMessageMutation.isPending}
-              data-testid="send-message"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+            </div>
+            
+            {/* Bottom Row: Send Button */}
+            <div className="flex justify-end">
+              <Button 
+                type="submit" 
+                size="lg"
+                disabled={(!message.trim() && uploadedFiles.length === 0) || sendMessageMutation.isPending}
+                data-testid="send-message"
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-2"
+              >
+                <Send className="h-4 w-4" />
+                <span>Send Message</span>
+              </Button>
+            </div>
           </div>
         </form>
       </CardContent>
