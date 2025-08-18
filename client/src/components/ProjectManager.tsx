@@ -1,9 +1,11 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 import { 
   FolderOpen, 
   Plus, 
@@ -20,7 +22,10 @@ import {
   Database,
   ExternalLink,
   Search,
-  BookOpen
+  BookOpen,
+  Upload,
+  File,
+  X
 } from 'lucide-react';
 import type { Task } from '@shared/schema';
 import TaskDetailModal from './TaskDetailModal';
@@ -36,6 +41,15 @@ interface Project {
   category: string;
   icon: any;
   tasks: Task[];
+}
+
+interface UploadFile {
+  file: File;
+  id: string;
+  progress: number;
+  status: 'pending' | 'uploading' | 'processing' | 'completed' | 'error';
+  error?: string;
+  result?: any;
 }
 
 interface ProjectManagerProps {
@@ -69,6 +83,123 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
+  const [showProjectFiles, setShowProjectFiles] = useState(false);
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
+  const [dragActive, setDragActive] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // File Upload Handlers
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFiles(Array.from(e.dataTransfer.files));
+    }
+  }, []);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFiles(Array.from(e.target.files));
+    }
+  }, []);
+
+  const handleFiles = useCallback((files: File[]) => {
+    const newUploadFiles: UploadFile[] = files.map(file => ({
+      file,
+      id: Math.random().toString(36).substring(7),
+      progress: 0,
+      status: 'pending'
+    }));
+    
+    setUploadFiles(prev => [...prev, ...newUploadFiles]);
+    setShowProjectFiles(true);
+    
+    // Start uploading files
+    newUploadFiles.forEach(uploadFile => {
+      uploadSingleFile(uploadFile);
+    });
+  }, []);
+
+  const uploadSingleFile = async (uploadFile: UploadFile) => {
+    try {
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { ...f, status: 'uploading', progress: 10 } : f
+      ));
+
+      const formData = new FormData();
+      formData.append('file', uploadFile.file);
+      formData.append('sessionId', sessionId);
+      formData.append('projectId', selectedProject?.id || 'general');
+
+      const response = await fetch('/api/knowledge-base/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { ...f, progress: 50, status: 'processing' } : f
+      ));
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          progress: 100, 
+          status: 'completed', 
+          result 
+        } : f
+      ));
+
+      // Refresh the knowledge base
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/search'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-base/statistics'] });
+
+      toast({
+        title: "File Uploaded",
+        description: `"${uploadFile.file.name}" has been added to the project`,
+      });
+
+    } catch (error) {
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          status: 'error', 
+          error: error instanceof Error ? error.message : 'Upload failed' 
+        } : f
+      ));
+
+      toast({
+        title: "Upload Failed",
+        description: `Failed to upload "${uploadFile.file.name}"`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const removeUploadFile = (id: string) => {
+    setUploadFiles(prev => prev.filter(f => f.id !== id));
+  };
+
+  const clearCompletedUploads = () => {
+    setUploadFiles(prev => prev.filter(f => f.status !== 'completed'));
+  };
 
   // Fetch Knowledge Base entries (using correct working endpoint)
   const { data: knowledgeBaseData } = useQuery({
@@ -414,31 +545,153 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
               </DialogTitle>
             </DialogHeader>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <p className="text-muted-foreground">{selectedProject.description}</p>
               
-              <div className="space-y-2">
-                {selectedProject.tasks.map((task) => (
-                  <div 
-                    key={task.id} 
-                    className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedTask(task)}
+              {/* Project File Upload Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Project Files</h3>
+                  <Button 
+                    onClick={() => setShowProjectFiles(!showProjectFiles)}
+                    size="sm" 
+                    variant="outline"
                   >
-                    <CheckCircle2 
-                      className={`w-5 h-5 ${task.status === 'done' ? 'text-green-500' : 'text-gray-300'}`} 
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium">{task.title}</p>
-                      {task.context && (
-                        <p className="text-sm text-muted-foreground mt-1">{task.context}</p>
-                      )}
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Files
+                  </Button>
+                </div>
+                
+                {showProjectFiles && (
+                  <div className="space-y-4">
+                    {/* File Drop Zone */}
+                    <div 
+                      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                        dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+                      }`}
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDragOver={handleDrag}
+                      onDrop={handleDrop}
+                      data-testid="project-file-drop-zone"
+                    >
+                      <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                      <p className="text-lg mb-2">Drop project files here</p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Documents, code, designs, and research files for {selectedProject.name}
+                      </p>
+                      <input
+                        type="file"
+                        multiple
+                        className="hidden"
+                        id="project-file-upload"
+                        onChange={handleFileSelect}
+                        accept=".pdf,.doc,.docx,.txt,.md,.js,.ts,.py,.jsx,.tsx,.json,.xml,.html,.css,.sql,.png,.jpg,.jpeg,.gif,.sketch,.fig"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById('project-file-upload')?.click()}
+                        data-testid="button-browse-project-files"
+                      >
+                        <File className="w-4 h-4 mr-2" />
+                        Browse Files
+                      </Button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{task.status}</Badge>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
+
+                    {/* Upload Progress */}
+                    {uploadFiles.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">Upload Progress</h4>
+                          {uploadFiles.some(f => f.status === 'completed') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearCompletedUploads}
+                              data-testid="button-clear-completed"
+                            >
+                              Clear Completed
+                            </Button>
+                          )}
+                        </div>
+                        {uploadFiles.map(uploadFile => (
+                          <div key={uploadFile.id} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <File className="w-4 h-4" />
+                                <span className="font-medium truncate max-w-xs">
+                                  {uploadFile.file.name}
+                                </span>
+                                <Badge 
+                                  variant={
+                                    uploadFile.status === 'completed' ? 'default' :
+                                    uploadFile.status === 'error' ? 'destructive' :
+                                    'secondary'
+                                  }
+                                >
+                                  {uploadFile.status}
+                                </Badge>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeUploadFile(uploadFile.id)}
+                                data-testid={`button-remove-${uploadFile.id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            
+                            {uploadFile.status === 'uploading' || uploadFile.status === 'processing' ? (
+                              <Progress value={uploadFile.progress} className="mb-2" />
+                            ) : null}
+                            
+                            {uploadFile.status === 'completed' && uploadFile.result && (
+                              <div className="text-sm text-green-600 flex items-center gap-1">
+                                <CheckCircle2 className="w-4 h-4" />
+                                Added to project: "{uploadFile.result.title}"
+                              </div>
+                            )}
+                            
+                            {uploadFile.status === 'error' && (
+                              <div className="text-sm text-red-600">
+                                Error: {uploadFile.error || 'Upload failed'}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))}
+                )}
+              </div>
+              
+              {/* Project Tasks Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Project Tasks</h3>
+                <div className="space-y-2">
+                  {selectedProject.tasks.map((task) => (
+                    <div 
+                      key={task.id} 
+                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => setSelectedTask(task)}
+                    >
+                      <CheckCircle2 
+                        className={`w-5 h-5 ${task.status === 'done' ? 'text-green-500' : 'text-gray-300'}`} 
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium">{task.title}</p>
+                        {task.context && (
+                          <p className="text-sm text-muted-foreground mt-1">{task.context}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{task.status}</Badge>
+                        <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </DialogContent>
