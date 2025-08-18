@@ -155,7 +155,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             
             {/* Left Column: AI Workstation */}
-            <div className="order-2 lg:order-1">
+            <div className="order-1 lg:order-1">
               <div className="bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 rounded-lg shadow-lg border border-amber-500/20">
                 <div className="p-4 border-b border-amber-500/20">
                   <h2 className="text-lg font-semibold text-amber-200 flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function HomePage() {
             </div>
             
             {/* Right Column: Direct Chat Interface */}
-            <div className="order-1 lg:order-2">
+            <div className="order-2 lg:order-2">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
