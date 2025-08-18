@@ -716,15 +716,171 @@ function DocsPanel({ payload, onUpdate }: { payload?: any; onUpdate?: (data: any
   );
 }
 
-function CalendarPanel({ payload, onUpdate }: { payload?: any; onUpdate?: (data: any) => void }) {
+function CalendarPanel({ payload, onUpdate, sessionId }: { payload?: any; onUpdate?: (data: any) => void; sessionId?: string }) {
+  const [events, setEvents] = useState<any[]>([]);
+  const [calendarStatus, setCalendarStatus] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch calendar data
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const fetchCalendarData = async () => {
+      try {
+        // Get calendar status
+        const statusResponse = await fetch(`/api/calendar/status/${sessionId}`);
+        const status = await statusResponse.json();
+        setCalendarStatus(status);
+
+        // Get events if connected
+        if (status.connected) {
+          const eventsResponse = await fetch(`/api/calendar/events/${sessionId}`);
+          const eventsData = await eventsResponse.json();
+          setEvents(eventsData.events || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch calendar data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCalendarData();
+    const interval = setInterval(fetchCalendarData, 60000); // Refresh every minute
+
+    return () => clearInterval(interval);
+  }, [sessionId]);
+
+  // Sync all tasks to calendar
+  const handleSyncAll = async () => {
+    if (!sessionId) return;
+    
+    try {
+      const response = await fetch(`/api/calendar/sync-all/${sessionId}`, {
+        method: 'POST'
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        onUpdate?.({ action: 'tasks_synced', count: result.syncedCount });
+        // Refresh calendar data
+        const eventsResponse = await fetch(`/api/calendar/events/${sessionId}`);
+        const eventsData = await eventsResponse.json();
+        setEvents(eventsData.events || []);
+      }
+    } catch (error) {
+      console.error('Failed to sync tasks:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gradient-to-b from-slate-800/20 to-gray-900/20">
+        <div className="text-center text-amber-200/80 text-sm">
+          <Calendar className="h-6 w-6 mx-auto mb-2 opacity-60 animate-pulse" />
+          <p>Loading calendar...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full p-4 bg-gradient-to-b from-slate-800/20 to-gray-900/20">
-      <div className="text-center text-amber-200/80 text-sm">
-        <Calendar className="h-8 w-8 mx-auto mb-2 opacity-60" />
-        <p>Calendar integration will appear here</p>
+    <div className="h-full flex flex-col bg-gradient-to-b from-slate-800/20 to-gray-900/20">
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b border-amber-500/10">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-amber-400" />
+          <span className="text-sm font-medium text-amber-200">Calendar</span>
+          <Badge 
+            variant="secondary" 
+            className={calendarStatus?.connected 
+              ? "bg-green-900/20 text-green-300 border-green-500/20" 
+              : "bg-orange-900/20 text-orange-300 border-orange-500/20"
+            }
+          >
+            {calendarStatus?.connected ? 'Connected' : 'Setup Required'}
+          </Badge>
+        </div>
+        {calendarStatus?.connected && (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleSyncAll}
+            className="text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 text-xs"
+            data-testid="button-sync-calendar"
+          >
+            Sync Tasks
+          </Button>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-3">
+        {!calendarStatus?.connected ? (
+          <div className="text-center text-amber-200/80 text-sm space-y-3">
+            <Calendar className="h-8 w-8 mx-auto mb-2 opacity-60" />
+            <p>Calendar not connected</p>
+            <p className="text-xs text-amber-300/60">
+              Set up calendar sync in Settings & Setup to view events here
+            </p>
+          </div>
+        ) : events.length === 0 ? (
+          <div className="text-center text-amber-200/80 text-sm space-y-3">
+            <Calendar className="h-8 w-8 mx-auto mb-2 opacity-60" />
+            <p>No upcoming events</p>
+            <p className="text-xs text-amber-300/60">
+              Sync your tasks or create events to see them here
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-amber-200 mb-3">
+              Upcoming Events ({events.length})
+            </h4>
+            {events.slice(0, 10).map((event, index) => (
+              <div
+                key={event.id || index}
+                className="bg-slate-700/20 border border-amber-500/10 rounded p-3 hover:bg-amber-900/10 transition-colors"
+                data-testid={`calendar-event-${index}`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h5 className="text-amber-100 text-sm font-medium truncate">
+                      {event.title}
+                    </h5>
+                    <p className="text-amber-300/60 text-xs mt-1">
+                      {new Date(event.startDate || event.startTime).toLocaleString()}
+                    </p>
+                    {event.location && (
+                      <p className="text-amber-300/50 text-xs mt-1">
+                        📍 {event.location}
+                      </p>
+                    )}
+                  </div>
+                  {event.taskId && (
+                    <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30">
+                      Task
+                    </Badge>
+                  )}
+                </div>
+                {event.description && (
+                  <p className="text-amber-200/70 text-xs mt-2 line-clamp-2">
+                    {event.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* AI Payload Display */}
         {payload?.event && (
-          <div className="mt-3 bg-slate-700/30 border border-amber-500/20 rounded-lg p-3">
-            <p className="text-amber-100 text-sm">{payload.event.title}</p>
+          <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/20 rounded-lg">
+            <h5 className="text-blue-300 text-sm font-medium mb-2">AI Suggested Event</h5>
+            <p className="text-blue-100 text-sm">{payload.event.title}</p>
+            {payload.event.time && (
+              <p className="text-blue-300/60 text-xs mt-1">{payload.event.time}</p>
+            )}
           </div>
         )}
       </div>
