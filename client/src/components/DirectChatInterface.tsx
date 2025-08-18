@@ -616,58 +616,75 @@ export function DirectChatInterface() {
           </div>
         )}
 
-        {/* Input Area */}
-        <div className="flex gap-2">
-          <div className="flex-1">
+        {/* Input Area - Mobile Optimized */}
+        <div className="space-y-3">
+          {/* Text Input - Much Taller for Mobile */}
+          <div className="w-full">
             <Textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask GPT-5 anything, create tasks, upload documents, or use voice recording..."
-              className="min-h-[80px] resize-none"
+              className="min-h-[120px] md:min-h-[100px] w-full resize-none text-base leading-relaxed px-4 py-3"
               disabled={isLoading}
               data-testid="chat-input"
             />
           </div>
-          <div className="flex flex-col gap-2">
+          
+          {/* Action Buttons - Horizontal Layout for Mobile */}
+          <div className="flex flex-wrap gap-2 justify-between items-center">
+            <div className="flex gap-2">
+              <Button
+                size="default"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || isRecording}
+                data-testid="upload-button"
+                className="flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                <span className="hidden sm:inline">Upload</span>
+              </Button>
+              <Button
+                size="default"
+                variant={isRecording ? "destructive" : "outline"}
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isLoading || voiceReady}
+                data-testid="record-button"
+                className={`flex items-center gap-2 ${isRecording ? "animate-pulse" : ""}`}
+                title="Record & Transcribe"
+              >
+                {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                <span className="hidden sm:inline">
+                  {isRecording ? "Stop" : "Record"}
+                </span>
+              </Button>
+              <Button
+                size="default"
+                variant={voiceReady ? "destructive" : "outline"}
+                onClick={voiceReady ? stopGPTVoice : startGPTVoice}
+                disabled={isLoading || voiceConnecting || isRecording}
+                data-testid="voice-chat-button"
+                className={`flex items-center gap-2 ${voiceReady ? "animate-pulse" : voiceConnecting ? "animate-pulse" : ""}`}
+                title="GPT Voice Chat"
+              >
+                {voiceReady ? <PhoneOff className="w-4 h-4" /> : voiceConnecting ? <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div> : <Phone className="w-4 h-4" />}
+                <span className="hidden sm:inline">
+                  {voiceReady ? "End Call" : voiceConnecting ? "Connecting..." : "Voice Chat"}
+                </span>
+              </Button>
+            </div>
+            
+            {/* Send Button - Primary Action */}
             <Button
-              size="sm"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading || isRecording}
-              data-testid="upload-button"
-            >
-              <Upload className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant={isRecording ? "destructive" : "outline"}
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={isLoading || voiceReady}
-              data-testid="record-button"
-              className={isRecording ? "animate-pulse" : ""}
-              title="Record & Transcribe"
-            >
-              {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </Button>
-            <Button
-              size="sm"
-              variant={voiceReady ? "destructive" : "outline"}
-              onClick={voiceReady ? stopGPTVoice : startGPTVoice}
-              disabled={isLoading || voiceConnecting || isRecording}
-              data-testid="voice-chat-button"
-              className={voiceReady ? "animate-pulse" : voiceConnecting ? "animate-pulse" : ""}
-              title="GPT Voice Chat"
-            >
-              {voiceReady ? <PhoneOff className="w-4 h-4" /> : voiceConnecting ? <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div> : <Phone className="w-4 h-4" />}
-            </Button>
-            <Button
-              size="sm"
+              size="default"
               onClick={sendMessage}
               disabled={isLoading || isRecording || voiceReady || (!inputMessage.trim() && uploadedFiles.length === 0)}
               data-testid="send-button"
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6"
             >
               <Send className="w-4 h-4" />
+              <span>Send</span>
             </Button>
           </div>
         </div>

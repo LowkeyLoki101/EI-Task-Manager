@@ -1,64 +1,13 @@
 # Emergent Intelligence
 
 ## Overview
-Emergent Intelligence is an AI-powered project management platform designed to streamline project workflows through advanced AI capabilities. It integrates task management, calendar synchronization, research assistance, and a central knowledge base. The platform features a triple voice system, n8n automation, an autonomous chat system with persistent memory, and a GPT-5 diary system for relationship building and idea generation. A key feature is its role as a central hub in a distributed AI agent network, enabling cross-service collaboration, task delegation to specialized AI agents, and shared research capabilities. The system supports conversational task creation, automated workflow suggestions, cross-device calendar sync, and AI-powered research, with a focus on building relationships and coordinating AI agents across a network. It also includes an autopoietic (self-growing) diary system that autonomously thinks, researches, and builds knowledge, incorporating a 5-step thinking methodology (Colby-Style Lens Processing) and an evolving self-question pool. This system can generate actionable business tasks from its thinking cycles and visually displays its cognitive processes in real-time within an AI workstation.
-
-## Recent System Updates (August 17, 2025)
-
-### Documentation Consolidation (10:34 PM)
-- **✅ Moved all documentation to docs/ folder**: Consolidated AI_WORKSTATION_TRACE_ROUTES.md, ARCHITECTURE.md, TECHNICAL_DOCUMENTATION.md, SYSTEM_STATUS.md, and ElevenLabs guides
-- **✅ Created CURRENT_ARCHITECTURE.md**: Documented critical parallel pathway violations and layering issues  
-- **✅ Created TROUBLESHOOTING_GUIDE.md**: Comprehensive guide for fixing common issues with step-by-step solutions
-- **✅ Updated docs/README.md**: Complete documentation index with navigation and current system state
-
-### Knowledge Base Unification (10:48 PM - 11:50 PM)
-- **✅ RESOLVED Parallel Pathways**: Fixed root cause of dual Knowledge Base systems
-- **✅ RESOLVED API Routing Issue**: Frontend now calls correct `/api/knowledge-base/search` endpoint with 108 entries
-- **✅ CORRECTED Response Mapping**: Fixed parameter formats (sessionId, query, type) and response structures (results vs entries)
-- **✅ UPDATED Cache Invalidation**: All Knowledge Base queries now use correct endpoint paths
-- **✅ IDENTIFIED ARCHITECTURAL PATTERN**: Documented parallel systems debugging framework for future issues
-- **Root Cause**: Two backend systems (knowledge-base-manager.ts vs knowledge-base-system.ts) with different API contracts
-- **Why Missed Initially**: Focused on frontend/sessionId issues rather than verifying which backend held actual data
-
-## Recent System Updates (Previous)
-- **🚨 CRITICAL FIXES IMPLEMENTED**: Comprehensive task completion workflow system
-- **✅ Task Detail Modal**: Rich task interaction with AI focus capability, notes, tools, manual completion
-- **✅ Task Completion System**: 5-stage completion workflow (Research → Planning → Execution → Knowledge → Publication)  
-- **✅ Task Creation Limits**: Maximum 5 incomplete tasks before forcing completion cycles
-- **✅ Knowledge Base RAG**: System now queries previous work to prevent repetitive content creation
-- **✅ AI Focus Feature**: Manual AI focus on specific tasks with instruction capability
-- **✅ Task Lifecycle**: Completed tasks automatically convert to knowledge base entries and diary narratives
-- **✅ Autopoietic Integration**: Task limits integrated with autonomous diary to prevent endless task creation
-- **✅ AI Workstation Mode Switching**: Fixed conflicting mode switchers, tools now work in Human/Hybrid/AI modes
-- **✅ Content Generation Systems**: Knowledge base and diary systems operational with quota management
-- **✅ Development Framework**: Implemented Self-Diagnostic & Improvement Framework for code quality
-- **✅ INTELLIGENT QUOTA MANAGEMENT**: PostgreSQL-based job queue with circuit breaker, exponential backoff, and comprehensive error handling
-- **✅ AI Worker System**: Production-ready AI content generation with real-time status tracking and graceful degradation
-- **✅ Frontend Status Indicators**: User-visible AI generation progress with queue status and circuit breaker state
-- **✅ KNOWLEDGE BASE DRAFT CACHE**: Complete content workflow system with approval pipeline (content → draft → approval → blog)
-- **✅ AI KNOWLEDGE ACTIONS**: Direct knowledge base integration - AI assistant (Colby) can now save structured content directly
-- **✅ CONTENT WORKFLOW API**: Full draft management system with approve/reject, bulk operations, and download capabilities
-- **✅ ELEVENLABS AI TOOL INTEGRATION**: Fixed authentication bypass for ElevenLabs webhooks - Conversational AI (Colby) now has full access to knowledge base and advanced tools
-- **✅ TASK CREATION POLICY**: Implemented 5-task completion enforcement - AI cannot create new tasks when 5+ incomplete tasks exist, forcing completion workflow
-- **✅ CALENDAR VISIBILITY**: Enhanced calendar component visibility with expanded default view and prominent styling for better user engagement
-- **✅ WORKSPACE ORGANIZATION**: Collapsed setup/maintenance interfaces (Workflow Automation, Calendar Setup, n8n) into collapsible "Settings & Setup" section for cleaner daily workspace
-- **📊 Current Scale**: 432+ tasks identified, task creation policy active to enforce completion workflows
+Emergent Intelligence is an AI-powered project management platform designed to streamline project workflows through advanced AI capabilities. It integrates task management, calendar synchronization, research assistance, and a central knowledge base. The platform features a triple voice system, n8n automation, an autonomous chat system with persistent memory, and a GPT-5 diary system for relationship building and idea generation. A key feature is its role as a central hub in a distributed AI agent network, enabling cross-service collaboration, task delegation to specialized AI agents, and shared research capabilities. The system supports conversational task creation, automated workflow suggestions, cross-device calendar sync, and AI-powered research, with a focus on building relationships and coordinating AI agents across a network. It also includes an autopoietic (self-growing) diary system that autonomously thinks, researches, and builds knowledge, incorporating a 5-step thinking methodology and an evolving self-question pool. This system can generate actionable business tasks from its thinking cycles and visually displays its cognitive processes in real-time within an AI workstation.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Interface design: Clean, mobile-first interface without technical backend details exposed to users. Single voice interface only.
 Chat behavior: No disruptive auto-scrolling when user is typing - allow natural interaction without forcing scroll position changes.
 Workspace organization: Daily-use tools prominent, setup/maintenance interfaces collapsed behind "Settings & Setup" section to reduce clutter.
-
-## Development Methodology
-**Self-Diagnostic & Improvement Framework**: All code generation, editing, and refactoring must follow the 6-step framework:
-1. **Investigation** - Parse output critically for truncation, paraphrasing, missing details
-2. **Diagnostic Report** - Structured analysis before final code output
-3. **Fortify & Enhance** - Rewrite weak sections completely, expand placeholders
-4. **Adjust for Drift** - Compare against earlier instructions, realign to canonical form
-5. **Final Output Policy** - Provide both diagnostic report and corrected code separately
-6. **Continuous Improvement** - Integrate lessons from prior diagnostics
-Never skip steps. Always investigate → diagnose → fortify → correct → output.
 
 ## System Architecture
 
@@ -68,7 +17,7 @@ Never skip steps. Always investigate → diagnose → fortify → correct → ou
 - **State Management**: TanStack Query.
 - **Routing**: Wouter.
 - **File Uploads**: Uppy with drag-and-drop.
-- **UI/UX Decisions**: Sleek metallic design matching the brand, dynamic container sizing for flexible layouts, and visual integration of the AI's thinking process.
+- **UI/UX Decisions**: Sleek metallic design matching the brand, dynamic container sizing for flexible layouts, and visual integration of the AI's thinking process. Mobile-first design with responsive layouts (desktop: side-by-side grid; mobile: stacked layout).
 
 ### Backend Architecture
 - **Server**: Express.js with TypeScript.
@@ -77,25 +26,19 @@ Never skip steps. Always investigate → diagnose → fortify → correct → ou
 
 ### Key Components
 - **Voice Widget**: ElevenLabs integration for conversational AI.
-- **Project-Based Task Manager**: Organized task management with project categorization, clickable task details, AI focus capability, and 5-stage completion workflow.
+- **Project-Based Task Manager**: Organized task management with project categorization, clickable task details, AI focus capability, and a 5-stage completion workflow (Research → Planning → Execution → Knowledge → Publication). Enforces a maximum of 5 incomplete tasks.
 - **Autonomous Chat**: GPT-5 powered assistant with persistent memory and relationship building.
-- **Intelligent Code Analysis**: GPT-5 powered code recommendation system with voting, approval, and multi-format export.
-- **File Upload System**: Multi-format handling (images, PDFs, documents) with GPT-4o vision analysis and automatic task extraction.
+- **Intelligent Code Analysis**: GPT-5 powered code recommendation system.
+- **File Upload System**: Multi-format handling with GPT-4o vision analysis and automatic task extraction.
 - **Workflow Automation**: Visual workflow suggestions powered by GPT-5 analysis and N8N integration.
 - **iPhone Calendar Sync**: CalDAV integration for cross-device task synchronization.
-- **Knowledge Base RAG System**: Enterprise-grade knowledge management with metadata, search, auto-capture, and RAG integration to prevent repetitive content creation by analyzing previous work.
+- **Knowledge Base RAG System**: Enterprise-grade knowledge management with metadata, search, auto-capture, and RAG integration to prevent repetitive content creation. Includes a draft cache and approval pipeline for content publishing.
 - **AI Workstation**: Dynamic interface with autonomous and human control modes, integrated tools (Calendar, Diary, Docs, Media, Browser, Research), and real-time AI observation.
 - **Autopoietic Diary System**: Autonomous AI that conducts research, builds knowledge, and generates tasks based on its internal thought processes (Colby-Style Lens Processing).
 - **Microservice Integration Network**: Comprehensive connector for cross-service AI collaboration, task delegation, and knowledge sharing.
-- **Blog System**: AI-powered research publication platform where autonomous agents publish polished blog posts from completion cycles.
-- **Task Completion System**: 5-stage completion workflow (Research → Planning → Execution → Knowledge → Publication) with automatic knowledge base integration and narrative diary entries.
-- **Task Creation Limits**: Maximum 5 incomplete tasks before system forces completion cycles, preventing endless task generation.
-- **Intelligent Quota Management**: PostgreSQL-based AI job queue with circuit breaker pattern, exponential backoff, rate limiting, and comprehensive error handling for sustainable API usage.
-- **AI Worker System**: Production-ready background worker with graceful degradation, real-time status tracking, and automatic retry logic for reliable AI content generation.
-- **Frontend Status Integration**: Real-time AI queue status indicators, circuit breaker state visualization, and user-facing progress tracking for transparent AI operations.
-- **Knowledge Base Draft Cache**: Complete content creation → draft storage → approval workflow → blog publishing pipeline with AI and human approval options.
-- **AI Knowledge Base Actions**: Direct API integration allowing AI assistant (Colby) to save structured knowledge entries with proper validation and storage.
-- **Content Workflow Management**: Full draft management system with approval/rejection, bulk operations, format downloads (MD/HTML/JSON), and task-to-knowledge conversion.
+- **Blog System**: AI-powered research publication platform for autonomous agents.
+- **Intelligent Quota Management**: PostgreSQL-based AI job queue with circuit breaker, exponential backoff, and error handling for sustainable API usage.
+- **AI Worker System**: Production-ready background worker for AI content generation with real-time status tracking and graceful degradation.
 
 ### AI Integration
 - **Supervisor Agent**: GPT-5 processes conversations and manages workflows.
@@ -143,7 +86,3 @@ Steps are labeled with `Context` (Computer/Phone/Physical) and `Time Window` (Mo
 
 ### Workflow Automation Stack
 - **n8n Integration**: Complete workflow automation with smart suggestions, task conversion, LLM workflows, and execution monitoring.
-- **Smart Workflow Engine**: AI analyzes tasks and suggests 6 automation patterns (email, data, research, social, files, AI assistant).
-- **Visual Workflow Builder**: Convert any task into n8n workflow JSON with automated triggers and actions.
-- **LLM Automation Chains**: OpenAI + n8n workflows for intelligent task processing.
-- **Real-time Monitoring**: Track workflow executions and results integration.

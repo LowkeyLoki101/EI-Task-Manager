@@ -17,7 +17,7 @@ import ProjectManager from '../components/ProjectManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
-import { Code, BookOpen, Brain, Calendar, Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { Code, BookOpen, Brain, Calendar, Settings, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Workstation from '../components/Workstation';
@@ -148,18 +148,48 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <main className="container mx-auto px-4 py-6">
+        <div className="max-w-6xl mx-auto">
           
-          {/* AI Workstation - Dynamic Tools Panel */}
-          <Workstation sessionId={sessionId} className="mb-6" />
-
-          {/* Direct Chat with GPT-5 - Primary Interface (Top Priority) */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Direct Chat with GPT-5
-            </h3>
-            <AutonomousChat sessionId={sessionId} />
+          {/* Desktop: Side-by-side layout, Mobile: Stacked layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            
+            {/* Left Column: AI Workstation */}
+            <div className="order-2 lg:order-1">
+              <div className="bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 rounded-lg shadow-lg border border-amber-500/20">
+                <div className="p-4 border-b border-amber-500/20">
+                  <h2 className="text-lg font-semibold text-amber-200 flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-amber-400" />
+                    AI Workstation
+                  </h2>
+                  <p className="text-xs text-amber-300/70 mt-1">
+                    Research, knowledge management, and AI tools
+                  </p>
+                </div>
+                <div className="p-2">
+                  <Workstation sessionId={sessionId} />
+                </div>
+              </div>
+            </div>
+            
+            {/* Right Column: Direct Chat Interface */}
+            <div className="order-1 lg:order-2">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Bot className="h-5 w-5 text-blue-600" />
+                    Direct Chat with GPT-5
+                  </h2>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    Primary conversational AI interface
+                  </p>
+                </div>
+                <div className="p-4">
+                  <AutonomousChat sessionId={sessionId} />
+                </div>
+              </div>
+            </div>
+            
           </div>
 
           {/* Project-Based Task Management */}
