@@ -106,7 +106,6 @@ export default function HomePage() {
               <a 
                 href="/knowledge-base" 
                 className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 transition-colors"
-                title="Comprehensive knowledge base with metadata, search, export/import"
               >
                 <BookOpen className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">Knowledge Base</span>
@@ -116,7 +115,6 @@ export default function HomePage() {
                 href="/code-analysis" 
                 target="_blank"
                 className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900 dark:hover:bg-blue-800 transition-colors"
-                title="GPT-5 powered code analysis"
               >
                 <Code className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">Code Analysis</span>
@@ -126,7 +124,6 @@ export default function HomePage() {
                 href="/diary" 
                 target="_blank"
                 className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200 dark:text-purple-300 dark:bg-purple-900 dark:hover:bg-purple-800 transition-colors"
-                title="AI autonomous diary with context awareness"
               >
                 <Brain className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">AI Diary</span>

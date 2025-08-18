@@ -324,7 +324,6 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               size="sm" 
               onClick={() => window.open('/code-analysis', '_blank')}
               data-testid="code-analysis"
-              title="Open Code Analysis (GPT-5 powered)"
               className="h-8 w-8 p-0"
             >
               <Code className="h-4 w-4" />
