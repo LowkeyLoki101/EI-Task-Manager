@@ -616,34 +616,35 @@ export function DirectChatInterface() {
           </div>
         )}
 
-        {/* Input Area - Mobile Optimized */}
-        <div className="space-y-3">
-          {/* Text Input - Much Taller for Mobile */}
+        {/* Input Area - Full Width Text Field */}
+        <div className="space-y-4">
+          {/* Text Input - Big Rectangle Taking Full Width */}
           <div className="w-full">
             <Textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask GPT-5 anything, create tasks, upload documents, or use voice recording..."
-              className="min-h-[120px] md:min-h-[100px] w-full resize-none text-base leading-relaxed px-4 py-3"
+              className="min-h-[140px] w-full resize-none text-base leading-relaxed px-4 py-4 rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
               disabled={isLoading}
               data-testid="chat-input"
             />
           </div>
           
-          {/* Action Buttons - Horizontal Layout for Mobile */}
-          <div className="flex flex-wrap gap-2 justify-between items-center">
-            <div className="flex gap-2">
+          {/* Action Buttons - All Below Text Area */}
+          <div className="flex flex-col gap-3">
+            {/* Top Row: File and Voice Actions */}
+            <div className="flex flex-wrap gap-3">
               <Button
                 size="default"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading || isRecording}
                 data-testid="upload-button"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-1 min-w-0 sm:flex-none"
               >
                 <Upload className="w-4 h-4" />
-                <span className="hidden sm:inline">Upload</span>
+                <span>Upload File</span>
               </Button>
               <Button
                 size="default"
@@ -651,13 +652,11 @@ export function DirectChatInterface() {
                 onClick={isRecording ? stopRecording : startRecording}
                 disabled={isLoading || voiceReady}
                 data-testid="record-button"
-                className={`flex items-center gap-2 ${isRecording ? "animate-pulse" : ""}`}
+                className={`flex items-center gap-2 flex-1 min-w-0 sm:flex-none ${isRecording ? "animate-pulse" : ""}`}
                 title="Record & Transcribe"
               >
                 {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                <span className="hidden sm:inline">
-                  {isRecording ? "Stop" : "Record"}
-                </span>
+                <span>{isRecording ? "Stop Recording" : "Record Audio"}</span>
               </Button>
               <Button
                 size="default"
@@ -665,27 +664,29 @@ export function DirectChatInterface() {
                 onClick={voiceReady ? stopGPTVoice : startGPTVoice}
                 disabled={isLoading || voiceConnecting || isRecording}
                 data-testid="voice-chat-button"
-                className={`flex items-center gap-2 ${voiceReady ? "animate-pulse" : voiceConnecting ? "animate-pulse" : ""}`}
+                className={`flex items-center gap-2 flex-1 min-w-0 sm:flex-none ${voiceReady ? "animate-pulse" : voiceConnecting ? "animate-pulse" : ""}`}
                 title="GPT Voice Chat"
               >
                 {voiceReady ? <PhoneOff className="w-4 h-4" /> : voiceConnecting ? <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div> : <Phone className="w-4 h-4" />}
-                <span className="hidden sm:inline">
-                  {voiceReady ? "End Call" : voiceConnecting ? "Connecting..." : "Voice Chat"}
+                <span>
+                  {voiceReady ? "End Voice Chat" : voiceConnecting ? "Connecting..." : "Start Voice Chat"}
                 </span>
               </Button>
             </div>
             
-            {/* Send Button - Primary Action */}
-            <Button
-              size="default"
-              onClick={sendMessage}
-              disabled={isLoading || isRecording || voiceReady || (!inputMessage.trim() && uploadedFiles.length === 0)}
-              data-testid="send-button"
-              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6"
-            >
-              <Send className="w-4 h-4" />
-              <span>Send</span>
-            </Button>
+            {/* Bottom Row: Send Button - Prominent */}
+            <div className="flex justify-end">
+              <Button
+                size="lg"
+                onClick={sendMessage}
+                disabled={isLoading || isRecording || voiceReady || (!inputMessage.trim() && uploadedFiles.length === 0)}
+                data-testid="send-button"
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-3 px-8 py-3 text-lg font-medium"
+              >
+                <Send className="w-5 h-5" />
+                <span>Send Message</span>
+              </Button>
+            </div>
           </div>
         </div>
 
