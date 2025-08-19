@@ -33,6 +33,7 @@ interface KnowledgeBaseEntry {
 
 interface KnowledgeBaseManagerProps {
   sessionId: string;
+  initialEntryId?: string;
 }
 
 interface SearchResults {
@@ -68,7 +69,7 @@ const typeIcons = {
   project: BookOpen,
 };
 
-export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
+export function KnowledgeBaseManager({ sessionId, initialEntryId }: KnowledgeBaseManagerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -126,6 +127,16 @@ export function KnowledgeBaseManager({ sessionId }: KnowledgeBaseManagerProps) {
     enabled: !!sessionId,
     refetchInterval: 10000,
   });
+
+  // Auto-open entry if initialEntryId is provided
+  useEffect(() => {
+    if (initialEntryId && searchResults?.results) {
+      const targetEntry = searchResults.results.find(entry => entry.id === initialEntryId);
+      if (targetEntry) {
+        setSelectedEntry(targetEntry);
+      }
+    }
+  }, [initialEntryId, searchResults]);
 
   // Get available exports
   const { data: exports } = useQuery({
