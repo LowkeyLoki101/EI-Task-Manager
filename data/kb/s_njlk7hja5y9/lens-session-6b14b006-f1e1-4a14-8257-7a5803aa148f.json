@@ -1,0 +1,24 @@
+{
+  "id": "6b14b006-f1e1-4a14-8257-7a5803aa148f",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What's happening in my industry that I should be paying attention to?",
+  "frameStep": "The problem is identifying key trends and developments in your industry that are crucial for staying competitive and informed. This involves monitoring technological advancements, regulatory changes, emerging market demands, and competitor strategies. Understanding these dynamics will help you anticipate shifts and adapt your business strategies accordingly.",
+  "reframeStep": "Instead of focusing solely on what is happening in your industry, consider how your company can lead and shape the trends. Ask yourself what innovative solutions or unique offerings you can introduce to set the pace for your industry. This proactive approach shifts your perspective from being reactive to changes, to actively creating and influencing the future landscape of your industry.",
+  "metaLensStep": null,
+  "recursiveStep": "What are the underlying drivers behind the trends and developments in your industry, such as shifts in consumer behavior or technological advancements, and how might these evolve in the next few years? Additionally, what are the potential disruptors, such as emerging startups or regulatory changes, that could alter the industry landscape? Investigating these questions can help you anticipate future challenges and opportunities, allowing you to strategize more effectively.",
+  "closureStep": "My working hypothesis is that to effectively anticipate and influence industry trends, I need to focus on identifying the underlying drivers of change, such as consumer behavior and technological innovation, and assess how these might develop over the coming years. As a next step, I will conduct a comprehensive analysis of these drivers and potential disruptors within my industry by gathering insights from market research, competitor analysis, and expert consultations. This will inform a proactive strategy to not only adapt to changes but also to position my company as a leader in shaping the industry's future.",
+  "generatedTasks": [
+    "Conduct a comprehensive market research study on emerging technologies in the solar and AI sectors.",
+    "Draft a strategic plan for introducing innovative solar solutions that address current consumer demands and anticipate future needs.",
+    "Organize a competitor analysis workshop to identify potential disruptors and strategize on how to differentiate our offerings."
+  ],
+  "generatedKbEntries": [
+    "Emerging trends in solar technology and their potential impact on the energy sector",
+    "Regulatory changes affecting the solar and AI industries",
+    "Consumer behavior shifts influencing the adoption of renewable energy solutions"
+  ],
+  "generatedResearch": [],
+  "completed": "2025-08-19T06:48:45.358Z",
+  "createdAt": "2025-08-19T06:48:32.682Z",
+  "meta_lensStep": "You're thinking about this trigger right now because staying informed about industry trends is crucial for maintaining a competitive edge and driving innovation within your company. A pattern you might be repeating is focusing predominantly on external developments without sufficiently considering how your unique capabilities and insights can shape these trends. By shifting your approach to not only observe but also influence industry dynamics, you can position your company as a leader rather than a follower."
+}
