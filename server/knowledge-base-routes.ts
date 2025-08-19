@@ -228,4 +228,49 @@ router.get('/exports', async (req: Request, res: Response) => {
   }
 });
 
+// Export individual entry
+router.post('/export-entry', async (req: Request, res: Response) => {
+  try {
+    const { entryId, sessionId, format = 'markdown' } = req.body;
+    
+    if (!entryId || !sessionId) {
+      return res.status(400).json({ error: 'entryId and sessionId are required' });
+    }
+
+    // Get the entry from the knowledge base
+    const searchResults = await knowledgeManager.search(sessionId, '', '', 1000);
+    const entry = searchResults.results.find((e: any) => e.id === entryId);
+    
+    if (!entry) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+
+    // Generate markdown content
+    const markdownContent = `# ${entry.title}
+
+**Type:** ${entry.type}  
+**Category:** ${entry.metadata.category}  
+**Created:** ${new Date(entry.createdAt).toLocaleString()}  
+**Updated:** ${new Date(entry.updatedAt).toLocaleString()}  
+${entry.metadata.tags.length > 0 ? `**Tags:** ${entry.metadata.tags.join(', ')}  ` : ''}
+
+---
+
+${entry.content}
+
+---
+
+*Generated from Emergent Intelligence Knowledge Base*
+`;
+
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${entry.title.replace(/[^a-zA-Z0-9]/g, '_')}.md"`);
+    res.send(markdownContent);
+
+  } catch (error) {
+    console.error('[Knowledge Base Export Entry] Error:', error);
+    res.status(500).json({ error: 'Failed to export entry' });
+  }
+});
+
 export default router;

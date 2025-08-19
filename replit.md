@@ -21,8 +21,9 @@ Background: Entrepreneur and systems thinker in Houston, TX, operating across so
 - Title attributes on UI elements should remain for LLM context understanding, not user help
 - Knowledge Base entries must be clickable and navigable from all interface locations
 
-**Recent Fix (2025-01-19):**
+**Recent Fixes (2025-01-19):**
 - Fixed Knowledge Base entries in project area - entries are now clickable links that navigate to individual knowledge base entries with proper hover states and visual indicators
+- Added Knowledge Base entry export and copy features - users can now export individual entries as markdown files or copy formatted text to clipboard
 
 **Chat Behavior:**
 - No disruptive auto-scrolling when user is typing
@@ -63,7 +64,7 @@ Background: Entrepreneur and systems thinker in Houston, TX, operating across so
 - **File Upload System**: Multi-format handling with GPT-4o vision analysis and automatic task extraction.
 - **Workflow Automation**: Visual workflow suggestions powered by GPT-5 analysis and N8N integration.
 - **iPhone Calendar Sync**: CalDAV integration for cross-device task synchronization.
-- **Knowledge Base RAG System**: Enterprise-grade knowledge management with metadata, search, auto-capture, and RAG integration to prevent repetitive content creation. Includes a draft cache and approval pipeline for content publishing.
+- **Knowledge Base RAG System**: Enterprise-grade knowledge management with metadata, search, auto-capture, and RAG integration to prevent repetitive content creation. Includes a draft cache and approval pipeline for content publishing. Features individual entry export (markdown) and copy-to-clipboard functionality.
 - **AI Workstation**: Dynamic interface with autonomous and human control modes, integrated tools (Calendar, Diary, Docs, Media, Browser, Research), and real-time AI observation.
 - **Autopoietic Diary System**: Autonomous AI that conducts research, builds knowledge, and generates tasks based on its internal thought processes (Colby-Style Lens Processing).
 - **Microservice Integration Network**: Comprehensive connector for cross-service AI collaboration, task delegation, and knowledge sharing.

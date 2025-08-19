@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Search, Download, Upload, Plus, FileText, MessageSquare, Code, BookOpen, Zap, BarChart3, File, FolderOpen, X, CheckCircle } from "lucide-react";
+import { Search, Download, Upload, Plus, FileText, MessageSquare, Code, BookOpen, Zap, BarChart3, File, FolderOpen, X, CheckCircle, Copy, Share2 } from "lucide-react";
 
 interface KnowledgeBaseEntry {
   id: string;
@@ -89,6 +89,63 @@ export function KnowledgeBaseManager({ sessionId, initialEntryId }: KnowledgeBas
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Copy to clipboard function
+  const copyToClipboard = async (entry: KnowledgeBaseEntry) => {
+    const textContent = `# ${entry.title}\n\n${entry.content}\n\n---\nType: ${entry.type}\nCategory: ${entry.metadata.category}\nTags: ${entry.metadata.tags.join(', ')}\nCreated: ${new Date(entry.createdAt).toLocaleString()}`;
+    
+    try {
+      await navigator.clipboard.writeText(textContent);
+      toast({
+        title: "Copied to clipboard",
+        description: "Entry content copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Could not copy to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Export individual entry
+  const exportEntry = useMutation({
+    mutationFn: async (entry: KnowledgeBaseEntry) => {
+      const response = await fetch('/api/knowledge-base/export-entry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          entryId: entry.id,
+          sessionId: sessionId,
+          format: 'markdown'
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to export entry');
+      return response.blob();
+    },
+    onSuccess: (blob, entry) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${entry.title.replace(/[^a-zA-Z0-9]/g, '_')}.md`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast({
+        title: "Export complete",
+        description: "Entry exported successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Export failed",
+        description: "Could not export entry",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Search knowledge base
   const { data: searchResults, isLoading: searchLoading } = useQuery<SearchResults>({
@@ -873,7 +930,28 @@ export function KnowledgeBaseManager({ sessionId, initialEntryId }: KnowledgeBas
                     </p>
                   </div>
                 </div>
-                <Badge variant="secondary">{selectedEntry.type}</Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(selectedEntry)}
+                    data-testid="button-copy-entry"
+                  >
+                    <Copy className="w-4 h-4 mr-1" />
+                    Copy
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportEntry.mutate(selectedEntry)}
+                    disabled={exportEntry.isPending}
+                    data-testid="button-export-entry"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    {exportEntry.isPending ? 'Exporting...' : 'Export'}
+                  </Button>
+                  <Badge variant="secondary">{selectedEntry.type}</Badge>
+                </div>
               </div>
             </DialogHeader>
             
