@@ -8,6 +8,8 @@ import type {
   LensProcessingSession, InsertLensProcessingSession,
   CreateKbEntryRequest, TriggerLensProcessingRequest
 } from "@shared/kb-schema";
+import { safeJsonParse } from "./lib/json-sanitizer";
+import { circuitBreakers, safeExternalCall } from "./lib/error-recovery";
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-fake-key-for-development" 
@@ -75,6 +77,13 @@ export class KnowledgeBaseSystem {
       source: entry.source,
       topic: entry.topic,
       content: entry.content,
+      // Required schema fields with defaults
+      status: "active",
+      contentType: entry.source === "research" ? "research" : "document",
+      platforms: [],
+      approvalStatus: "auto-approved",
+      approvedBy: "ai",
+      draftData: {},
       tags: entry.tags || [],
       derivedTasks: entry.derivedTasks || [],
       metadata: entry.metadata || {},
@@ -115,13 +124,17 @@ export class KnowledgeBaseSystem {
         
         // Apply filters
         if (filters?.source && entry.source !== filters.source) continue;
-        if (filters?.tags && entry.tags && !filters.tags.some(tag => entry.tags.includes(tag))) continue;
+        if (filters?.tags && entry.tags && !filters.tags.some(tag => entry.tags?.includes(tag))) continue;
 
         entries.push(entry);
       }
 
       // Sort by timestamp, newest first
-      entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      entries.sort((a, b) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeB - timeA;
+      });
 
       return filters?.limit ? entries.slice(0, filters.limit) : entries;
     } catch (error) {
@@ -340,13 +353,15 @@ Format as JSON array of strings. Maximum 3 topics. Examples:
       research: session.generatedResearch,
     };
 
-    try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `Based on this completed lens processing session, generate specific actionable outputs:
+    return await safeExternalCall(
+      circuitBreakers.openai,
+      async () => {
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `Based on this completed lens processing session, generate specific actionable outputs:
 
 1. Tasks - concrete work items that should be created (e.g., "Draft blog post on...", "Research customer objections to...", "Create FAQ document for...")
 2. Knowledge Base entries - topics that should be documented (e.g., "Church solar rebate programs by state", "Heat pump ROI calculations")
@@ -358,22 +373,22 @@ Return JSON format:
 }
 
 Maximum 3 items each. Focus on business-relevant outputs for solar/AI/energy sectors.`
-          },
-          {
-            role: "user",
-            content: JSON.stringify(fullContext, null, 2)
-          }
-        ],
-        max_tokens: 400,
-        temperature: 0.3,
-      });
+            },
+            {
+              role: "user",
+              content: JSON.stringify(fullContext, null, 2)
+            }
+          ],
+          max_tokens: 400,
+          temperature: 0.3,
+        });
 
-      const content = response.choices[0].message.content || '{"tasks": [], "kbEntries": []}';
-      return JSON.parse(content);
-    } catch (error) {
-      console.error('[ColbyLens] Error generating outputs:', error);
-      return { tasks: [], kbEntries: [] };
-    }
+        const content = response.choices[0].message.content || '{"tasks": [], "kbEntries": []}';
+        return safeJsonParse(content, { tasks: [], kbEntries: [] });
+      },
+      { tasks: [], kbEntries: [] },
+      'ColbyLens output generation'
+    );
   }
 
   // Self-Question Evolution
@@ -383,13 +398,15 @@ Maximum 3 items each. Focus on business-relevant outputs for solar/AI/energy sec
     
     if (activeQuestions.length < 5) return; // Don't evolve if too few questions
 
-    try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `You are evolving a self-question pool for an autonomous thinking agent. 
+    const newQuestions = await safeExternalCall(
+      circuitBreakers.openai,
+      async () => {
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `You are evolving a self-question pool for an autonomous thinking agent. 
 
 Current questions: ${JSON.stringify(activeQuestions.map(q => q.text), null, 2)}
 
@@ -399,18 +416,24 @@ Create 2-3 new variations by:
 3. Introducing new angles relevant to business/solar/AI/energy
 
 Return JSON array of new question strings. Focus on questions that would trigger valuable thinking sessions.`
-          },
-          {
-            role: "user",
-            content: "Generate evolved self-questions"
-          }
-        ],
-        max_tokens: 300,
-        temperature: 0.8,
-      });
+            },
+            {
+              role: "user",
+              content: "Generate evolved self-questions"
+            }
+          ],
+          max_tokens: 300,
+          temperature: 0.8,
+        });
 
-      const content = response.choices[0].message.content || "[]";
-      const newQuestions = JSON.parse(content) as string[];
+        const content = response.choices[0].message.content || "[]";
+        return safeJsonParse(content, []) as string[];
+      },
+      [],
+      'Self-question evolution'
+    ) as string[];
+
+    try {
 
       // Add new questions to pool
       for (const text of newQuestions) {

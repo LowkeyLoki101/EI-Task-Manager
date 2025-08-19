@@ -50,6 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Enhanced Actions with SDK integration
   registerEnhancedActions(app);
   
+  // Register Insight Progress Tracking
+  const { registerInsightRoutes } = await import('./routes/insight-routes');
+  registerInsightRoutes(app);
+  
   // Register Autonomous Chat with persistent memory
   const { registerAutonomousChat } = await import('./autonomous-chat');
   registerAutonomousChat(app);

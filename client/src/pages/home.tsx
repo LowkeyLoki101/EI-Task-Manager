@@ -21,6 +21,7 @@ import { Code, BookOpen, Brain, Calendar, Settings, ChevronDown, ChevronUp, Bot 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Workstation from '../components/Workstation';
+import { InsightProgressPanel } from '../components/InsightProgressPanel';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -192,8 +193,13 @@ export default function HomePage() {
             
           </div>
 
+          {/* AI Insight Generation Progress */}
+          <div className="mb-6">
+            <InsightProgressPanel />
+          </div>
+
           {/* Project-Based Task Management */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
             <ProjectManager sessionId={sessionId} />
           </div>
 

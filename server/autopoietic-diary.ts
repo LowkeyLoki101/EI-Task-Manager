@@ -129,6 +129,14 @@ export class AutopoieticDiary {
       if (lensSession.generatedKbEntries && lensSession.generatedKbEntries.length > 0) {
         for (const kbTopic of lensSession.generatedKbEntries) {
           try {
+            // Report KB creation activity
+            await this.reportInsightActivity({
+              type: 'kb_creation',
+              status: 'active',
+              description: `Creating KB entry: ${kbTopic}`,
+              progress: 0
+            });
+
             await this.kbSystem.createKbEntry({
               sessionId: this.sessionId,
               source: "diary",
@@ -142,6 +150,15 @@ export class AutopoieticDiary {
               }
             });
             kbCount++;
+            
+            // Report completed KB creation
+            await this.reportInsightActivity({
+              type: 'kb_creation',
+              status: 'completed',
+              description: `KB entry created: ${kbTopic}`,
+              progress: 100
+            });
+
             console.log(`[AutopoieticDiary] Created KB entry: "${kbTopic}"`);
           } catch (error) {
             console.error(`[AutopoieticDiary] Failed to create KB entry "${kbTopic}":`, error);
@@ -249,14 +266,7 @@ Keep it concise but comprehensive (300-400 words).`
       await storage.createMessage({
         sessionId: this.sessionId,
         content: `Autonomous thinking cycle triggered by: "${trigger}"\n\n${diaryContent}`,
-        role: "assistant",
-        metadata: {
-          type: "autopoietic-diary",
-          trigger,
-          lensSessionId: lensSession.id,
-          stats,
-          timestamp: new Date().toISOString(),
-        }
+        role: "assistant"
       });
 
       // Also add to knowledge base for RAG integration
@@ -283,6 +293,25 @@ Keep it concise but comprehensive (300-400 words).`
 
     } catch (error) {
       console.error('[AutopoieticDiary] Error saving diary entry:', error);
+    }
+  }
+
+  // Report insight activity for progress tracking
+  private async reportInsightActivity(activity: {
+    type: 'research' | 'kb_creation' | 'task_generation' | 'lens_processing';
+    status: 'active' | 'completed' | 'failed';
+    description: string;
+    progress?: number;
+  }): Promise<void> {
+    try {
+      await fetch('http://localhost:5000/api/insights/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(activity)
+      });
+    } catch (error) {
+      // Fail silently to not disrupt main operations
+      console.warn('[AutopoieticDiary] Failed to report activity:', error);
     }
   }
 

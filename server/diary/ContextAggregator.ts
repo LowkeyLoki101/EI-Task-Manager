@@ -80,12 +80,13 @@ export class ContextAggregator {
    */
   private async getTaskContext(sessionId: string): Promise<TaskContext> {
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${sessionId}`);
-      if (!response.ok) {
-        return this.getEmptyTaskContext();
-      }
-
-      const data = await response.json();
+      // Import error recovery here to avoid circular dependencies
+      const { circuitBreakers, resilientFetch } = await import('../lib/error-recovery');
+      
+      const data = await circuitBreakers.contextAggregator.execute(
+        () => resilientFetch(`http://localhost:5000/api/tasks/${sessionId}`),
+        () => ({ tasks: [] })
+      );
       const tasks = data.tasks || [];
 
       const now = new Date();
