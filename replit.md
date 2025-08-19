@@ -4,11 +4,41 @@
 Emergent Intelligence is an AI-powered project management platform designed to streamline project workflows through advanced AI capabilities. It integrates task management, calendar synchronization, research assistance, and a central knowledge base. The platform features a triple voice system, n8n automation, an autonomous chat system with persistent memory, and a GPT-5 diary system for relationship building and idea generation. A key feature is its role as a central hub in a distributed AI agent network, enabling cross-service collaboration, task delegation to specialized AI agents, and shared research capabilities. The system supports conversational task creation, automated workflow suggestions, cross-device calendar sync, and AI-powered research, with a focus on building relationships and coordinating AI agents across a network. It also includes an autopoietic (self-growing) diary system that autonomously thinks, researches, and builds knowledge, incorporating a 5-step thinking methodology and an evolving self-question pool. This system can generate actionable business tasks from its thinking cycles and visually displays its cognitive processes in real-time within an AI workstation.
 
 ## User Preferences
-Preferred communication style: Simple, everyday language.
-Interface design: Clean, mobile-first interface without technical backend details exposed to users. Single voice interface only.
-Chat behavior: No disruptive auto-scrolling when user is typing - allow natural interaction without forcing scroll position changes.
-Workspace organization: Daily-use tools prominent, setup/maintenance interfaces collapsed behind "Settings & Setup" section to reduce clutter.
-UI cleanliness: Remove status lines, help text, and any clutter elements that create visual noise or weird button shapes.
+**User Profile: Colby Black**
+Background: Entrepreneur and systems thinker in Houston, TX, operating across solar/energy, AI agents, drone inspections, and voice-first products.
+
+**Communication Style:**
+- Everyday conversational language with technical precision when needed
+- Low hype, practical, forward-looking outputs
+- Short paragraphs, scannable bullets
+- Mark (Assumptions) and (Risks) inline when present
+- Clever/quick humor when appropriate, never forced
+
+**Interface Design:**
+- Clean, mobile-first interface without technical backend details exposed to users
+- Single voice interface only
+- Daily-use tools prominent, setup/maintenance interfaces collapsed behind "Settings & Setup" section
+- Title attributes on UI elements should remain for LLM context understanding, not user help
+- Knowledge Base entries must be clickable and navigable from all interface locations
+
+**Recent Fix (2025-01-19):**
+- Fixed Knowledge Base entries in project area - entries are now clickable links that navigate to individual knowledge base entries with proper hover states and visual indicators
+
+**Chat Behavior:**
+- No disruptive auto-scrolling when user is typing
+- Allow natural interaction without forcing scroll position changes
+
+**Active Projects:**
+- SkyClaim: Drone roof inspection + AI storm reports
+- Starlight Solar: Fence-mounted solar, solar pergolas, DC heat pumps
+- Conversational Voicemail: ElevenLabs conversational agent built on Replit web apps
+- Emergent Intelligence: Digital avatars, knowledge-base construction, ethical frameworks
+- SyncWave/VibraRest: Vibro-acoustic sleep & relief products
+
+**Content Creation Preferences:**
+- One-pagers/PDFs, landing pages, avatar scripts, SMS/email templates
+- Research briefs: 5-10 bullets with citations, dates, and 2-3 counterpoints
+- Clear separation of facts vs. claims vs. opinions with sources and timestamps
 
 ## System Architecture
 

@@ -419,13 +419,19 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="max-h-80 overflow-y-auto">
-              {knowledgeBaseData?.results?.length > 0 ? (
+              {knowledgeBaseData?.results && knowledgeBaseData.results.length > 0 ? (
                 <div className="space-y-3">
-                  {knowledgeBaseData.results?.slice(0, 10).map((entry: any) => (
-                    <div key={entry.id} className="p-3 bg-white/80 dark:bg-gray-800/80 rounded-lg border border-green-200 dark:border-green-800">
+                  {knowledgeBaseData.results.slice(0, 10).map((entry: any) => (
+                    <a
+                      key={entry.id} 
+                      href={`/knowledge-base?entry=${entry.id}`}
+                      className="block p-3 bg-white/80 dark:bg-gray-800/80 rounded-lg border border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-900/10 hover:border-green-300 dark:hover:border-green-700 transition-colors cursor-pointer"
+                      data-testid={`knowledge-entry-${entry.id}`}
+                      title={`View knowledge base entry: ${entry.title}`}
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-medium text-green-900 dark:text-green-100 mb-1">
+                          <h4 className="font-medium text-green-900 dark:text-green-100 mb-1 hover:text-green-800 dark:hover:text-green-200">
                             {entry.title}
                           </h4>
                           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
@@ -445,8 +451,9 @@ export default function ProjectManager({ sessionId }: ProjectManagerProps) {
                             )}
                           </div>
                         </div>
+                        <ExternalLink className="w-4 h-4 text-green-600 dark:text-green-400 ml-2 flex-shrink-0" />
                       </div>
-                    </div>
+                    </a>
                   ))}
                 </div>
               ) : (

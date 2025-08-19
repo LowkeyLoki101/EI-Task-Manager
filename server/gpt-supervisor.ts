@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import { randomUUID } from "crypto";
 import { gptDiary } from "./gpt-diary";
+import { getPersonalizedSystemPrompt, getBusinessContext, getResearchGuidance } from "./user-profile";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -87,24 +88,34 @@ class IntelligentResourceManager {
   }
   
   private async analyzeTaskForResources(taskTitle: string, taskContext?: string): Promise<any> {
-    const prompt = `Analyze this task and determine what resources would be most helpful:
+    // Get business context for intelligent resource selection
+    const businessContext = getBusinessContext(taskTitle, taskContext);
+    const researchGuidance = getResearchGuidance(`${taskTitle} ${taskContext}`);
+    
+    const prompt = `${getPersonalizedSystemPrompt()}
+
+Analyze this task and determine what resources would be most helpful:
 
 Task: "${taskTitle}"
 Context: ${taskContext || 'General task'}
+
+BUSINESS CONTEXT: ${businessContext.join(' | ')}
+RESEARCH PRIORITIES: ${researchGuidance.sources.join(', ')} (${researchGuidance.urgency} priority)
+RELATED DOMAINS: ${researchGuidance.relatedTopics.slice(0,3).join(', ')}
 
 Determine:
 1. Does this need video tutorials? (needsVideo: boolean)
 2. Does this need research/documentation? (needsResearch: boolean) 
 3. Would a step-by-step guide help? (needsGuide: boolean)
-4. What are the best search queries to find resources? (searchQueries: string[] - max 3 queries)
+4. What are the best search queries to find resources? (searchQueries: string[] - max 3 queries, prioritize business-relevant terms)
 5. What specific tools or websites might be needed? (suggestedTools: string[] - max 5 tools)
 
-Consider the type of task:
-- For coding: Include programming tutorials, documentation, GitHub repos
-- For design: Include design resources, templates, inspiration
-- For business: Include guides, templates, market research
-- For learning: Include courses, tutorials, documentation
-- For creative: Include inspiration, tools, techniques
+Consider business-specific contexts:
+- For SkyClaim tasks: Include drone regulation, FAA guidelines, inspection protocols, insurance industry resources
+- For Starlight Solar tasks: Include solar industry reports, HVAC integration guides, Texas energy regulations
+- For Emergent Intelligence tasks: Include AI development frameworks, knowledge base systems, automation tools
+- For voice/conversational AI: Include ElevenLabs documentation, voice UI patterns, conversational design
+- For SyncWave/VibraRest tasks: Include wellness product development, vibro-acoustic research, sleep science
 
 Respond in JSON format only.`;
 

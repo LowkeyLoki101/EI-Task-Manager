@@ -6,6 +6,7 @@ import { getAutopoieticDiary } from "./autopoietic-diary";
 import { KnowledgeBaseSystem } from "./knowledge-base-system";
 import { getPersonalizedPrompt, getColbyContext } from "./colby-knowledge";
 import { webSearch } from "./web-search";
+import { getPersonalizedSystemPrompt, getBusinessContext, getResearchGuidance } from "./user-profile";
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-fake-key-for-development" 
@@ -123,10 +124,15 @@ SPECIFIC DIRECTIVES:
 - If analyzing insights → use DIARY tool with specific lens methodology
 - If finding tutorials → use MEDIA tool with specific search terms
 
-BUSINESS CONTEXT:
-- SkyClaim: Drone roof inspections, AI damage analysis, insurance reports
-- Starlight Solar: Fence-mounted panels, pergolas, black-on-black aesthetics  
-- Emergent Intelligence: AI development, knowledge bases, automation
+BUSINESS INTELLIGENCE: ${JSON.stringify(getBusinessContext(currentTool, lastAction || ''), null, 2)}
+RESEARCH GUIDANCE: ${JSON.stringify(getResearchGuidance(`${currentTool} ${lastAction}`), null, 2)}
+
+ACTIVE BUSINESS DOMAINS:
+- SkyClaim: Drone roof inspections, AI damage analysis, insurance reports, storm response automation
+- Starlight Solar: Fence-mounted panels, pergolas, HVAC integration, Texas energy market analysis
+- Conversational Voicemail: ElevenLabs voice agents, automated business communication systems
+- Emergent Intelligence: AI development, knowledge bases, autonomous agent networks
+- SyncWave/VibraRest: Vibro-acoustic wellness products, sleep enhancement technology
 
 NEVER respond with generic "reflecting" - always take specific tool-based action.
 

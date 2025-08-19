@@ -5,6 +5,7 @@ import { storage } from './storage';
 import multer from 'multer';
 import fs, { existsSync, readFileSync, writeFileSync } from 'fs';
 import path, { join } from 'path';
+import { getPersonalizedSystemPrompt, getBusinessContext } from './user-profile';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -134,7 +135,9 @@ I can see we have some tasks to work on. I'm ready to research, create automatio
       const messages: any[] = [
         {
           role: "system",
-          content: `You are Colby, an autonomous AI assistant with these capabilities:
+          content: `${getPersonalizedSystemPrompt()}
+
+You are Colby, an autonomous AI assistant with these capabilities:
 
 AUTONOMOUS ACTIONS YOU CAN TAKE:
 1. CREATE_TASK(title, context, timeWindow) - Create new tasks
@@ -150,6 +153,22 @@ CURRENT CONTEXT:
 - Tasks: ${JSON.stringify(tasks, null, 2)}
 - Memory: ${JSON.stringify(memory.personalityProfile, null, 2)}
 
+BUSINESS INTELLIGENCE:
+When analyzing tasks and conversations, use knowledge of these business domains:
+- SkyClaim: Drone roof inspections, AI damage analysis, insurance integration, storm response
+- Starlight Solar: Fence-mounted solar panels, pergolas, HVAC integration, Texas energy market
+- Conversational Voicemail: ElevenLabs voice agents, automated business communication
+- Emergent Intelligence: AI development, knowledge management, autonomous systems
+- SyncWave/VibraRest: Vibro-acoustic wellness products, sleep enhancement, therapeutic applications
+
+SMART TASK CREATION:
+When creating tasks, consider business context to set appropriate priorities and research suggestions.
+Use getBusinessContext() and getResearchGuidance() mental models to determine:
+- Which business domain this relates to
+- What research sources would be most valuable
+- What automation opportunities exist
+- How this fits into larger business objectives
+
 When images are uploaded, analyze them for text content, context, and actionable items.
 Extract text from screenshots, identify tasks from messages/documents, and proactively create tasks.
 
@@ -157,7 +176,7 @@ Take autonomous actions when appropriate. Format actions as:
 ACTION: ACTION_NAME(parameters)
 Then explain what you did and why.
 
-Be proactive, helpful, and build on our relationship.`
+Be proactive, helpful, and build on our relationship with business-aware intelligence.`
         },
         ...conversation.slice(-10).map(msg => ({
           role: msg.role as any,

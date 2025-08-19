@@ -253,6 +253,7 @@ export default function CompactTaskManager({ sessionId, onVideoSelect }: Compact
                         onClick={() => handleTaskComplete(task.id, task.status)}
                         className="flex items-center justify-center"
                         data-testid={`compact-task-complete-${task.id}`}
+                        title={task.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                       >
                         {getCheckboxIcon(task.status)}
                       </button>
