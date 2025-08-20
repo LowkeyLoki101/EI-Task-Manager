@@ -47,7 +47,12 @@ export function InsightProgressPanel() {
       const response = await fetch('/api/insights/activity');
       if (response.ok) {
         const data = await response.json();
-        setActivities(data.activities || []);
+        // Convert timestamp strings to Date objects
+        const activities = (data.activities || []).map((activity: any) => ({
+          ...activity,
+          timestamp: new Date(activity.timestamp)
+        }));
+        setActivities(activities);
       }
     } catch (error) {
       console.error('[InsightProgress] Failed to fetch activity:', error);
@@ -143,7 +148,9 @@ export function InsightProgressPanel() {
                       {activity.description}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {activity.timestamp.toLocaleTimeString()}
+                      {activity.timestamp instanceof Date 
+                        ? activity.timestamp.toLocaleTimeString() 
+                        : new Date(activity.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
                   <div className="flex-shrink-0">
