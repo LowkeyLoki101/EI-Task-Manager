@@ -1,0 +1,26 @@
+{
+  "id": "b294d427-d0c2-4527-a33e-e8bdb90bb423",
+  "sessionId": "s_njlk7hja5y9",
+  "timestamp": "2025-08-20T23:32:56.862Z",
+  "source": "diary",
+  "topic": "Frameworks for critical thinking in the solar industry",
+  "content": "Generated from lens processing: My working hypothesis is that some of my foundational assumptions may be influenced by cognitive biases or outdated information. As a next step, I will identify and list these assumptions, then systematically evaluate them using research and diverse perspectives. I will also adopt tools like critical thinking frameworks and feedback from others to continuously challenge and update my assumptions.",
+  "status": "active",
+  "contentType": "document",
+  "platforms": [],
+  "approvalStatus": "auto-approved",
+  "approvedBy": "ai",
+  "draftData": {},
+  "tags": [
+    "autopoietic",
+    "lens-generated"
+  ],
+  "derivedTasks": [],
+  "metadata": {
+    "lensSessionId": "ce1a1764-e3f6-4f81-9731-bd3c4cfcdebf",
+    "trigger": "What assumption am I making that might be wrong?",
+    "generationTimestamp": "2025-08-20T23:32:56.862Z"
+  },
+  "createdAt": "2025-08-20T23:32:56.862Z",
+  "updatedAt": "2025-08-20T23:32:56.862Z"
+}

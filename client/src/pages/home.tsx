@@ -87,51 +87,51 @@ export default function HomePage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-industrial-dark carbon-fiber-weave">
       {/* Header */}
-      <header className="border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b-2 border-industrial-accent bg-industrial-dark hex-mesh-pattern backdrop-blur-sm sticky top-0 z-50 shadow-xl">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <EmergentLogo />
+              <div className="drone-camera-lens" style={{width: '32px', height: '32px'}}></div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-xl font-bold text-industrial-primary font-industrial-display">
                   EMERGENT
                 </h1>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Conversational AI Task Management
+                <p className="text-xs text-industrial-secondary font-industrial-mono">
+                  CONVERSATIONAL AI TASK MANAGEMENT
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <a 
                 href="/knowledge-base" 
-                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 dark:text-green-300 dark:bg-green-900 dark:hover:bg-green-800 transition-colors"
+                className="riveted-button inline-flex items-center px-3 py-2 text-xs font-medium rounded text-industrial-success font-industrial-mono"
                 title="Comprehensive knowledge base with metadata, search, export/import"
               >
                 <BookOpen className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Knowledge Base</span>
+                <span className="hidden sm:inline">KNOWLEDGE BASE</span>
                 <span className="sm:hidden">KB</span>
               </a>
               <a 
                 href="/code-analysis" 
                 target="_blank"
-                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900 dark:hover:bg-blue-800 transition-colors"
+                className="riveted-button inline-flex items-center px-3 py-2 text-xs font-medium rounded text-industrial-accent font-industrial-mono"
                 title="GPT-5 powered code analysis"
               >
                 <Code className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Code Analysis</span>
-                <span className="sm:hidden">Code</span>
+                <span className="hidden sm:inline">CODE ANALYSIS</span>
+                <span className="sm:hidden">CODE</span>
               </a>
               <a 
                 href="/diary" 
                 target="_blank"
-                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200 dark:text-purple-300 dark:bg-purple-900 dark:hover:bg-purple-800 transition-colors"
+                className="riveted-button inline-flex items-center px-3 py-2 text-xs font-medium rounded text-solar-gold font-industrial-mono"
                 title="AI autonomous diary with context awareness"
               >
                 <Brain className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">AI Diary</span>
-                <span className="sm:hidden">Diary</span>
+                <span className="hidden sm:inline">AI DIARY</span>
+                <span className="sm:hidden">DIARY</span>
               </a>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Label htmlFor="builder-mode" className="text-xs sm:text-sm whitespace-nowrap hidden sm:inline">Builder Mode</Label>
@@ -157,14 +157,14 @@ export default function HomePage() {
             
             {/* Left Column: AI Workstation */}
             <div className="order-1 lg:order-1">
-              <div className="bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 rounded-lg shadow-lg border border-amber-500/20">
-                <div className="p-4 border-b border-amber-500/20">
-                  <h2 className="text-lg font-semibold text-amber-200 flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-amber-400" />
+              <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border-2 border-industrial-accent">
+                <div className="p-4 border-b-2 border-industrial-accent/30">
+                  <h2 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
+                    <div className="drone-camera-lens" style={{width: '20px', height: '20px'}}></div>
                     AI Workstation
                   </h2>
-                  <p className="text-xs text-amber-300/70 mt-1">
-                    Research, knowledge management, and AI tools
+                  <p className="text-xs text-industrial-secondary font-industrial-mono mt-1">
+                    RESEARCH, KNOWLEDGE MANAGEMENT, AND AI TOOLS
                   </p>
                 </div>
                 <div className="p-2">
@@ -175,14 +175,14 @@ export default function HomePage() {
             
             {/* Right Column: Direct Chat Interface */}
             <div className="order-2 lg:order-2">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Bot className="h-5 w-5 text-blue-600" />
+              <div className="industrial-card photovoltaic-shimmer rounded-lg shadow-xl border-2 border-solar-gold/50">
+                <div className="p-4 border-b-2 border-solar-gold/30">
+                  <h2 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
+                    <div className="aperture-ring" style={{width: '20px', height: '20px'}}></div>
                     Direct Chat with GPT-5
                   </h2>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    Primary conversational AI interface
+                  <p className="text-xs text-industrial-secondary font-industrial-mono mt-1">
+                    PRIMARY CONVERSATIONAL AI INTERFACE
                   </p>
                 </div>
                 <div className="p-4">
@@ -199,7 +199,7 @@ export default function HomePage() {
           </div>
 
           {/* Project-Based Task Management */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <div className="industrial-card fine-grid-mesh rounded-lg shadow-xl p-6 mb-6 border border-industrial-accent/30">
             <ProjectManager sessionId={sessionId} />
           </div>
 

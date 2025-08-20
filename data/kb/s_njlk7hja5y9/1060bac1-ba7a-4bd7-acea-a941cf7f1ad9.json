@@ -1,0 +1,26 @@
+{
+  "id": "1060bac1-ba7a-4bd7-acea-a941cf7f1ad9",
+  "sessionId": "s_njlk7hja5y9",
+  "timestamp": "2025-08-20T23:33:18.599Z",
+  "source": "diary",
+  "topic": "Methods for balancing storytelling with actionable content in marketing",
+  "content": "Generated from lens processing: My working hypothesis is that the most effective story hook today would be one that addresses a timely challenge or aspiration of my audience, positioning the brand as a supportive ally in their journey. The next step is to use tools like social media listening or surveys to gather current insights about my audience’s needs and interests, and then craft content that not only tells a story but also offers practical solutions or inspiration.",
+  "status": "active",
+  "contentType": "document",
+  "platforms": [],
+  "approvalStatus": "auto-approved",
+  "approvedBy": "ai",
+  "draftData": {},
+  "tags": [
+    "autopoietic",
+    "lens-generated"
+  ],
+  "derivedTasks": [],
+  "metadata": {
+    "lensSessionId": "0adb6c69-47b4-41f7-a0de-05e36a40f0a7",
+    "trigger": "If I wanted to make marketing content today, what story hook would I use?",
+    "generationTimestamp": "2025-08-20T23:33:18.599Z"
+  },
+  "createdAt": "2025-08-20T23:33:18.599Z",
+  "updatedAt": "2025-08-20T23:33:18.599Z"
+}

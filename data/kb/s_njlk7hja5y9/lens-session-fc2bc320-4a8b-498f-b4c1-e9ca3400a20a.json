@@ -1,0 +1,24 @@
+{
+  "id": "fc2bc320-4a8b-498f-b4c1-e9ca3400a20a",
+  "sessionId": "s_njlk7hja5y9",
+  "trigger": "What assumption am I making that might be wrong?",
+  "frameStep": "The problem at hand is identifying assumptions I'm making that could be incorrect. I see a need to examine my current beliefs or premises that might not be based on factual evidence or could be influenced by biases. Clearly stating these assumptions will help in evaluating their validity and deciding whether they need to be adjusted or discarded.",
+  "reframeStep": "Instead of focusing solely on identifying incorrect assumptions, consider reframing the question to explore assumptions that might be limiting possibilities or creativity. By shifting the perspective to uncover assumptions that restrict thinking or innovation, you open up potential for new ideas and approaches. This reframe encourages a broader exploration of how assumptions shape not only what might be wrong, but also what might be possible.",
+  "metaLensStep": null,
+  "recursiveStep": "In applying the recursive lens to the original trigger, consider asking: What are the underlying beliefs or biases that lead me to make these assumptions? How do these assumptions influence my decision-making processes and the outcomes I achieve? Additionally, investigate how challenging or changing these assumptions could impact my understanding or approach to problems in the future. This can lead to a deeper exploration of the frameworks and paradigms that guide my thinking.",
+  "closureStep": "My working hypothesis is that some of my assumptions are rooted in unexamined biases or outdated information. The next step is to actively identify and list these assumptions, then research and gather evidence to test their validity. I will also seek diverse perspectives to challenge these assumptions and explore how changing them might unlock new opportunities or solutions.",
+  "generatedTasks": [
+    "Draft a blog post on challenging assumptions in the solar energy sector to foster innovation.",
+    "Research common biases in AI decision-making processes and their impact on energy management.",
+    "Create a workshop outline for identifying and overcoming limiting assumptions in renewable energy projects."
+  ],
+  "generatedKbEntries": [
+    "Common assumptions in solar energy project planning and their potential pitfalls",
+    "Impact of cognitive biases on AI-driven energy solutions",
+    "Strategies for fostering creative thinking in renewable energy development"
+  ],
+  "generatedResearch": [],
+  "completed": "2025-08-20T23:31:52.905Z",
+  "createdAt": "2025-08-20T23:31:41.273Z",
+  "meta_lensStep": "I am thinking about this now because questioning assumptions is crucial for personal growth and problem-solving. This often reflects a pattern of seeking to validate or challenge my beliefs to ensure they align with reality and foster innovative thinking. By consistently scrutinizing assumptions, I aim to prevent potential errors and cultivate an open-minded approach to various situations."
+}

@@ -1,0 +1,446 @@
+/* SkyClaim Industrial Design System */
+/* Techno-garage aerospace aesthetic with solar/drone/photography elements */
+
+/* ========== CSS CUSTOM PROPERTIES ========== */
+:root {
+  /* Primary Industrial Colors */
+  --industrial-slate-900: hsl(215, 25%, 16%);  /* Darkest background */
+  --industrial-slate-800: hsl(215, 25%, 18%);  /* Dark background */
+  --industrial-slate-700: hsl(215, 25%, 20%);  /* Medium background */
+  --industrial-slate-600: hsl(215, 20%, 25%);  /* Light background */
+  --industrial-slate-500: hsl(215, 20%, 40%);  /* Medium text */
+  --industrial-slate-400: hsl(215, 20%, 60%);  /* Light text */
+
+  /* Accent Colors */
+  --industrial-blue-600: hsl(217, 91%, 60%);   /* Primary blue */
+  --industrial-blue-500: hsl(217, 91%, 55%);   /* Medium blue */
+  --industrial-blue-400: hsl(217, 91%, 50%);   /* Dark blue */
+  --industrial-blue-300: hsl(217, 91%, 65%);   /* Light blue */
+
+  /* Solar Panel Gold Accents */
+  --solar-gold-500: hsl(45, 96%, 53%);         /* Primary solar gold */
+  --solar-gold-400: hsl(45, 96%, 48%);         /* Dark solar gold */
+  --solar-gold-300: hsl(45, 96%, 58%);         /* Light solar gold */
+
+  /* Status Colors */
+  --industrial-green: hsl(158, 64%, 52%);      /* Success/Online */
+  --industrial-red: hsl(0, 84%, 60%);          /* Danger/Alert */
+  --industrial-amber: hsl(45, 96%, 53%);       /* Warning */
+
+  /* Photography/Camera Colors */
+  --camera-lens-silver: hsl(0, 0%, 75%);       /* Camera silver */
+  --camera-lens-dark: hsl(0, 0%, 25%);         /* Camera dark */
+}
+
+/* ========== TYPOGRAPHY ========== */
+.font-industrial-mono {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.font-industrial-display {
+  font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.font-industrial-body {
+  font-family: 'Inter', 'SF Pro Text', system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* ========== TEXTURE PATTERNS ========== */
+.hex-mesh-pattern {
+  background-image: 
+    radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0),
+    radial-gradient(circle at 10px 10px, rgba(255,255,255,0.03) 1px, transparent 0);
+  background-size: 20px 20px, 40px 40px;
+  position: relative;
+}
+
+.hex-mesh-pattern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(30deg, transparent 24%, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.02) 26%, transparent 27%, transparent 74%, rgba(255,255,255,0.02) 75%, rgba(255,255,255,0.02) 76%, transparent 77%),
+    linear-gradient(150deg, transparent 24%, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.02) 26%, transparent 27%, transparent 74%, rgba(255,255,255,0.02) 75%, rgba(255,255,255,0.02) 76%, transparent 77%);
+  background-size: 20px 35px;
+  pointer-events: none;
+}
+
+.carbon-fiber-weave {
+  background-image: 
+    linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(0,0,0,0.1) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.05) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.05) 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+}
+
+.fine-grid-mesh {
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.solar-panel-texture {
+  background-image: 
+    linear-gradient(90deg, rgba(45, 96, 53, 0.1) 0%, rgba(45, 96, 53, 0.05) 50%, rgba(45, 96, 53, 0.1) 100%),
+    linear-gradient(0deg, rgba(45, 96, 53, 0.05) 0%, transparent 50%, rgba(45, 96, 53, 0.05) 100%);
+  background-size: 60px 60px, 40px 40px;
+  position: relative;
+}
+
+.solar-panel-texture::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    transparent 30%, 
+    rgba(45, 96, 53, 0.02) 35%, 
+    rgba(45, 96, 53, 0.02) 65%, 
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* ========== INDUSTRIAL COMPONENTS ========== */
+.riveted-button {
+  background: linear-gradient(145deg, var(--industrial-slate-600), var(--industrial-slate-700));
+  border: 1px solid var(--industrial-slate-500);
+  color: var(--industrial-slate-400);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.riveted-button::before,
+.riveted-button::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, var(--industrial-slate-500), var(--industrial-slate-700));
+  border-radius: 50%;
+  border: 1px solid var(--industrial-slate-400);
+}
+
+.riveted-button::before {
+  top: 4px;
+  left: 4px;
+}
+
+.riveted-button::after {
+  bottom: 4px;
+  right: 4px;
+}
+
+.riveted-button:hover {
+  background: linear-gradient(145deg, var(--industrial-slate-500), var(--industrial-slate-600));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.riveted-button-blue {
+  background: linear-gradient(145deg, var(--industrial-blue-600), var(--industrial-blue-400));
+  border: 1px solid var(--industrial-blue-300);
+  color: white;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.riveted-button-blue::before,
+.riveted-button-blue::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, var(--industrial-blue-300), var(--industrial-blue-500));
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.6);
+}
+
+.riveted-button-blue::before {
+  top: 4px;
+  left: 4px;
+}
+
+.riveted-button-blue::after {
+  bottom: 4px;
+  right: 4px;
+}
+
+.riveted-button-blue:hover {
+  background: linear-gradient(145deg, var(--industrial-blue-500), var(--industrial-blue-300));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(73, 126, 231, 0.4);
+}
+
+/* ========== DRONE/CAMERA ELEMENTS ========== */
+.drone-camera-lens {
+  background: 
+    radial-gradient(circle at center, 
+      var(--industrial-blue-600) 0%, 
+      var(--industrial-blue-600) 20%, 
+      var(--camera-lens-silver) 21%, 
+      var(--camera-lens-dark) 25%, 
+      var(--camera-lens-silver) 30%, 
+      var(--camera-lens-dark) 60%, 
+      var(--industrial-slate-800) 80%
+    );
+  border-radius: 50%;
+  border: 2px solid var(--camera-lens-silver);
+  position: relative;
+  box-shadow: 
+    inset 0 2px 4px rgba(0,0,0,0.3),
+    0 2px 8px rgba(0,0,0,0.2);
+}
+
+.drone-camera-lens::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30%;
+  height: 30%;
+  background: radial-gradient(circle, var(--industrial-blue-600), var(--industrial-blue-400));
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.drone-hud-status {
+  background: linear-gradient(90deg, var(--industrial-slate-800), var(--industrial-slate-700));
+  border: 1px solid var(--industrial-green);
+  color: var(--industrial-green);
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.drone-hud-status::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--industrial-green);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  animation: pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 4px var(--industrial-green);
+}
+
+/* ========== SOLAR PANEL ELEMENTS ========== */
+.solar-cell-grid {
+  background: 
+    linear-gradient(90deg, var(--solar-gold-500) 1px, transparent 1px),
+    linear-gradient(180deg, var(--solar-gold-500) 1px, transparent 1px);
+  background-size: 20px 20px;
+  position: relative;
+}
+
+.solar-cell-grid::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(45, 96, 53, 0.1) 25%, 
+    transparent 25%, 
+    transparent 75%, 
+    rgba(45, 96, 53, 0.1) 75%
+  );
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.photovoltaic-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.photovoltaic-shimmer::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, 
+    transparent 30%, 
+    rgba(45, 96, 53, 0.3) 50%, 
+    transparent 70%
+  );
+  animation: photovoltaic-sweep 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes photovoltaic-sweep {
+  0% { transform: translateX(-100%) translateY(-100%); }
+  50% { transform: translateX(0%) translateY(0%); }
+  100% { transform: translateX(100%) translateY(100%); }
+}
+
+/* ========== DAMAGE ALERT ELEMENTS ========== */
+.damage-alert {
+  background: linear-gradient(145deg, 
+    rgba(231, 76, 60, 0.1), 
+    rgba(192, 57, 43, 0.15)
+  );
+  border: 2px solid var(--industrial-red);
+  border-radius: 8px;
+  position: relative;
+}
+
+.damage-alert::before {
+  content: '⚠';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 16px;
+  color: var(--industrial-red);
+  animation: warning-flash 1s ease-in-out infinite;
+}
+
+@keyframes warning-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ========== INDUSTRIAL CARDS ========== */
+.industrial-card {
+  background: linear-gradient(145deg, var(--industrial-slate-800), var(--industrial-slate-900));
+  border: 1px solid var(--industrial-slate-600);
+  border-radius: 8px;
+  box-shadow: 
+    0 4px 8px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: all 0.3s ease;
+}
+
+.industrial-card:hover {
+  border-color: var(--industrial-blue-600);
+  box-shadow: 
+    0 8px 16px rgba(0,0,0,0.3),
+    0 0 0 1px var(--industrial-blue-600),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+}
+
+.industrial-input {
+  background: var(--industrial-slate-800);
+  border: 2px solid var(--industrial-slate-600);
+  color: var(--industrial-slate-400);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.industrial-input:focus {
+  outline: none;
+  border-color: var(--industrial-blue-600);
+  box-shadow: 0 0 0 3px rgba(73, 126, 231, 0.2);
+}
+
+/* ========== TEXT UTILITIES ========== */
+.text-industrial-primary { color: white; }
+.text-industrial-secondary { color: var(--industrial-slate-400); }
+.text-industrial-muted { color: var(--industrial-slate-500); }
+.text-industrial-accent { color: var(--industrial-blue-600); }
+.text-industrial-success { color: var(--industrial-green); }
+.text-industrial-warning { color: var(--industrial-amber); }
+.text-industrial-danger { color: var(--industrial-red); }
+.text-solar-gold { color: var(--solar-gold-500); }
+
+/* ========== BACKGROUND UTILITIES ========== */
+.bg-industrial-dark { background-color: var(--industrial-slate-900); }
+.bg-industrial-medium { background-color: var(--industrial-slate-800); }
+.bg-industrial-light { background-color: var(--industrial-slate-700); }
+
+/* ========== PHOTOGRAPHY ELEMENTS ========== */
+.aperture-ring {
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--camera-lens-silver);
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle, 
+    var(--industrial-slate-900) 30%, 
+    var(--camera-lens-dark) 60%, 
+    var(--camera-lens-silver) 80%
+  );
+}
+
+.aperture-ring::before {
+  content: 'f/2.8';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--industrial-blue-600);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.camera-viewfinder {
+  border: 2px solid var(--industrial-blue-600);
+  border-radius: 4px;
+  background: rgba(0,0,0,0.8);
+  position: relative;
+}
+
+.camera-viewfinder::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--industrial-blue-600);
+  transform: translate(-50%, -50%);
+}
+
+/* ========== RESPONSIVE ADJUSTMENTS ========== */
+@media (max-width: 768px) {
+  .hex-mesh-pattern::before {
+    background-size: 15px 26px;
+  }
+  
+  .riveted-button::before,
+  .riveted-button::after,
+  .riveted-button-blue::before,
+  .riveted-button-blue::after {
+    width: 3px;
+    height: 3px;
+  }
+  
+  .drone-camera-lens {
+    box-shadow: 
+      inset 0 1px 2px rgba(0,0,0,0.3),
+      0 1px 4px rgba(0,0,0,0.2);
+  }
+}
