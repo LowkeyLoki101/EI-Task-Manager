@@ -27,6 +27,8 @@ Background: Entrepreneur and systems thinker in Houston, TX, operating across so
 - **Added workspace system** - Event bus (workspaceBus.ts), WorkspaceProvider, and PanelDock enable AI agents to open tools and coordinate with human actions
 - **Fixed chat container height** - Added max-h-[85vh] constraint to prevent excessive scrolling while maintaining workstation expansion capability
 - **Mobile-first responsive layout** - Removed overflow constraints and fixed heights for flexible, adaptive interface design
+- **Auto-expanding chat input** - Replaced fixed Input with dynamic Textarea that grows from 1 line to 4 lines maximum, supporting text wrapping and smooth height transitions
+- **Chat interface cleanup** - Removed redundant labeling, moved logo to chat header, positioned trust score properly
 
 **Chat Behavior:**
 - No disruptive auto-scrolling when user is typing

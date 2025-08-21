@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
 import { Send, Brain, Clock, FileText, Calendar, Settings, Lightbulb, Upload, X, Code, Zap, Copy, Check, HelpCircle } from 'lucide-react';
 import companyLogo from '@assets/IMG_3516_1755741839157.jpeg';
 
@@ -41,6 +42,7 @@ interface AutonomousChatProps {
 
 export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const [message, setMessage] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isExpanded, setIsExpanded] = useState(true);
   const [showDiary, setShowDiary] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -178,10 +180,24 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   // Handle input focus/blur and typing to prevent unwanted scrolling
   const handleInputFocus = () => setIsUserTyping(true);
   const handleInputBlur = () => setIsUserTyping(false);
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
     setIsUserTyping(true);
+    autoResizeTextarea();
   };
+
+  const autoResizeTextarea = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 120); // Max height of ~120px
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  };
+
+  // Auto-resize on message change
+  useEffect(() => {
+    autoResizeTextarea();
+  }, [message]);
 
   // File upload handlers
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -523,15 +539,17 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         <form onSubmit={handleSendMessage} className="flex-shrink-0 space-y-2 border-t border-blue-200 pt-3">
           {/* Full Width Text Area */}
           <div className="w-full">
-            <Input
+            <Textarea
+              ref={textareaRef}
               value={message}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
               placeholder="Ask Colby to help with tasks, research, automation..."
               disabled={sendMessageMutation.isPending}
-              className="w-full h-16 text-base px-4 py-3 resize-none rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
+              className="w-full min-h-[64px] text-base px-4 py-3 resize-none rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 overflow-y-auto"
               data-testid="chat-input"
+              rows={1}
             />
           </div>
           
