@@ -10,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ResearchScratchpad } from './ResearchScratchpad';
 import { KnowledgeBaseManager } from './KnowledgeBaseManager';
 import ContentCreationPanel from './ContentCreationPanel';
+import { useWorkspace } from '@/lib/workspace';
+import { emit } from '@/lib/workspaceBus';
 import React from 'react';
 
 // Error Boundary for catching panel errors
@@ -149,6 +151,9 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
   const [isOrganizing, setIsOrganizing] = useState(false);
   const workstationRef = useRef<HTMLDivElement>(null);
   const aiIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Connect to workspace system for global mode management
+  const { mode: workspaceMode, setMode: setWorkspaceMode, openTool } = useWorkspace();
 
   // Query autopoietic diary status for mind's eye visualization
   const { data: autopoieticStatus } = useQuery<AutopoieticStatus>({
@@ -235,15 +240,21 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
     }
   };
 
-  // Toggle between modes: off -> human -> hybrid -> ai -> off
+  // Sync workspace mode with workstation state
+  useEffect(() => {
+    if (workstationState.mode === 'off') {
+      // Don't sync "off" mode to workspace - just disable locally
+      return;
+    }
+    setWorkspaceMode(workstationState.mode as 'human' | 'hybrid' | 'ai');
+  }, [workstationState.mode, setWorkspaceMode]);
+
+  // Toggle between modes: human -> hybrid -> ai -> human (removed 'off')
   const toggleMode = () => {
     setWorkstationState(prev => {
-      let newMode: 'off' | 'human' | 'hybrid' | 'ai';
+      let newMode: 'human' | 'hybrid' | 'ai';
       
       switch (prev.mode) {
-        case 'off':
-          newMode = 'human';
-          break;
         case 'human':
           newMode = 'hybrid';
           break;
@@ -251,8 +262,6 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
           newMode = 'ai';
           break;
         case 'ai':
-          newMode = 'off';
-          break;
         default:
           newMode = 'human';
       }
@@ -264,17 +273,15 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       };
       
       if (newMode === 'ai') {
-        setAiThinking('Initiating full autonomous mode...');
+        setAiThinking('AI autonomous mode active...');
       } else if (newMode === 'hybrid') {
-        setAiThinking('Initiating hybrid mode...');
-      } else if (newMode === 'off') {
-        setAiThinking('');
-        setUserActions([]);
+        setAiThinking('Hybrid mode - AI and human collaboration...');
       } else {
         setAiThinking('');
         setUserActions([]);
       }
       
+      console.log('[Workstation] Mode changed to:', newMode);
       return newState;
     });
   };
@@ -298,7 +305,8 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
   }, []);
 
   const adjustHeight = (delta: number) => {
-    setHeight(prev => Math.max(200, Math.min(600, prev + delta)));
+    // Removed hard constraints - allow natural growth up to 90vh
+    setHeight(prev => Math.max(200, Math.min(window.innerHeight * 0.9, prev + delta)));
   };
 
   const activeToolComponent = tools.find(t => t.id === activeTool);
@@ -340,13 +348,16 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
   return (
     <div 
       ref={workstationRef}
-      className={`relative bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 border-2 border-amber-500/50 rounded-lg shadow-2xl backdrop-blur-sm ring-2 ring-amber-400/20 ${className}`}
+      className={`
+        w-full overflow-visible
+        bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 
+        border-2 border-amber-500/50 rounded-lg shadow-2xl backdrop-blur-sm ring-2 ring-amber-400/20 
+        min-h-[200px] max-h-[90vh] flex flex-col
+        ${className}
+      `}
       style={{ 
-        height: `${height}px`,
-        maxHeight: `${height}px`,
-        overflow: 'visible',  // Changed from 'hidden' to 'visible' to prevent clipping
-        zIndex: 9999,  // Increased to 9999 to ensure it's always on top
-        position: 'relative'  // Ensure it creates stacking context
+        zIndex: 9999,
+        position: 'relative'
       }}
     >
       {/* Header */}
@@ -570,17 +581,23 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
           
           const handleClick = () => {
             if (workstationState.mode === 'off') return;
-            console.log(`[Workstation] Switching to ${tool.name} tool, current mode: ${workstationState.mode}`);
+            console.log(`[Workstation] Tool click: ${tool.name}, mode: ${workstationState.mode}`);
             
-            // Add specific logging for Knowledge Base
-            if (tool.id === 'knowledge') {
-              console.log('[Workstation] Knowledge Base button clicked - loading entries...');
+            // Use workspace system for tool opening
+            if (workstationState.mode === 'human' || workstationState.mode === 'hybrid') {
+              // Human can click tools in human/hybrid mode
+              openTool(tool.id, { sessionId, toolName: tool.name });
+            } else {
+              // AI mode - log but don't allow direct tool opening
+              console.log(`[Workstation] Tool blocked in AI mode: ${tool.name}`);
             }
             
+            // Still set local state for UI consistency
             setActiveTool(tool.id);
-            setCurrentPayload(null); // Clear any AI payload when user manually switches
+            setCurrentPayload(null);
+            
             if (workstationState.mode === 'human' || workstationState.mode === 'hybrid') {
-              logUserAction(`Switched to ${tool.name} tool`);
+              logUserAction(`Opened ${tool.name} tool via workspace`);
             }
           };
           
@@ -610,8 +627,8 @@ export default function Workstation({ sessionId, className = '' }: WorkstationPr
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden relative">
-        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 overflow-visible relative min-h-0">
+        <div className="w-full h-full overflow-y-auto overflow-x-hidden">
           {activeToolComponent ? (
             <activeToolComponent.component 
               payload={currentPayload}

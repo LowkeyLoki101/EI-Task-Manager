@@ -22,6 +22,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Workstation from '../components/Workstation';
 import { InsightProgressPanel } from '../components/InsightProgressPanel';
+import { PanelDock } from '../components/PanelDock';
+import { useWorkspace } from '../lib/workspace';
 import companyLogo from '@assets/IMG_3516_1755741839157.jpeg';
 
 export default function HomePage() {
@@ -235,6 +237,13 @@ export default function HomePage() {
                 }`}>
                   <Workstation sessionId={sessionId} />
                 </div>
+                
+                {/* Panel Dock - Shows tools opened by Human or AI */}
+                {workstationExpanded && (
+                  <div className="px-4 pb-4">
+                    <PanelDock />
+                  </div>
+                )}
               </div>
               
             </div>

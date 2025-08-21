@@ -1,0 +1,235 @@
+You’re spot on. The workstation was literally being cropped (fixed height + overflow). You already killed some of it—nice. Let’s finish Phase-1 (layout) and wire Phase-2 (modes + simple bus) without introducing a big new state lib.
+
+⸻
+
+Phase 1 — Unbox the Workstation (mobile-first)
+
+Goals: one page scroller, workstation full-bleed on mobile, no fixed heights, no inner overflow.
+
+Workstation wrapper
+
+// WorkstationCard.tsx
+export function WorkstationCard({ children }) {
+  return (
+    <section
+      className="
+        w-full overflow-visible
+        rounded-none border-0 bg-transparent p-0
+        md:rounded-2xl md:border md:border-white/10 md:bg-slate-900/40 md:p-4
+      "
+    >
+      {children}
+    </section>
+  );
+}
+
+Page shell
+
+// App/Page shell
+<div className="min-h-dvh bg-slate-950 text-slate-100">
+  <header className="h-12 px-3 flex items-center justify-between border-b border-white/10">
+    <div className="font-semibold">AI Workstation</div>
+    <button className="md:hidden text-xs opacity-70">⋯</button>
+  </header>
+
+  <main className="px-3 md:px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+    <WorkstationCard>
+      <AIWorkstation />
+    </WorkstationCard>
+
+    <ChatPanel />
+  </main>
+</div>
+
+Class audit checklist (do these across components)
+	•	Remove any h-[…] / max-h-[…] on the workstation; if you need presence, use min-h-[180px].
+	•	Ensure only the page scrolls: workstation children should not use overflow-y-auto.
+	•	On mobile: no max-w-*; re-introduce md:max-w-2xl md:mx-auto for desktop niceness.
+	•	Use text-[16px] on inputs to stop iOS zoom.
+	•	Sticky chat composer + safe-area padding at bottom.
+
+⸻
+
+Phase 2 — Make Human / Hybrid / Auto actually control access
+
+We’ll keep your architecture and add a tiny event bus + a lightweight WorkspaceProvider.
+This lets:
+	•	Human mode: only user actions open tools
+	•	Hybrid: both can open/focus/inject
+	•	Auto: only AI opens; user view-only
+
+2.1 A tiny, framework-free event bus (20 lines)
+
+// src/workspaceBus.ts
+export type Source = 'human' | 'ai';
+export type Cmd =
+  | { type: 'OPEN_TOOL'; source: Source; tool: string; args?: any }
+  | { type: 'FOCUS_TASK'; source: Source; taskId: string }
+  | { type: 'INJECT_INPUT'; source: Source; target: string; payload: any };
+
+type Listener = (cmd: Cmd) => void;
+const listeners = new Set<Listener>();
+
+export const emit = (cmd: Cmd) => { listeners.forEach(fn => fn(cmd)); };
+export const subscribe = (fn: Listener) => { listeners.add(fn); return () => listeners.delete(fn); };
+
+2.2 WorkspaceProvider (mode gate + state for panels)
+
+// src/workspace.tsx
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { subscribe, emit, type Cmd, type Source } from './workspaceBus';
+
+type Mode = 'human' | 'hybrid' | 'auto';
+type Panel = { id: string; type: string; props?: any };
+
+type WorkspaceCtx = {
+  mode: Mode; setMode: (m: Mode) => void;
+  panels: Panel[]; focused?: string;
+  openTool: (tool: string, args?: any) => void;         // human action
+  focusTask: (id: string) => void;                      // human action
+  injectInput: (target: string, payload: any) => void;  // human action
+};
+const Ctx = createContext<WorkspaceCtx | null>(null);
+
+const allow = (mode: Mode, who: Source, action: Cmd['type']) => {
+  if (mode === 'human')  return who === 'human';
+  if (mode === 'hybrid') return true;
+  if (mode === 'auto')   return who === 'ai';
+  return false;
+};
+
+export function WorkspaceProvider({ children }) {
+  const [mode, setMode] = useState<Mode>('human');
+  const [panels, setPanels] = useState<Panel[]>([]);
+  const [focused, setFocused] = useState<string | undefined>(undefined);
+
+  // react to AI or human commands
+  useEffect(() => {
+    return subscribe((cmd) => {
+      if (!allow(mode, cmd.source, cmd.type)) return;
+
+      if (cmd.type === 'OPEN_TOOL') {
+        const id = crypto.randomUUID();
+        setPanels(p => [...p, { id, type: cmd.tool, props: cmd.args }]);
+        setFocused(id);
+      }
+      if (cmd.type === 'FOCUS_TASK') setFocused(cmd.taskId);
+      if (cmd.type === 'INJECT_INPUT') {
+        // route to a panel/task by target id; stub for now
+        // e.g., enqueue into a shared task map
+      }
+    });
+  }, [mode]);
+
+  const api = useMemo<WorkspaceCtx>(() => ({
+    mode, setMode,
+    panels, focused,
+    openTool: (tool, args) => emit({ type:'OPEN_TOOL', source:'human', tool, args }),
+    focusTask: (taskId)    => emit({ type:'FOCUS_TASK', source:'human', taskId }),
+    injectInput: (target,payload)=> emit({ type:'INJECT_INPUT', source:'human', target, payload }),
+  }), [mode, panels, focused]);
+
+  return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
+}
+export const useWorkspace = () => {
+  const v = useContext(Ctx); if (!v) throw new Error('WorkspaceProvider missing');
+  return v;
+};
+
+2.3 Tool buttons (Human/Hybrid)
+
+// In your Workstation toolbar
+import { useWorkspace } from '@/workspace';
+
+function ToolButton({ tool, Icon, label }) {
+  const { mode, openTool } = useWorkspace();
+  const disabled = mode === 'auto';     // human cannot open in auto
+  return (
+    <button
+      onClick={() => openTool(tool)}
+      disabled={disabled}
+      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 disabled:opacity-40"
+    >
+      <Icon className="size-4" /> {label}
+    </button>
+  );
+}
+
+2.4 Agent/model can also surface tools (Hybrid/Auto)
+
+// Anywhere inside your agent runtime / chat controller:
+import { emit } from '@/workspaceBus';
+
+emit({ type: 'OPEN_TOOL', source: 'ai', tool: 'KB', args: { query: 'hail 8/18 Cypress' }});
+
+2.5 Panel Dock (shows what’s being worked on “right there”)
+
+// PanelDock.tsx
+import { useWorkspace } from '@/workspace';
+
+export function PanelDock() {
+  const { panels, focused } = useWorkspace();
+  return (
+    <div className="mt-3 md:mt-4">
+      <div className="grid gap-3 md:grid-cols-2">
+        {panels.map(p => (
+          <div key={p.id}
+               data-focused={focused === p.id}
+               className="rounded-xl border border-white/10 bg-slate-900/50 p-3">
+            <PanelRenderer panel={p} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PanelRenderer({ panel }) {
+  switch (panel.type) {
+    case 'KB': return <KBPanel {...panel.props} />;
+    case 'CODE': return <CodePanel {...panel.props} />;
+    case 'DIARY': return <DiaryPanel {...panel.props} />;
+    default: return <div className="opacity-70">Unknown tool: {panel.type}</div>;
+  }
+}
+
+2.6 EXPAND on mobile (no cropping, full focus)
+
+// Fullscreen sheet when a panel is focused
+{expanded && (
+  <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur p-3 pt-[max(env(safe-area-inset-top),0.75rem)]">
+    <button onClick={()=>setExpanded(false)}
+            className="mb-2 rounded-lg border border-white/10 px-3 py-2">Close</button>
+    <div className="h-[calc(100dvh-5rem)] overflow-auto">
+      <PanelRenderer panel={focusedPanel} />
+    </div>
+  </div>
+)}
+
+
+⸻
+
+Why this works (and stays simple)
+	•	No rewrite: we didn’t add Redux/Zustand; the bus is 20 lines, Provider is ~50 lines.
+	•	Mode gates are real: every command passes through allow(mode, source, action).
+	•	Everyone can “see the work”: the dock renders whatever human or AI opens—exactly the behavior you described.
+	•	Mobile’s breathable now: one scroll area, full-bleed workstation, safe-area aware.
+
+If you paste your current AIWorkstation + the toolbar JSX, I’ll return an exact diff and place the PanelDock exactly where you want it in your layout.
+
+⸻
+
+(Personal Notes — for us)
+Current focus: Finish un-clipping layout and add a tiny, reliable mode/permission system with a shared bus.
+My take: Your “gradual over rewrite” instinct is right; the bus + provider gives you 90% of the behavior with tiny surface area.
+Unknowns: File names and where your agent runtime emits UI intents. I assumed a client-side agent controller exists.
+Assumptions: Tailwind + React; workstation controls are plain buttons.
+Evidence plan: After Phase-1 classes, the workstation will render full height; after adding the bus, toggling modes should immediately allow/deny tool opens.
+Risks: Minimal—style regressions only; functionality is additive.
+Leverage points: Central command path means we can later log, audit, or animate tool opens without changing callers.
+Next steps:
+	1.	Drop in workspaceBus.ts + workspace.tsx provider.
+	2.	Wrap app with <WorkspaceProvider>.
+	3.	Swap your tool buttons to call openTool.
+	4.	Render <PanelDock /> under the workstation.
+Feasibility: 5/5.
