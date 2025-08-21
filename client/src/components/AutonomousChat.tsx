@@ -291,21 +291,17 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
     <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 flex flex-col h-[600px]">
       <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <img 
               src={companyLogo} 
               alt="Emergent Intelligence Logo" 
               className="h-8 w-8 rounded-full object-cover shadow-sm border border-blue-300/30"
             />
-            <div className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-blue-600" />
-              <span className="text-blue-800 dark:text-blue-200">Colby - Autonomous AI Assistant</span>
-              {memory?.relationships?.trustLevel && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  Trust: {Math.round(memory.relationships.trustLevel * 100)}%
-                </Badge>
-              )}
-            </div>
+            {memory?.relationships?.trustLevel && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                Trust: {Math.round(memory.relationships.trustLevel * 100)}%
+              </Badge>
+            )}
           </div>
           <div className="flex gap-1 items-center">
             <Button 
