@@ -17,7 +17,7 @@ import ProjectManager from '../components/ProjectManager';
 import { useElevenLabsEvents } from '../hooks/useElevenLabsEvents';
 import VoiceWidget from '../components/VoiceWidget';
 import { ConversationHistory } from '../components/ConversationHistory';
-import { Code, BookOpen, Brain, Calendar, Settings, ChevronDown, ChevronUp, Bot } from 'lucide-react';
+import { Code, BookOpen, Brain, Calendar, Settings, Bot } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Workstation from '../components/Workstation';
@@ -230,7 +230,7 @@ export default function HomePage() {
                 onClick={() => setShowSettings(!showSettings)}
                 className="riveted-button px-3 py-1 text-xs font-industrial-mono rounded"
               >
-                {showSettings ? 'HIDE' : 'EXPAND'}
+                {showSettings ? 'HIDE' : 'SHOW TASKS'}
               </button>
             </div>
             {showSettings && (
@@ -240,101 +240,37 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Settings & Setup - Collapsible Section */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-            <Button
-              variant="ghost"
-              onClick={() => setShowSettings(!showSettings)}
-              className="w-full flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg"
-            >
-              <div className="flex items-center gap-2">
-                <Settings className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Settings & Setup
-                </span>
-                <Badge variant="outline" className="text-xs">
-                  3 tools
-                </Badge>
-              </div>
-              {showSettings ? (
-                <ChevronUp className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-              )}
-            </Button>
-            
-            {showSettings && (
-              <div className="px-4 pb-4 space-y-4">
-                {/* Workflow Suggestions */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
-                  <WorkflowSuggestions sessionId={sessionId} />
+          {/* Advanced Tools - Collapsible Section */}
+          {showSettings && (
+            <div className="mt-6 space-y-4">
+              {/* Workflow Automation */}
+              <div className="industrial-card carbon-fiber-weave rounded-lg shadow-xl border border-industrial-accent/30">
+                <div className="p-4 border-b border-industrial-accent/20">
+                  <h3 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-industrial-accent" />
+                    Advanced Tools
+                  </h3>
                 </div>
-
-                {/* Calendar & Scheduling */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg shadow-sm p-4 border border-blue-200 dark:border-blue-700">
-                  <div className="flex items-center mb-4">
-                    <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Calendar & Task Scheduling
-                    </h3>
-                    <Badge variant="secondary" className="ml-2">Sync Available</Badge>
+                <div className="p-4 space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-industrial-primary font-industrial-display mb-2">Workflow Automation</h4>
+                      <WorkflowSuggestions sessionId={sessionId} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-industrial-primary font-industrial-display mb-2">Calendar Integration</h4>
+                      <CalendarSync sessionId={sessionId} />
+                    </div>
                   </div>
-                  <CalendarSync sessionId={sessionId} />
+                  
+                  <div>
+                    <h4 className="text-sm font-semibold text-industrial-primary font-industrial-display mb-2">System Analysis</h4>
+                    <GPTSupervisor sessionId={sessionId} />
+                  </div>
                 </div>
-
-                {/* n8n Workflow Automation */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
-                  <WorkflowVisualizer 
-                    sessionId={sessionId} 
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* GPT-5 Supervisor - Analysis & Insights Only */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <GPTSupervisor sessionId={sessionId} />
-          </div>
-
-          {/* Transcript Manager - Manual Edit/Delete Controls */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <TranscriptManager sessionId={sessionId} />
-          </div>
-
-          {/* Conversation History */}
-          <div className="space-y-6">
-            <ConversationHistory sessionId={sessionId} />
-          </div>
-
-          {/* Simple Call to Action */}
-          <div className="text-center py-8">
-            <div className="max-w-md mx-auto space-y-6">
-              <div className="text-4xl">🎤</div>
-              <div className="space-y-3">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Ready to start
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-center">
-                  <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                    Click the blue chat button to start!
-                  </span>
-                  <br />
-                  <br />Ready to create and manage tasks with AI assistance.
-                  <br />Powered by GPT-5 for intelligent task breakdown and automation.
-                  <br />
-                  <br />
-                  <small className="text-sm opacity-75">
-                    Voice interface active! Click the chat bubble in the bottom right corner.
-                    <br />
-                    Type or speak: "Create a task to write a blog post" and it will automatically create the task.
-                    <br />
-                    Note: Voice mode requires opening in a new tab outside Replit preview.
-                  </small>
-                </p>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
 
