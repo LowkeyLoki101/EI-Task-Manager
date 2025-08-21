@@ -349,6 +349,57 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
             >
               <Code className="h-4 w-4" />
             </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Dialog open={showHelp} onOpenChange={setShowHelp}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        data-testid="help-button"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-blue-600" />
+                        How to Use Colby
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 text-sm">
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Upload className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <strong>File Upload:</strong> Upload screenshots, documents, or images. Colby can extract text, analyze content, and create tasks based on what's found.
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Zap className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <strong>Autonomous Actions:</strong> Colby can autonomously create tasks, research information, suggest automations, and learn from our interactions.
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Brain className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <strong>Smart Assistance:</strong> Ask for help with project management, research, code analysis, or workflow automation. Colby has persistent memory and builds context over time.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>How to use Colby</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -576,58 +627,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
                 <Upload className="h-4 w-4" />
                 <span>Upload File</span>
               </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Dialog open={showHelp} onOpenChange={setShowHelp}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          type="button"
-                          variant="ghost"
-                          className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                          data-testid="help-button"
-                        >
-                          <HelpCircle className="h-4 w-4" />
-                          <span>Help</span>
-                        </Button>
-                      </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          <Brain className="h-5 w-5 text-blue-600" />
-                          How to Use Colby
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 text-sm">
-                        <div className="space-y-2">
-                          <div className="flex items-start gap-2">
-                            <Upload className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <strong>File Upload:</strong> Upload screenshots, documents, or images. Colby can extract text, analyze content, and create tasks based on what's found.
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <Zap className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <strong>Autonomous Actions:</strong> Colby can autonomously create tasks, research information, suggest automations, and learn from our interactions.
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <Brain className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <strong>Smart Assistance:</strong> Ask for help with project management, research, code analysis, or workflow automation. Colby has persistent memory and builds context over time.
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>How to use Colby</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+
             </div>
             
             {/* Bottom Row: Send Button */}
