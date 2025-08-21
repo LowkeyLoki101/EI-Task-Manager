@@ -133,16 +133,17 @@ export default function HomePage() {
                 <span className="hidden sm:inline">AI DIARY</span>
                 <span className="sm:hidden">DIARY</span>
               </a>
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Label htmlFor="builder-mode" className="text-xs sm:text-sm whitespace-nowrap hidden sm:inline">Builder Mode</Label>
-                <Label htmlFor="builder-mode" className="text-xs whitespace-nowrap sm:hidden">Builder</Label>
-                <Switch
-                  id="builder-mode"
-                  checked={builderMode}
-                  onCheckedChange={setBuilderMode}
-                />
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="builder-mode" className="text-xs text-industrial-secondary font-industrial-mono whitespace-nowrap">BUILDER</Label>
+                  <Switch
+                    id="builder-mode"
+                    checked={builderMode}
+                    onCheckedChange={setBuilderMode}
+                  />
+                </div>
+                <ThemeToggle />
               </div>
-              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -152,30 +153,12 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-6">
         <div className="max-w-6xl mx-auto">
           
-          {/* Desktop: Side-by-side layout, Mobile: Stacked layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Main Dashboard Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             
-            {/* Left Column: AI Workstation */}
-            <div className="order-1 lg:order-1">
-              <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border-2 border-industrial-accent">
-                <div className="p-4 border-b-2 border-industrial-accent/30">
-                  <h2 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
-                    <div className="drone-camera-lens" style={{width: '20px', height: '20px'}}></div>
-                    AI Workstation
-                  </h2>
-                  <p className="text-xs text-industrial-secondary font-industrial-mono mt-1">
-                    RESEARCH, KNOWLEDGE MANAGEMENT, AND AI TOOLS
-                  </p>
-                </div>
-                <div className="p-2">
-                  <Workstation sessionId={sessionId} />
-                </div>
-              </div>
-            </div>
-            
-            {/* Right Column: Direct Chat Interface */}
-            <div className="order-2 lg:order-2">
-              <div className="industrial-card photovoltaic-shimmer rounded-lg shadow-xl border-2 border-solar-gold/50">
+            {/* Primary Chat Interface - Full Width on Mobile */}
+            <div className="lg:col-span-2">
+              <div className="industrial-card photovoltaic-shimmer rounded-lg shadow-xl border-2 border-solar-gold/50 h-full">
                 <div className="p-4 border-b-2 border-solar-gold/30">
                   <h2 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
                     <div className="aperture-ring" style={{width: '20px', height: '20px'}}></div>
@@ -191,16 +174,70 @@ export default function HomePage() {
               </div>
             </div>
             
+            {/* Side Panel: AI Status & Quick Actions */}
+            <div className="space-y-4">
+              
+              {/* AI Insight Progress - Clickable Summary */}
+              <div className="industrial-card hex-mesh-pattern rounded-lg shadow-xl border border-industrial-accent/30">
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-industrial-primary font-industrial-display flex items-center gap-2 mb-3">
+                    <div className="drone-camera-lens" style={{width: '16px', height: '16px'}}></div>
+                    AI Activity
+                  </h3>
+                  <div className="space-y-2">
+                    <button 
+                      onClick={() => window.open('/diary', '_blank')}
+                      className="riveted-button-blue w-full px-3 py-2 text-xs font-industrial-mono rounded flex items-center gap-2"
+                    >
+                      <Brain className="h-3 w-3" />
+                      VIEW AI DIARY
+                    </button>
+                    <button 
+                      onClick={() => window.open('/knowledge-base', '_blank')}
+                      className="riveted-button w-full px-3 py-2 text-xs font-industrial-mono rounded flex items-center gap-2"
+                    >
+                      <BookOpen className="h-3 w-3" />
+                      KNOWLEDGE BASE
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Workstation - Compact */}
+              <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border border-industrial-accent/30">
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold text-industrial-primary font-industrial-display flex items-center gap-2 mb-2">
+                    <div className="drone-camera-lens" style={{width: '16px', height: '16px'}}></div>
+                    AI Tools
+                  </h3>
+                  <div className="max-h-48 overflow-hidden">
+                    <Workstation sessionId={sessionId} />
+                  </div>
+                </div>
+              </div>
+              
+            </div>
           </div>
 
-          {/* AI Insight Generation Progress */}
-          <div className="mb-6">
-            <InsightProgressPanel />
-          </div>
-
-          {/* Project-Based Task Management */}
-          <div className="industrial-card fine-grid-mesh rounded-lg shadow-xl p-6 mb-6 border border-industrial-accent/30">
-            <ProjectManager sessionId={sessionId} />
+          {/* Project Tasks - Expandable Section */}
+          <div className="industrial-card fine-grid-mesh rounded-lg shadow-xl border border-industrial-accent/30">
+            <div className="p-4 border-b border-industrial-accent/20 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
+                <div className="solar-cell-grid" style={{width: '20px', height: '20px', borderRadius: '4px'}}></div>
+                Project Management
+              </h3>
+              <button 
+                onClick={() => setShowSettings(!showSettings)}
+                className="riveted-button px-3 py-1 text-xs font-industrial-mono rounded"
+              >
+                {showSettings ? 'HIDE' : 'EXPAND'}
+              </button>
+            </div>
+            {showSettings && (
+              <div className="p-4">
+                <ProjectManager sessionId={sessionId} />
+              </div>
+            )}
           </div>
 
           {/* Settings & Setup - Collapsible Section */}

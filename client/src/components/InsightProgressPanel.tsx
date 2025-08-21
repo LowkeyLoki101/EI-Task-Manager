@@ -136,11 +136,20 @@ export function InsightProgressPanel() {
             {activities.length === 0 ? (
               <div className="text-center py-4 text-industrial-secondary font-industrial-body">
                 <div className="drone-hud-status mb-2">STANDBY</div>
-                No recent insight generation activity
+                <button 
+                  onClick={() => window.open('/diary', '_blank')}
+                  className="riveted-button-blue mt-2 px-3 py-1 text-xs font-industrial-mono rounded"
+                >
+                  VIEW AI DIARY
+                </button>
               </div>
             ) : (
-              activities.slice(0, 5).map((activity) => (
-                <div key={activity.id} className="flex items-center gap-3 p-3 rounded-lg bg-industrial-medium carbon-fiber-weave border border-industrial-accent/20">
+              activities.slice(0, 3).map((activity) => (
+                <button
+                  key={activity.id} 
+                  onClick={() => window.open('/diary', '_blank')}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-industrial-medium carbon-fiber-weave border border-industrial-accent/20 hover:border-industrial-accent/50 transition-all cursor-pointer w-full text-left"
+                >
                   <div className="flex-shrink-0 text-industrial-accent">
                     {getActivityIcon(activity.type)}
                   </div>
@@ -154,18 +163,23 @@ export function InsightProgressPanel() {
                         : new Date(activity.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 flex items-center gap-2">
                     <div className={`w-3 h-3 rounded-full ${getStatusColor(activity.status)} shadow-lg`} style={{
                       boxShadow: activity.status === 'active' ? '0 0 6px currentColor' : '0 0 3px currentColor'
                     }} />
+                    <span className="text-xs text-industrial-accent">→</span>
                   </div>
-                  {activity.progress !== undefined && activity.status === 'active' && (
-                    <div className="w-16">
-                      <Progress value={activity.progress} className="h-2 bg-industrial-dark" />
-                    </div>
-                  )}
-                </div>
+                </button>
               ))
+            )}
+            
+            {activities.length > 3 && (
+              <button 
+                onClick={() => window.open('/diary', '_blank')}
+                className="w-full mt-2 riveted-button px-3 py-2 text-xs font-industrial-mono rounded"
+              >
+                VIEW ALL ACTIVITY ({activities.length})
+              </button>
             )}
           </div>
         </CardContent>
