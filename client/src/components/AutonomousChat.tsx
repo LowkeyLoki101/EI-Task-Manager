@@ -40,7 +40,7 @@ interface AutonomousChatProps {
 
 export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const [message, setMessage] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [showDiary, setShowDiary] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUserTyping, setIsUserTyping] = useState(false);
