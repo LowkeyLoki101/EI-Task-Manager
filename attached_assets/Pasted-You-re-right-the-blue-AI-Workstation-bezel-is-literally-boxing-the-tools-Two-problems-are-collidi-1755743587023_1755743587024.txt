@@ -1,0 +1,214 @@
+You’re right—the blue “AI Workstation” bezel is literally boxing the tools. Two problems are colliding:
+	1.	Layout clipping
+
+	•	The Workstation container likely has overflow-hidden + a fixed height (or a max height on a parent). That chops off the tool row and makes the whole thing feel trapped.
+	•	There’s also a max-w-* + generous padding on mobile, shrinking the usable canvas.
+
+	2.	No central “mode → permissions → actions” wiring
+
+	•	Human/Hybrid intent isn’t enforced anywhere global, so the UI can’t reliably decide who can open tools or inject input. The chat and the agents don’t share a single event bus/store.
+
+⸻
+
+Fix it (fast + clean)
+
+A) Unbox the Workstation (pure layout patch)
+
+Use one scroll area, make the Workstation “overflow-visible,” and let it expand full-bleed on mobile. Keep the fancy card only on md+.
+
+// WorkstationCard.tsx
+export function WorkstationCard({ children }) {
+  return (
+    <section
+      className="
+        w-full
+        rounded-none border-0 bg-transparent p-0
+        md:rounded-2xl md:border md:border-white/10 md:bg-slate-900/40 md:p-4
+        overflow-visible
+      ">
+      {children}
+    </section>
+  );
+}
+
+And ensure the page shell isn’t clipping:
+
+// Page shell
+<div className="min-h-dvh bg-slate-950 text-slate-100">
+  {/* …header… */}
+  <main className="px-3 md:px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+    {/* NO nested overflow here; let the main page scroll */}
+    <WorkstationCard>
+      <AIWorkstation />
+    </WorkstationCard>
+
+    <ChatPanel />
+  </main>
+</div>
+
+Kill fixed heights like h-64 on the workstation. Prefer min-h-[180px] (if you need presence) and let content drive height.
+
+B) Make “Human / Hybrid / Auto” actually do something
+
+Create a tiny global store that: (1) tracks the mode, (2) gates actions, (3) exposes an event bus the chat/agents can call to open tools, focus tasks, and inject input.
+
+// useWorkspace.ts (Zustand)
+import { create } from 'zustand';
+import { nanoid } from 'nanoid';
+
+type Mode = 'human' | 'hybrid' | 'auto';
+type Panel = { id: string; type: string; props?: any };
+
+type Cmd =
+  | { type: 'OPEN_TOOL'; tool: string; args?: any }
+  | { type: 'FOCUS_TASK'; taskId: string }
+  | { type: 'INJECT_INPUT'; target: string; payload: any };
+
+export const useWorkspace = create<{
+  mode: Mode;
+  panels: Panel[];
+  focused?: string;
+  setMode: (m: Mode) => void;
+  dispatch: (cmd: Cmd) => void;
+  allow: (who: 'human' | 'ai', action: string) => boolean;
+}>((set, get) => ({
+  mode: 'human',
+  panels: [],
+  setMode: (m) => set({ mode: m }),
+  allow: (who, _action) => {
+    const m = get().mode;
+    if (m === 'human') return who === 'human';
+    if (m === 'hybrid') return true;
+    if (m === 'auto') return who === 'ai';
+    return false;
+  },
+  dispatch: (cmd) => {
+    const { mode } = get();
+    const isAI = cmd.type !== 'INJECT_INPUT' && cmd.type !== 'OPEN_TOOL' ? true : false;
+    const ok = get().allow(isAI ? 'ai' : 'human', cmd.type);
+    if (!ok) return;
+
+    if (cmd.type === 'OPEN_TOOL') {
+      const id = nanoid();
+      set((s) => ({ panels: [...s.panels, { id, type: cmd.tool, props: cmd.args }], focused: id }));
+    }
+    if (cmd.type === 'FOCUS_TASK') set({ focused: cmd.taskId });
+    if (cmd.type === 'INJECT_INPUT') {
+      // up to you: route to the panel or a task queue
+      // e.g., event emitter, or set() into a shared message bus
+    }
+  },
+}));
+
+Wire the toolbar buttons (Human can click tools in Human/Hybrid)
+
+function ToolButton({ tool, icon: Icon, label }) {
+  const dispatch = useWorkspace((s) => s.dispatch);
+  const mode = useWorkspace((s) => s.mode);
+  const allow = useWorkspace((s) => s.allow);
+  const disabled = !(mode === 'human' || mode === 'hybrid');
+
+  return (
+    <button
+      onClick={() => dispatch({ type: 'OPEN_TOOL', tool })}
+      disabled={!allow('human', 'OPEN_TOOL')}
+      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 disabled:opacity-40"
+    >
+      <Icon className="size-4" /> {label}
+    </button>
+  );
+}
+
+Let the chat/agents open tools too (Hybrid/Auto)
+
+Wherever your model/tool-calls return UI intents, just call dispatch:
+
+// from chat controller / agent runtime
+useWorkspace.getState().dispatch({
+  type: 'OPEN_TOOL',
+  tool: 'KB',
+  args: { query: 'roof hail 8/18' }
+});
+
+C) Show tools “right there in front of the user”
+
+Render a Panel Dock that surfaces whatever the human or AI opens. Desktop = resizable; mobile = one-at-a-time, full-bleed “Expand”.
+
+import { useWorkspace } from '@/state/useWorkspace';
+
+function PanelDock() {
+  const { panels, focused } = useWorkspace();
+  return (
+    <div className="mt-3 md:mt-4">
+      <div className="grid gap-3 md:grid-cols-2">
+        {panels.map(p => (
+          <div key={p.id}
+               data-focused={focused === p.id}
+               className="rounded-xl border border-white/10 bg-slate-900/50 p-3">
+            <PanelRenderer panel={p} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PanelRenderer({ panel }) {
+  switch (panel.type) {
+    case 'KB': return <KBPanel {...panel.props} />;
+    case 'CODE': return <CodePanel {...panel.props} />;
+    case 'DIARY': return <DiaryPanel {...panel.props} />;
+    default: return <div>Unknown tool: {panel.type}</div>;
+  }
+}
+
+Mobile Expand: make the “EXPAND” button toggle a full-screen sheet:
+
+// FullscreenSheet
+{expanded && (
+  <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur p-3 pt-[max(env(safe-area-inset-top),0.75rem)]">
+    <button onClick={()=>setExpanded(false)} className="mb-2 rounded-lg border border-white/10 px-3 py-2">Close</button>
+    <div className="h-[calc(100dvh-5rem)] overflow-auto">
+      <PanelRenderer panel={focusedPanel} />
+    </div>
+  </div>
+)}
+
+
+⸻
+
+D) UI polish checklist (do these now)
+	•	Remove overflow-hidden from the blue Workstation container; use overflow-visible.
+	•	Drop any h-*/max-h-* on the Workstation on mobile.
+	•	Make page the only scroller; let Workstation grow; keep composer sticky.
+	•	Use full width on mobile (w-full, no max-w-*); re-introduce md:max-w-2xl only at desktop.
+	•	Collapse tool controls into a single row; secondary info (Trust, etc.) behind a menu.
+	•	Use min-h-dvh + safe-area paddings for iOS.
+
+⸻
+
+E) Why this will feel right
+	•	Human mode: only you can open/focus panels; AI is read-only.
+	•	Hybrid: both can open panels; your chat input is injected into the running task via INJECT_INPUT.
+	•	Auto: AI runs and surfaces the artifacts; you can still view and expand, but gated from opening new tools.
+
+(Deduction: your current UI mixes “dashboard card” and “workbench” metaphors; giving the Workstation its own full-bleed surface + a real mode gate fixes both the visual claustrophobia and the behavior mismatch.)
+
+⸻
+
+(Personal Notes — for us)
+Current focus: Unclip the Workstation and wire a real mode/permission/event bus.
+My take: 90% of the “it doesn’t understand” is missing global state + intent plumbing. The rest is overflow-hidden + desktop padding on mobile.
+Unknowns: Exact component names; where your agent runtime emits tool intents.
+Assumptions: Tailwind + React; shadcn-like cards; Replit iOS preview.
+Evidence plan: We’ll see instant improvement once overflow + fixed heights are gone; then test mode gates.
+Hallucination check: I avoided naming files; gave drop-in snippets.
+Risks: Minor style regressions—contained to Workstation wrapper.
+Leverage points: One store to rule modes + a simple dispatch is the backbone for “AI pulls up what it’s working on.”
+Next steps:
+	1.	Apply layout patch (A).
+	2.	Add useWorkspace (B).
+	3.	Render PanelDock and hook toolbar + chat to dispatch (C).
+Alt path: Use react-resizable-panels for a desktop split view; keep mobile as fullscreen sheet.
+What I need from you: Paste your AIWorkstation + chat container JSX and I’ll return an exact diff.
+Feasibility: 5/5 (today’s stack).
