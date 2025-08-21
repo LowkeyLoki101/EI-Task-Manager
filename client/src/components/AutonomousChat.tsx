@@ -287,7 +287,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   }
 
   return (
-    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 flex flex-col h-[600px]">
+    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 flex flex-col min-h-[600px]">
       <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
