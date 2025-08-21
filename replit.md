@@ -30,6 +30,7 @@ Background: Entrepreneur and systems thinker in Houston, TX, operating across so
 - **Auto-expanding chat input** - Replaced fixed Input with dynamic Textarea that grows from 1 line to 4 lines maximum, supporting text wrapping and smooth height transitions
 - **Chat interface cleanup** - Removed redundant labeling, moved logo to chat header, positioned trust score properly
 - **Streamlined button layout** - Moved help button to top header and send button to same row as upload for compact, efficient interface
+- **Fixed workstation compact state** - Increased AI Tools compact height from 192px to 384px so entire workstation is visible without clipping
 
 **Chat Behavior:**
 - No disruptive auto-scrolling when user is typing
