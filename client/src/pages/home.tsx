@@ -162,15 +162,6 @@ export default function HomePage() {
             
             {/* Primary Chat Interface - Full Width on Mobile */}
             <div className="lg:col-span-2">
-              {/* Company Logo Above Chat */}
-              <div className="mb-4 flex justify-center">
-                <img 
-                  src={companyLogo} 
-                  alt="Company Logo" 
-                  className="h-16 w-auto object-contain"
-                />
-              </div>
-              
               <div className="industrial-card photovoltaic-shimmer rounded-lg shadow-xl border-2 border-solar-gold/50 h-full">
                 <div className="p-4 border-b-2 border-solar-gold/30">
                   <h2 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
