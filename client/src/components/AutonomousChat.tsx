@@ -52,6 +52,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastAiMessageRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   // Get conversation history
@@ -123,6 +124,10 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   const messages = conversationData?.messages || [];
   const memory = conversationData?.memory;
   const insights = conversationData?.insights || [];
+  
+  // Track the last AI message for smarter scrolling
+  const lastMessage = messages[messages.length - 1];
+  const lastAiMessage = messages.filter((msg: ChatMessage) => msg.role === 'assistant').pop();
   const trustLevel = conversationData?.trustLevel || 0.5;
   const allInsights = insightsData?.insights || [];
   const successfulPatterns = insightsData?.patterns || [];
@@ -142,7 +147,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
     }
   }, [isExpanded]);
 
-  // Smart auto-scroll - only scroll if user is near bottom and not actively typing
+  // Smart auto-scroll - scroll to start of AI messages, end for user messages
   useEffect(() => {
     if (messages.length > 0 && !isUserTyping && isExpanded) {
       const timer = setTimeout(() => {
@@ -154,11 +159,23 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
           
           // Only auto-scroll if user is near bottom
           if (isNearBottom) {
-            messagesEndRef.current?.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'end',
-              inline: 'nearest'
-            });
+            const lastMessage = messages[messages.length - 1];
+            
+            // If last message is from AI, scroll to the start of that message
+            if (lastMessage?.role === 'assistant' && lastAiMessageRef.current) {
+              lastAiMessageRef.current.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest'
+              });
+            } else {
+              // For user messages or general cases, scroll to bottom
+              messagesEndRef.current?.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest'
+              });
+            }
           }
         }
       }, 100);
@@ -501,11 +518,14 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               </div>
             ) : (
               messages.map((msg: ChatMessage) => (
-                <div key={msg.id} className={`p-3 rounded-lg shadow-sm ${
-                  msg.role === 'assistant' 
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 ml-2' 
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 mr-2'
-                }`}>
+                <div 
+                  key={msg.id} 
+                  ref={msg.role === 'assistant' && msg.id === lastAiMessage?.id ? lastAiMessageRef : null}
+                  className={`p-3 rounded-lg shadow-sm ${
+                    msg.role === 'assistant' 
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 ml-2' 
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 mr-2'
+                  }`}>
                   <div className="flex items-start justify-between mb-2">
                     <span className="text-xs font-medium">
                       {msg.role === 'assistant' ? '🤖 Colby' : '👤 You'}
