@@ -155,10 +155,31 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-6">
           
+          {/* Project Management - Collapsed by Default */}
+          <div className="industrial-card fine-grid-mesh rounded-lg shadow-xl border border-industrial-accent/30">
+            <div className="p-4 border-b border-industrial-accent/20 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
+                <div className="solar-cell-grid" style={{width: '20px', height: '20px', borderRadius: '4px'}}></div>
+                Project Management
+              </h3>
+              <button 
+                onClick={() => setShowSettings(!showSettings)}
+                className="riveted-button px-3 py-1 text-xs font-industrial-mono rounded"
+              >
+                {showSettings ? 'HIDE' : 'SHOW TASKS'}
+              </button>
+            </div>
+            {showSettings && (
+              <div className="p-4">
+                <ProjectManager sessionId={sessionId} />
+              </div>
+            )}
+          </div>
+
           {/* Main Dashboard Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Primary Chat Interface - Full Width on Mobile */}
             <div className="lg:col-span-2">
@@ -197,57 +218,36 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-
-              {/* AI Workstation - Expandable */}
-              <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border border-industrial-accent/30 transition-all duration-500">
-                <div className="p-3 border-b border-industrial-accent/20 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
-                    <div className="drone-camera-lens" style={{width: '16px', height: '16px'}}></div>
-                    AI Tools
-                  </h3>
-                  <button 
-                    onClick={() => setWorkstationExpanded(!workstationExpanded)}
-                    className="riveted-button-blue px-2 py-1 text-xs font-industrial-mono rounded"
-                  >
-                    {workstationExpanded ? 'COMPACT' : 'EXPAND'}
-                  </button>
-                </div>
-                <div className={`transition-all duration-500 ${
-                  workstationExpanded 
-                    ? 'min-h-[90vh] p-4' 
-                    : 'max-h-96 overflow-hidden p-3'
-                }`}>
-                  <Workstation sessionId={sessionId} />
-                </div>
-                
-                {/* Panel Dock - Shows tools opened by Human or AI */}
-                {workstationExpanded && (
-                  <div className="px-4 pb-4">
-                    <PanelDock />
-                  </div>
-                )}
-              </div>
               
             </div>
           </div>
 
-          {/* Project Tasks - Expandable Section */}
-          <div className="industrial-card fine-grid-mesh rounded-lg shadow-xl border border-industrial-accent/30">
-            <div className="p-4 border-b border-industrial-accent/20 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
-                <div className="solar-cell-grid" style={{width: '20px', height: '20px', borderRadius: '4px'}}></div>
-                Project Management
+          {/* AI Workstation - Below Chat */}
+          <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border border-industrial-accent/30 transition-all duration-500">
+            <div className="p-3 border-b border-industrial-accent/20 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
+                <div className="drone-camera-lens" style={{width: '16px', height: '16px'}}></div>
+                AI Tools
               </h3>
               <button 
-                onClick={() => setShowSettings(!showSettings)}
-                className="riveted-button px-3 py-1 text-xs font-industrial-mono rounded"
+                onClick={() => setWorkstationExpanded(!workstationExpanded)}
+                className="riveted-button-blue px-2 py-1 text-xs font-industrial-mono rounded"
               >
-                {showSettings ? 'HIDE' : 'SHOW TASKS'}
+                {workstationExpanded ? 'COMPACT' : 'EXPAND'}
               </button>
             </div>
-            {showSettings && (
-              <div className="p-4">
-                <ProjectManager sessionId={sessionId} />
+            <div className={`transition-all duration-500 ${
+              workstationExpanded 
+                ? 'min-h-[90vh] p-4' 
+                : 'max-h-96 overflow-hidden p-3'
+            }`}>
+              <Workstation sessionId={sessionId} />
+            </div>
+            
+            {/* Panel Dock - Shows tools opened by Human or AI */}
+            {workstationExpanded && (
+              <div className="px-4 pb-4">
+                <PanelDock />
               </div>
             )}
           </div>

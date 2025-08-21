@@ -31,6 +31,7 @@ Background: Entrepreneur and systems thinker in Houston, TX, operating across so
 - **Chat interface cleanup** - Removed redundant labeling, moved logo to chat header, positioned trust score properly
 - **Streamlined button layout** - Moved help button to top header and send button to same row as upload for compact, efficient interface
 - **Fixed workstation compact state** - Increased AI Tools compact height from 192px to 384px so entire workstation is visible without clipping
+- **Reorganized interface layout** - Moved AI workstation below chat and project management above chat (collapsed by default) for better workflow focus
 
 **Chat Behavior:**
 - No disruptive auto-scrolling when user is typing
