@@ -1,0 +1,112 @@
+[
+  {
+    "id": "6a00f6fe-cd9c-44ff-a316-8aa05e1d9f56",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "What's a question I haven't asked myself in a while?",
+    "category": "general",
+    "useCount": "1",
+    "lastUsed": "2025-08-21T02:02:30.098Z",
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "761a98d0-bdb7-40df-a85c-0ca1ae7383bf",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "What would surprise me if I found it?",
+    "category": "general",
+    "useCount": "1",
+    "lastUsed": "2025-08-21T02:02:32.743Z",
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "0e580ad5-c1ed-4d6a-a470-5b9d6a77c1af",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "If I wanted to make marketing content today, what story hook would I use?",
+    "category": "general",
+    "useCount": "1",
+    "lastUsed": "2025-08-21T02:02:24.786Z",
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "3b5eb62e-a940-4e39-8600-524edfa00e9b",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "What simulation could I run to create new data for us?",
+    "category": "general",
+    "useCount": "1",
+    "lastUsed": "2025-08-21T02:02:32.742Z",
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "937b5678-1b27-4e1e-a4a9-eb7a5341144b",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "What problem am I avoiding thinking about?",
+    "category": "general",
+    "useCount": "1",
+    "lastUsed": "2025-08-21T02:02:26.774Z",
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "7b338fda-0afe-48b0-a016-749c1c901abe",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "If I shuffled my own prompts, what new ones emerge?",
+    "category": "general",
+    "useCount": "0",
+    "lastUsed": null,
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "fb550bf5-98bf-479d-9f02-efb06f5f04cf",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "What's happening in my industry that I should be paying attention to?",
+    "category": "general",
+    "useCount": "1",
+    "lastUsed": "2025-08-21T02:02:30.098Z",
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "87739186-9f7e-4c0c-85d8-b9fdc736de89",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "What assumption am I making that might be wrong?",
+    "category": "general",
+    "useCount": "1",
+    "lastUsed": "2025-08-21T02:02:26.774Z",
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "b34a72cc-9141-46de-ad2a-4cc1d3c3d8f3",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "What would happen if I approached this problem backwards?",
+    "category": "general",
+    "useCount": "0",
+    "lastUsed": null,
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  },
+  {
+    "id": "957dbd89-b929-46b7-8672-a9b8081a9dc1",
+    "sessionId": "s_1gzmo7xqb68",
+    "text": "What pattern do I keep seeing that others might be missing?",
+    "category": "general",
+    "useCount": "1",
+    "lastUsed": "2025-08-21T02:02:24.784Z",
+    "effectiveness": "5",
+    "created": "2025-08-21T02:02:14.830Z",
+    "retired": null
+  }
+]

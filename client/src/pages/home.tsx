@@ -218,10 +218,10 @@ export default function HomePage() {
                     {workstationExpanded ? 'COMPACT' : 'EXPAND'}
                   </button>
                 </div>
-                <div className={`transition-all duration-500 overflow-hidden ${
+                <div className={`transition-all duration-500 ${
                   workstationExpanded 
-                    ? 'max-h-screen p-4' 
-                    : 'max-h-48 p-3'
+                    ? 'max-h-[80vh] overflow-y-auto p-4' 
+                    : 'max-h-48 overflow-hidden p-3'
                 }`}>
                   <Workstation sessionId={sessionId} />
                 </div>
