@@ -604,9 +604,8 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
             />
           </div>
           
-          {/* Buttons Below Text Area */}
-          <div className="flex flex-col gap-3">
-            {/* Top Row: Action Buttons */}
+          {/* Action Buttons */}
+          <div className="flex gap-3 justify-between">
             <div className="flex gap-3">
               <input
                 type="file"
@@ -627,22 +626,18 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
                 <Upload className="h-4 w-4" />
                 <span>Upload File</span>
               </Button>
-
             </div>
             
-            {/* Bottom Row: Send Button */}
-            <div className="flex justify-end">
-              <Button 
-                type="submit" 
-                size="lg"
-                disabled={(!message.trim() && uploadedFiles.length === 0) || sendMessageMutation.isPending}
-                data-testid="send-message"
-                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-2"
-              >
-                <Send className="h-4 w-4" />
-                <span>Send Message</span>
-              </Button>
-            </div>
+            <Button 
+              type="submit" 
+              size="lg"
+              disabled={(!message.trim() && uploadedFiles.length === 0) || sendMessageMutation.isPending}
+              data-testid="send-message"
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-2"
+            >
+              <Send className="h-4 w-4" />
+              <span>Send Message</span>
+            </Button>
           </div>
         </form>
       </CardContent>

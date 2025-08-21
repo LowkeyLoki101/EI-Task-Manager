@@ -29,6 +29,7 @@ Background: Entrepreneur and systems thinker in Houston, TX, operating across so
 - **Mobile-first responsive layout** - Removed overflow constraints and fixed heights for flexible, adaptive interface design
 - **Auto-expanding chat input** - Replaced fixed Input with dynamic Textarea that grows from 1 line to 4 lines maximum, supporting text wrapping and smooth height transitions
 - **Chat interface cleanup** - Removed redundant labeling, moved logo to chat header, positioned trust score properly
+- **Streamlined button layout** - Moved help button to top header and send button to same row as upload for compact, efficient interface
 
 **Chat Behavior:**
 - No disruptive auto-scrolling when user is typing
