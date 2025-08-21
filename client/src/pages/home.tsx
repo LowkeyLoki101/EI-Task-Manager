@@ -223,7 +223,7 @@ export default function HomePage() {
                 </div>
                 <div className={`transition-all duration-500 ${
                   workstationExpanded 
-                    ? 'max-h-[80vh] overflow-y-auto p-4' 
+                    ? 'min-h-[90vh] p-4' 
                     : 'max-h-48 overflow-hidden p-3'
                 }`}>
                   <Workstation sessionId={sessionId} />
