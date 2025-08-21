@@ -27,6 +27,7 @@ export default function HomePage() {
   const sessionId = useSessionId();
   const [builderMode, setBuilderMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [workstationExpanded, setWorkstationExpanded] = useState(false);
   
   // Listen for ElevenLabs widget events
   useElevenLabsEvents();
@@ -203,16 +204,26 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* AI Workstation - Compact */}
-              <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border border-industrial-accent/30">
-                <div className="p-3">
-                  <h3 className="text-sm font-semibold text-industrial-primary font-industrial-display flex items-center gap-2 mb-2">
+              {/* AI Workstation - Expandable */}
+              <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border border-industrial-accent/30 transition-all duration-500">
+                <div className="p-3 border-b border-industrial-accent/20 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
                     <div className="drone-camera-lens" style={{width: '16px', height: '16px'}}></div>
                     AI Tools
                   </h3>
-                  <div className="max-h-48 overflow-hidden">
-                    <Workstation sessionId={sessionId} />
-                  </div>
+                  <button 
+                    onClick={() => setWorkstationExpanded(!workstationExpanded)}
+                    className="riveted-button-blue px-2 py-1 text-xs font-industrial-mono rounded"
+                  >
+                    {workstationExpanded ? 'COMPACT' : 'EXPAND'}
+                  </button>
+                </div>
+                <div className={`transition-all duration-500 overflow-hidden ${
+                  workstationExpanded 
+                    ? 'max-h-screen p-4' 
+                    : 'max-h-48 p-3'
+                }`}>
+                  <Workstation sessionId={sessionId} />
                 </div>
               </div>
               
