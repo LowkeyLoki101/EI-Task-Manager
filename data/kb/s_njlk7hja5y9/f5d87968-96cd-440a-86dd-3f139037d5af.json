@@ -1,0 +1,26 @@
+{
+  "id": "f5d87968-96cd-440a-86dd-3f139037d5af",
+  "sessionId": "s_njlk7hja5y9",
+  "timestamp": "2025-08-21T07:35:57.196Z",
+  "source": "diary",
+  "topic": "Cognitive biases affecting assumption-making in energy industries",
+  "content": "Generated from lens processing: My working hypothesis is that some of my assumptions may be influenced by cognitive biases or outdated information. As a next step, I will conduct a structured review of my core assumptions, possibly using a checklist or framework to systematically evaluate their validity. Additionally, I will seek feedback from others to gain diverse perspectives that could reveal any blind spots in my reasoning.",
+  "status": "active",
+  "contentType": "document",
+  "platforms": [],
+  "approvalStatus": "auto-approved",
+  "approvedBy": "ai",
+  "draftData": {},
+  "tags": [
+    "autopoietic",
+    "lens-generated"
+  ],
+  "derivedTasks": [],
+  "metadata": {
+    "lensSessionId": "f48c75ee-98ec-4267-a85e-b50e413036bf",
+    "trigger": "What assumption am I making that might be wrong?",
+    "generationTimestamp": "2025-08-21T07:35:57.196Z"
+  },
+  "createdAt": "2025-08-21T07:35:57.196Z",
+  "updatedAt": "2025-08-21T07:35:57.196Z"
+}

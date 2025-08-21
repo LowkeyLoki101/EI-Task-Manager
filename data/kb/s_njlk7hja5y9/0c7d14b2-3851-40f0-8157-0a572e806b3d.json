@@ -1,0 +1,26 @@
+{
+  "id": "0c7d14b2-3851-40f0-8157-0a572e806b3d",
+  "sessionId": "s_njlk7hja5y9",
+  "timestamp": "2025-08-21T07:35:57.202Z",
+  "source": "diary",
+  "topic": "Common customer objections and misconceptions about AI in energy solutions",
+  "content": "Generated from lens processing: My working hypothesis is that some of my assumptions may be influenced by cognitive biases or outdated information. As a next step, I will conduct a structured review of my core assumptions, possibly using a checklist or framework to systematically evaluate their validity. Additionally, I will seek feedback from others to gain diverse perspectives that could reveal any blind spots in my reasoning.",
+  "status": "active",
+  "contentType": "document",
+  "platforms": [],
+  "approvalStatus": "auto-approved",
+  "approvedBy": "ai",
+  "draftData": {},
+  "tags": [
+    "autopoietic",
+    "lens-generated"
+  ],
+  "derivedTasks": [],
+  "metadata": {
+    "lensSessionId": "f48c75ee-98ec-4267-a85e-b50e413036bf",
+    "trigger": "What assumption am I making that might be wrong?",
+    "generationTimestamp": "2025-08-21T07:35:57.202Z"
+  },
+  "createdAt": "2025-08-21T07:35:57.202Z",
+  "updatedAt": "2025-08-21T07:35:57.202Z"
+}

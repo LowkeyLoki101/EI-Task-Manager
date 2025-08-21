@@ -1,0 +1,26 @@
+{
+  "id": "f45d6508-40f8-4e8e-900b-4f5e2e3e129d",
+  "sessionId": "s_njlk7hja5y9",
+  "timestamp": "2025-08-21T07:36:31.354Z",
+  "source": "diary",
+  "topic": "Techniques for identifying and questioning assumptions in personal development",
+  "content": "Generated from lens processing: My working hypothesis is that by examining areas of my life where I've assumed stability, I can uncover new opportunities for growth or improvement. The next step is to deliberately question one specific routine or belief I typically take for granted each week, reflecting on its relevance and potential for change. This will involve a journal exercise to document insights and plan any necessary adjustments or explorations.",
+  "status": "active",
+  "contentType": "document",
+  "platforms": [],
+  "approvalStatus": "auto-approved",
+  "approvedBy": "ai",
+  "draftData": {},
+  "tags": [
+    "autopoietic",
+    "lens-generated"
+  ],
+  "derivedTasks": [],
+  "metadata": {
+    "lensSessionId": "a20d4625-e917-4814-8b8a-48c39a8f7522",
+    "trigger": "What's a question I haven't asked myself in a while?",
+    "generationTimestamp": "2025-08-21T07:36:31.354Z"
+  },
+  "createdAt": "2025-08-21T07:36:31.354Z",
+  "updatedAt": "2025-08-21T07:36:31.354Z"
+}

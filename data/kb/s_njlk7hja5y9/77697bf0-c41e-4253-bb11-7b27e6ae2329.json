@@ -1,0 +1,26 @@
+{
+  "id": "77697bf0-c41e-4253-bb11-7b27e6ae2329",
+  "sessionId": "s_njlk7hja5y9",
+  "timestamp": "2025-08-21T07:36:20.263Z",
+  "source": "diary",
+  "topic": "Frameworks for mitigating AI downsides in energy",
+  "content": "Generated from lens processing: My working hypothesis is that AI in the energy sector should be approached as a complement to human expertise rather than a standalone solution. The next step is to conduct a detailed analysis of case studies where AI has been integrated with human decision-making in the energy sector, identifying both successes and challenges. This research will inform the development of guidelines for creating hybrid systems that leverage the strengths of both AI and human expertise.",
+  "status": "active",
+  "contentType": "document",
+  "platforms": [],
+  "approvalStatus": "auto-approved",
+  "approvedBy": "ai",
+  "draftData": {},
+  "tags": [
+    "autopoietic",
+    "lens-generated"
+  ],
+  "derivedTasks": [],
+  "metadata": {
+    "lensSessionId": "c0e01a0c-f2e1-4ac2-aad3-b2a1b47460b0",
+    "trigger": "What assumption am I making about AI in the energy sector, and how would the outcome change if I considered the reverse?",
+    "generationTimestamp": "2025-08-21T07:36:20.263Z"
+  },
+  "createdAt": "2025-08-21T07:36:20.263Z",
+  "updatedAt": "2025-08-21T07:36:20.263Z"
+}
