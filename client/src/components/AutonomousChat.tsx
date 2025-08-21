@@ -350,7 +350,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="flex flex-col flex-1 min-h-0 space-y-4">
+      <CardContent className="flex flex-col h-full p-4 gap-4">
         {/* Memory/Relationship Status */}
         {memory && memory.knowledgeBase.automationPatterns.length > 0 && (
           <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
@@ -421,9 +421,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
           </div>
         )}
 
-        {/* Chat Messages - Flexible growing area */}
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full w-full pr-4" ref={scrollAreaRef}>
+        {/* Chat Messages - Scrollable area */}
+        <div className="flex-1 min-h-0 max-h-96">
+          <ScrollArea className="h-full w-full pr-2" ref={scrollAreaRef}>
           <div className="space-y-3">
             {isLoading ? (
               <div className="text-center text-sm text-gray-500 py-8">Loading conversation...</div>
@@ -524,7 +524,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         )}
 
         {/* Message Input - Always visible at bottom */}
-        <form onSubmit={handleSendMessage} className="flex-shrink-0 space-y-3">
+        <form onSubmit={handleSendMessage} className="flex-shrink-0 space-y-3 border-t border-blue-200 pt-3 mt-auto">
           {/* Full Width Text Area */}
           <div className="w-full">
             <Input
