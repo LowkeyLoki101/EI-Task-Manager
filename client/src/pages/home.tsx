@@ -154,6 +154,31 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-6">
         <div className="max-w-6xl mx-auto">
           
+          {/* AI Workstation - Full Width Above Chat */}
+          <div className="mb-6">
+            <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border border-industrial-accent/30 transition-all duration-500">
+              <div className="p-4 border-b border-industrial-accent/20 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
+                  <div className="drone-camera-lens" style={{width: '20px', height: '20px'}}></div>
+                  AI Workstation
+                </h3>
+                <button 
+                  onClick={() => setWorkstationExpanded(!workstationExpanded)}
+                  className="riveted-button-blue px-3 py-1 text-sm font-industrial-mono rounded"
+                >
+                  {workstationExpanded ? 'COMPACT' : 'EXPAND'}
+                </button>
+              </div>
+              <div className={`transition-all duration-500 ${
+                workstationExpanded 
+                  ? 'max-h-[60vh] overflow-y-auto p-4' 
+                  : 'max-h-32 overflow-hidden p-3'
+              }`}>
+                <Workstation sessionId={sessionId} />
+              </div>
+            </div>
+          </div>
+
           {/* Main Dashboard Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             
@@ -201,29 +226,6 @@ export default function HomePage() {
                       KNOWLEDGE BASE
                     </button>
                   </div>
-                </div>
-              </div>
-
-              {/* AI Workstation - Expandable */}
-              <div className="industrial-card solar-panel-texture rounded-lg shadow-xl border border-industrial-accent/30 transition-all duration-500">
-                <div className="p-3 border-b border-industrial-accent/20 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
-                    <div className="drone-camera-lens" style={{width: '16px', height: '16px'}}></div>
-                    AI Tools
-                  </h3>
-                  <button 
-                    onClick={() => setWorkstationExpanded(!workstationExpanded)}
-                    className="riveted-button-blue px-2 py-1 text-xs font-industrial-mono rounded"
-                  >
-                    {workstationExpanded ? 'COMPACT' : 'EXPAND'}
-                  </button>
-                </div>
-                <div className={`transition-all duration-500 ${
-                  workstationExpanded 
-                    ? 'max-h-[80vh] overflow-y-auto p-4' 
-                    : 'max-h-48 overflow-hidden p-3'
-                }`}>
-                  <Workstation sessionId={sessionId} />
                 </div>
               </div>
               
