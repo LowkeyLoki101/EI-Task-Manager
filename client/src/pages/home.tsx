@@ -162,16 +162,7 @@ export default function HomePage() {
             
             {/* Primary Chat Interface - Full Width on Mobile */}
             <div className="lg:col-span-2">
-              <div className="industrial-card photovoltaic-shimmer rounded-lg shadow-xl border-2 border-solar-gold/50 h-full">
-                <div className="p-4 border-b-2 border-solar-gold/30">
-                  <h2 className="text-lg font-semibold text-industrial-primary font-industrial-display flex items-center gap-2">
-                    <div className="aperture-ring" style={{width: '20px', height: '20px'}}></div>
-                    Direct Chat with GPT-5
-                  </h2>
-                  <p className="text-xs text-industrial-secondary font-industrial-mono mt-1">
-                    PRIMARY CONVERSATIONAL AI INTERFACE
-                  </p>
-                </div>
+              <div className="rounded-lg shadow-xl border border-blue-200/30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm h-full">
                 <div className="p-4">
                   <AutonomousChat sessionId={sessionId} />
                 </div>
