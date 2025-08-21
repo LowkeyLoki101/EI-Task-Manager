@@ -422,7 +422,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         )}
 
         {showDiary && (
-          <div className="space-y-2">
+          <div className="space-y-3 flex-shrink-0">
             <div className="flex items-center gap-2 text-sm font-medium text-blue-800 dark:text-blue-200">
               <FileText className="h-4 w-4" />
               AI Memory & Insights
@@ -452,8 +452,8 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
             )}
             
             {/* Recent Insights */}
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {allInsights.slice(0, 5).map((entry: DiaryEntry) => (
+            <div className="space-y-1 max-h-60 overflow-y-auto border border-blue-200 dark:border-blue-700 rounded-lg p-2 bg-blue-50/50 dark:bg-blue-950/50">
+              {allInsights.slice(0, 8).map((entry: DiaryEntry) => (
                 <div key={entry.id} className="text-xs p-2 bg-blue-100 dark:bg-blue-900 rounded">
                   <div className="flex items-center gap-1 mb-1">
                     {getTypeIcon(entry.type)}
@@ -462,9 +462,9 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
                       {new Date(entry.timestamp).toLocaleDateString()}
                     </span>
                   </div>
-                  <div>{entry.content}</div>
+                  <div className="text-gray-800 dark:text-gray-200">{entry.content}</div>
                   {entry.tags.length > 0 && (
-                    <div className="flex gap-1 mt-1">
+                    <div className="flex gap-1 mt-1 flex-wrap">
                       {entry.tags.map(tag => (
                         <Badge key={tag} variant="outline" className="text-xs py-0">
                           {tag}
@@ -477,6 +477,11 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
               {allInsights.length === 0 && (
                 <div className="text-xs text-gray-500 p-2">
                   No insights yet. Start chatting to build relationship memory.
+                </div>
+              )}
+              {allInsights.length > 8 && (
+                <div className="text-xs text-blue-600 dark:text-blue-400 p-2 text-center">
+                  Showing 8 of {allInsights.length} insights
                 </div>
               )}
             </div>
