@@ -21,9 +21,12 @@ Background: Entrepreneur and systems thinker in Houston, TX, operating across so
 - Title attributes on UI elements should remain for LLM context understanding, not user help
 - Knowledge Base entries must be clickable and navigable from all interface locations
 
-**Recent Fixes (2025-01-19):**
-- Fixed Knowledge Base entries in project area - entries are now clickable links that navigate to individual knowledge base entries with proper hover states and visual indicators
-- Added Knowledge Base entry export and copy features - users can now export individual entries as markdown files or copy formatted text to clipboard
+**Recent Fixes (2025-08-21):**
+- **Fixed critical workstation expansion issue** - Removed 600px height constraint that was clipping workstation content; now properly expands to full viewport
+- **Implemented functional workspace modes** - Human/Hybrid/AI modes now have real permission enforcement and centralized tool management
+- **Added workspace system** - Event bus (workspaceBus.ts), WorkspaceProvider, and PanelDock enable AI agents to open tools and coordinate with human actions
+- **Fixed chat container height** - Added max-h-[85vh] constraint to prevent excessive scrolling while maintaining workstation expansion capability
+- **Mobile-first responsive layout** - Removed overflow constraints and fixed heights for flexible, adaptive interface design
 
 **Chat Behavior:**
 - No disruptive auto-scrolling when user is typing
