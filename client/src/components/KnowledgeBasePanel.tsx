@@ -36,6 +36,39 @@ export function KnowledgeBasePanel({ sessionId }: KnowledgeBasePanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEntry, setSelectedEntry] = useState<KnowledgeBaseEntry | null>(null);
 
+  // Render markdown-style text formatting (bold, italic, etc.)
+  const renderFormattedText = (text: string) => {
+    // Handle **bold** text
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    // Handle *italic* text
+    const italicRegex = /\*(.*?)\*/g;
+    
+    let formatted = text;
+    
+    // Convert **bold** to JSX
+    const parts = formatted.split(boldRegex);
+    const elements: (string | JSX.Element)[] = [];
+    
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 2 === 0) {
+        // Regular text, check for italics
+        const italicParts = parts[i].split(italicRegex);
+        for (let j = 0; j < italicParts.length; j++) {
+          if (j % 2 === 0) {
+            if (italicParts[j]) elements.push(italicParts[j]);
+          } else {
+            elements.push(<em key={`italic-${i}-${j}`}>{italicParts[j]}</em>);
+          }
+        }
+      } else {
+        // Bold text
+        elements.push(<strong key={`bold-${i}`}>{parts[i]}</strong>);
+      }
+    }
+    
+    return elements.length > 0 ? elements : text;
+  };
+
   const effectiveSessionId = sessionId || 's_njlk7hja5y9';
 
   // Simple fetch - no complex conditions
@@ -144,9 +177,9 @@ export function KnowledgeBasePanel({ sessionId }: KnowledgeBasePanelProps) {
               </button>
             </div>
             <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <pre className="whitespace-pre-wrap text-sm text-amber-100/80">
-                {selectedEntry.content}
-              </pre>
+              <div className="whitespace-pre-wrap text-sm text-amber-100/80 leading-relaxed">
+                {renderFormattedText(selectedEntry.content)}
+              </div>
             </div>
           </div>
         </div>

@@ -307,12 +307,12 @@ Respond in JSON format only.`;
               searchResults,
               researchCompleted: true,
               insights: searchResults.insights,
-              summary: searchResults.summary
+              analysis: searchResults.analysis
             };
             
             // Trigger autopoietic diary with research findings
             const diary = getAutopoieticDiary(sessionId);
-            const researchTrigger = `Research findings on "${action.payload.searchQuery}": ${searchResults.summary}. Key insights: ${searchResults.insights.join(', ')}`;
+            const researchTrigger = `Research findings on "${action.payload.searchQuery}": ${searchResults.analysis}. Key insights: ${searchResults.insights.join(', ')}`;
             await diary.manualThinkingCycle(researchTrigger);
             
             // Store research result for scratchpad display IMMEDIATELY
@@ -320,7 +320,7 @@ Respond in JSON format only.`;
               id: `research_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               sessionId,
               query: action.payload.searchQuery,
-              summary: searchResults.summary,
+              analysis: searchResults.analysis,
               insights: searchResults.insights,
               results: searchResults.results,
               searchUrls: searchResults.results?.map((r: any) => r.url) || [],
@@ -342,7 +342,7 @@ Respond in JSON format only.`;
               sessionId,
               query: action.payload.searchQuery,
               searchUrls: searchResults.results?.map((r: any) => r.url) || [],
-              summary: searchResults.summary,
+              analysis: searchResults.analysis,
               insights: searchResults.insights,
               results: searchResults.results,
               aiThinking: action.thinking,
@@ -355,7 +355,7 @@ Respond in JSON format only.`;
               content: `RESEARCH EXECUTED: ${action.thinking}
               
 Query: ${action.payload.searchQuery}
-Summary: ${searchResults.summary}
+Analysis: ${searchResults.analysis}
 Key Insights: ${searchResults.insights.join(', ')}
 Next Actions: Generate follow-up questions and create actionable tasks based on these findings`,
               context: "research-executed",

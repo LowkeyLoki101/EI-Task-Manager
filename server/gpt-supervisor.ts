@@ -393,8 +393,8 @@ Format with clear headings and bullet points for easy reading.`;
   
   getResourcesForTask(taskId: string): ResourceDiscovery[] {
     const allResources: ResourceDiscovery[] = [];
-    for (const resources of this.resourceCache.values()) {
-      allResources.push(...resources.filter(r => r.taskId === taskId));
+    for (const resources of Array.from(this.resourceCache.values())) {
+      allResources.push(...resources.filter((r: any) => r.taskId === taskId));
     }
     return allResources;
   }
