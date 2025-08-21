@@ -288,7 +288,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
   }
 
   return (
-    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 flex flex-col min-h-[600px] max-h-[85vh]">
+    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 flex flex-col h-[600px]">
       <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -350,7 +350,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="flex flex-col h-full p-4 gap-4">
+      <CardContent className="flex flex-col flex-1 p-4 gap-3 min-h-0">
         {/* Memory/Relationship Status */}
         {memory && memory.knowledgeBase.automationPatterns.length > 0 && (
           <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
@@ -422,7 +422,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         )}
 
         {/* Chat Messages - Scrollable area */}
-        <div className="flex-1 min-h-0 max-h-96">
+        <div className="flex-1 min-h-0">
           <ScrollArea className="h-full w-full pr-2" ref={scrollAreaRef}>
           <div className="space-y-3">
             {isLoading ? (
@@ -524,7 +524,7 @@ export default function AutonomousChat({ sessionId }: AutonomousChatProps) {
         )}
 
         {/* Message Input - Always visible at bottom */}
-        <form onSubmit={handleSendMessage} className="flex-shrink-0 space-y-3 border-t border-blue-200 pt-3 mt-auto">
+        <form onSubmit={handleSendMessage} className="flex-shrink-0 space-y-2 border-t border-blue-200 pt-3">
           {/* Full Width Text Area */}
           <div className="w-full">
             <Input
