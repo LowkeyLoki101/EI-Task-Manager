@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Workstation from '../components/Workstation';
 import { InsightProgressPanel } from '../components/InsightProgressPanel';
+import companyLogo from '@assets/IMG_3516_1755741839157.jpeg';
 
 export default function HomePage() {
   const sessionId = useSessionId();
@@ -162,7 +163,7 @@ export default function HomePage() {
               {/* Company Logo Above Chat */}
               <div className="mb-4 flex justify-center">
                 <img 
-                  src="/attached_assets/IMG_3516_1755741839157.jpeg" 
+                  src={companyLogo} 
                   alt="Company Logo" 
                   className="h-16 w-auto object-contain"
                 />
